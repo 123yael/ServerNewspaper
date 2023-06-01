@@ -61,7 +61,7 @@ namespace BLL.functions
             _order = order;
         }
 
-        #region WpAdSubCategoryActions
+        #region WpAdSubCategory
 
         // פונקציה שמחזירה את כל תתי הקטגוריות של מודעות מילים בפורמט DTO
         public List<WordAdSubCategoryDTO> GetAllWordAdSubCategories()
@@ -74,6 +74,8 @@ namespace BLL.functions
         }
         #endregion
 
+        #region AdSize
+
         // פונקציה שמחזירה מערך של כל גדלי הפרסומות בפורמט של DTO
         public List<AdSizeDTO> GetAllAdSize()
         {
@@ -84,6 +86,10 @@ namespace BLL.functions
             return adSizeDTO;
         }
 
+        #endregion
+
+        #region AdPlacement
+
         // פונקציה שמחזירה את כל מיקומי הפרסומות בפורמט של DTO
         public List<AdPlacementDTO> GetAllAdPlacement()
         {
@@ -93,6 +99,44 @@ namespace BLL.functions
                 adPlacementDTO.Add(_Mapper.Map<AdPlacement, AdPlacementDTO>(adPlacement));
             return adPlacementDTO;
         }
+        #endregion
+
+        #region Customer
+
+        // פונקציה שמקבלת לקוח ומחזירה את הקוד שלו
+        // ואם הוא לא קיים היא מוסיפה אותו ומחזירה את הקוד שלו
+        public int GetIdByCustomer(CustomerDTO customer)
+        {
+            CustomerDTO newCust = GetAllCustomers().Where(x => x.CustEmail.Equals(customer.CustEmail)).FirstOrDefault(c => c.CustPassword.Equals(customer.CustPassword));
+            if (newCust != null)
+                return newCust.CustId;
+            Customer custToAdd = _Mapper.Map<CustomerDTO, Customer>(customer);
+            _customerActions.AddNewCustomer(custToAdd);
+            return custToAdd.CustId;
+        }
+
+        // פונקציה שמחזירה את כל הלקוחות
+        private List<CustomerDTO> GetAllCustomers()
+        {
+            List<CustomerDTO> customers = new List<CustomerDTO>();
+            List<Customer> customers2 = _customerActions.GetAllCustomers();
+            foreach (Customer cust in customers2)
+                customers.Add(_Mapper.Map<Customer, CustomerDTO>(cust));
+            return customers;
+        }
+
+        // פונקציה שמקבלת מייל וסיסמה של לקוח
+        // ומזירה אמת אם הוא קיים ושקר אם לא קיים
+        public bool IsCustomerExists(string email, string pass)
+        {
+            CustomerDTO newCust = GetAllCustomers().Where(x => x.CustEmail.Equals(email)).FirstOrDefault(c => c.CustPassword.Equals(pass));
+            if (newCust != null)
+                return true;
+            return false;
+        }
+
+        #endregion
+
 
         // פונקציה שמוסיפה תמונה לקובץ pdf
         public void AddAdFileToPdf()
@@ -204,14 +248,6 @@ namespace BLL.functions
             for (int q = i; q < i + Width; q++)
                 for (int l = j; l < j + Height; l++)
                     matPage[q, l] = detail.AdFile;
-        }
-
-
-        public static string Reverse(string s)
-        {
-            char[] charArray = s.ToCharArray();
-            Array.Reverse(charArray);
-            return new string(charArray);
         }
 
         // פונקצהי כתיבה לתוך דף pdf
@@ -398,45 +434,13 @@ namespace BLL.functions
             document.Save(filename);
         }
 
-        #region Customers
+        
 
-        // פונקציה שמקבלת לקוח ומחזירה את הקוד שלו
-        // ואם הוא לא קיים היא מוסיפה אותו ומחזירה את הקוד שלו
-        public int GetIdByCustomer(CustomerDTO customer)
-        {
-            CustomerDTO newCust = GetAllCustomers().Where(x => x.CustEmail.Equals(customer.CustEmail)).FirstOrDefault(c => c.CustPassword.Equals(customer.CustPassword));
-            if (newCust != null)
-                return newCust.CustId;
-            Customer custToAdd = _Mapper.Map<CustomerDTO, Customer>(customer);
-            _customerActions.AddNewCustomer(custToAdd);
-            return custToAdd.CustId;
-        }
+        // --------------------------------------------------------------------------------------
+        // ----------------------- כל מה שקשור להזמנת פרסומת -----------------------------------
+        // --------------------------------------------------------------------------------------
 
-        // פונקציה שמחזירה את כל הלקוחות
-        private List<CustomerDTO> GetAllCustomers()
-        {
-            List<CustomerDTO> customers = new List<CustomerDTO>();
-            List<Customer> customers2 = _customerActions.GetAllCustomers();
-            foreach (Customer cust in customers2)
-                customers.Add(_Mapper.Map<Customer, CustomerDTO>(cust));
-            return customers;
-        }
-
-        // פונקציה שמקבלת מייל וסיסמה של לקוח
-        // ומזירה אמת אם הוא קיים ושקר אם לא קיים
-        public bool IsCustomerExists(string email, string pass)
-        {
-            CustomerDTO newCust = GetAllCustomers().Where(x => x.CustEmail.Equals(email)).FirstOrDefault(c => c.CustPassword.Equals(pass));
-            if (newCust != null)
-                return true;
-            return false;
-        }
-
-        #endregion
-
-
-
-
+        // פונקציה שממירה מערך dto של פרטי הזמנה ומערך רגיל של פרטי הזמנה
         private List<OrderDetail> ListOrderDetailDTOToListOrderDetail(List<OrderDetailDTO> listOrderDetails)
         {
             List<OrderDetail> orderDetails = new List<OrderDetail>();
@@ -457,8 +461,8 @@ namespace BLL.functions
             return sum;
         }
 
-        // פונקציה שמכניסה פרטי הזמנה למסד הנתונים
-        // ומחזירה רשימה של קודים של פרטי הזמנה
+        // פונקציה שמכניסה פרטי הזמנות למסד הנתונים
+        // ומחזירה רשימה של קודים של פרטי הזמנות
         private List<int> EnterOrderDetails(List<OrderDetail> orderDetails)
         {
             List<int> ordersIds = new List<int>(); 
