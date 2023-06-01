@@ -7,7 +7,7 @@ using System;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var configuration = builder.Configuration;
+IConfiguration _configuration = builder.Configuration;
 
 // Add services to the container.
 
@@ -23,7 +23,7 @@ builder.Services.AddCors(p => p.AddPolicy("AlowAll", option =>
     option.AllowAnyOrigin();
 }));
 
-builder.Services.AddDbContext<NewspaperSystemContext>(y => y.UseSqlServer(configuration["NewspaperSystemContextString"]));
+builder.Services.AddDbContext<NewspaperSystemContext>(y => y.UseSqlServer(_configuration["NewspaperSystemContextString"]));
 
 builder.Services.AddScoped<IAdPlacementActions, AdPlacementActions>();
 builder.Services.AddScoped<IAdSizeActions, AdSizeActions>();
