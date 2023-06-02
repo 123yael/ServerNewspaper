@@ -25,7 +25,7 @@ namespace BLL.functions
         public List<WordAdSubCategoryDTO> GetAllWordAdSubCategories();
 
         public int GetIdByCustomer(CustomerDTO customer);
-        public bool IsCustomerExists(string email, string pass);
+        public CustomerDTO GetCustomerByEmailAndPass(string email, string pass);
 
         public void FinishOrder(CustomerDTO customer, List<List<DateTime>> listDates, List<OrderDetailDTO> listOrderDetails);
 

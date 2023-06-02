@@ -21,6 +21,7 @@ using System.Text.Encodings.Web;
 using PdfSharp.Drawing.Layout;
 using static System.Net.Mime.MediaTypeNames;
 using DAL.Actions.Classes;
+using System.Data.SqlTypes;
 
 namespace BLL.functions
 {
@@ -126,13 +127,13 @@ namespace BLL.functions
         }
 
         // פונקציה שמקבלת מייל וסיסמה של לקוח
-        // ומזירה אמת אם הוא קיים ושקר אם לא קיים
-        public bool IsCustomerExists(string email, string pass)
+        // ומזירה אותו אם הוא קיים וכלום אם לא קיים
+        public CustomerDTO GetCustomerByEmailAndPass(string email, string pass)
         {
-            CustomerDTO newCust = GetAllCustomers().Where(x => x.CustEmail.Equals(email)).FirstOrDefault(c => c.CustPassword.Equals(pass));
+            var newCust = GetAllCustomers().FirstOrDefault(x => x.CustEmail.Equals(email) && x.CustPassword.Equals(pass));
             if (newCust != null)
-                return true;
-            return false;
+                return newCust;
+            return null!;
         }
 
         #endregion

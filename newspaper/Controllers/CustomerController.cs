@@ -22,10 +22,10 @@ namespace newspaper.Controllers
             return Ok(_funcs.GetIdByCustomer(cust));
         }
 
-        [HttpGet("IsCustomerExists/{email}/{pass}")]
-        public IActionResult IsCustomerExists(string email, string pass)
+        [HttpGet("GetCustomerByEmailAndPass/{email}/{pass}")]
+        public IActionResult GetCustomerByEmailAndPass(string email, string pass)
         {
-            return Ok(_funcs.IsCustomerExists(email, pass));
+            return Ok(_funcs.GetCustomerByEmailAndPass(email, pass));
         }
     }
 }
