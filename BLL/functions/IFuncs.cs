@@ -13,6 +13,8 @@ namespace BLL.functions
 
         public List<AdPlacementDTO> GetAllAdPlacement();
 
+        public List<NewspapersPublishedDTO> GetAllNewspapersPublished();
+
         public void AddAdFileToPdf();
 
         public void AddAdFileToPdf3();

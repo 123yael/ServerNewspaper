@@ -45,13 +45,15 @@ namespace BLL.functions
         IWordAdSubCategoryActions _wpAdSubCategoryActions;
         ICustomerActions _customerActions;
         IOrderActions _order;
+        INewspapersPublishedActions _newspapersPublished;
         public Funcs(IAdSizeActions adSize,
             IOrderDetailActions ordersDetailActions,
             IDatesForOrderDetailActions datesForOrderDetailActions,
             IAdPlacementActions adPlacement,
             IWordAdSubCategoryActions wpAdSubCategoryActions,
             ICustomerActions customerActions,
-            IOrderActions order)
+            IOrderActions order,
+            INewspapersPublishedActions newspapersPublished)
         {
             _adSize = adSize;
             _ordersDetailActions = ordersDetailActions;
@@ -60,6 +62,7 @@ namespace BLL.functions
             _wpAdSubCategoryActions = wpAdSubCategoryActions;
             _customerActions = customerActions;
             _order = order;
+            _newspapersPublished = newspapersPublished;
         }
 
         #region WpAdSubCategory
@@ -138,6 +141,18 @@ namespace BLL.functions
 
         #endregion
 
+        #region NewspapersPublished
+
+        public List<NewspapersPublishedDTO> GetAllNewspapersPublished()
+        {
+            List<NewspapersPublished> NewspapersPublished = _newspapersPublished.GetAllNewspapersPublished();
+            List<NewspapersPublishedDTO> NewspapersPublishedDTO = new List<NewspapersPublishedDTO>();
+            foreach (NewspapersPublished np in NewspapersPublished)
+                NewspapersPublishedDTO.Add(_Mapper.Map<NewspapersPublished, NewspapersPublishedDTO>(np));
+            return NewspapersPublishedDTO;
+        }
+
+        #endregion
 
         // פונקציה שמוסיפה תמונה לקובץ pdf
         public void AddAdFileToPdf()

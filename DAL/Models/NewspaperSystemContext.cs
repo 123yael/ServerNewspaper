@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 
 namespace DAL.Models;
 
@@ -11,12 +10,9 @@ public partial class NewspaperSystemContext : DbContext
     {
     }
 
-    private readonly IConfiguration _configuration;
-
-    public NewspaperSystemContext(DbContextOptions<NewspaperSystemContext> options, IConfiguration configuration)
+    public NewspaperSystemContext(DbContextOptions<NewspaperSystemContext> options)
         : base(options)
     {
-        _configuration = configuration;
     }
 
     public virtual DbSet<AdPlacement> AdPlacements { get; set; }
@@ -43,13 +39,13 @@ public partial class NewspaperSystemContext : DbContext
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see http://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseSqlServer(_configuration["NewspaperSystemContextString"]);
+        => optionsBuilder.UseSqlServer("Server=LAPTOP-1RTDVDQI\\EXPRESS_YAEL;Database=NewspaperSystem;Trusted_Connection=True;TrustServerCertificate=True;");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<AdPlacement>(entity =>
         {
-            entity.HasKey(e => e.PlaceId).HasName("PK__AdPlacem__BF2B684A4146384F");
+            entity.HasKey(e => e.PlaceId).HasName("PK__AdPlacem__BF2B684AED6A5E4E");
 
             entity.Property(e => e.PlaceId).HasColumnName("place_id");
             entity.Property(e => e.PlaceName)
@@ -63,7 +59,7 @@ public partial class NewspaperSystemContext : DbContext
 
         modelBuilder.Entity<AdSize>(entity =>
         {
-            entity.HasKey(e => e.SizeId).HasName("PK__AdSizes__0DCACE31B86B7807");
+            entity.HasKey(e => e.SizeId).HasName("PK__AdSizes__0DCACE318B2C01FD");
 
             entity.Property(e => e.SizeId).HasColumnName("size_id");
             entity.Property(e => e.SizeHeight)
@@ -87,7 +83,7 @@ public partial class NewspaperSystemContext : DbContext
 
         modelBuilder.Entity<AdvertisementCategory>(entity =>
         {
-            entity.HasKey(e => e.CategoryId).HasName("PK__Advertis__D54EE9B48497A67E");
+            entity.HasKey(e => e.CategoryId).HasName("PK__Advertis__D54EE9B4E5CD5B86");
 
             entity.Property(e => e.CategoryId).HasColumnName("category_id");
             entity.Property(e => e.CategoryName)
@@ -98,7 +94,7 @@ public partial class NewspaperSystemContext : DbContext
 
         modelBuilder.Entity<Customer>(entity =>
         {
-            entity.HasKey(e => e.CustId).HasName("PK__Customer__A1B71F902745948F");
+            entity.HasKey(e => e.CustId).HasName("PK__Customer__A1B71F9077FFA155");
 
             entity.Property(e => e.CustId).HasColumnName("cust_id");
             entity.Property(e => e.CustEmail)
@@ -125,7 +121,7 @@ public partial class NewspaperSystemContext : DbContext
 
         modelBuilder.Entity<DatesForOrderDetail>(entity =>
         {
-            entity.HasKey(e => e.DateId).HasName("PK__DatesFor__51FC48652599E6D4");
+            entity.HasKey(e => e.DateId).HasName("PK__DatesFor__51FC48654D4BBA00");
 
             entity.Property(e => e.DateId).HasColumnName("date_id");
             entity.Property(e => e.Date)
@@ -143,11 +139,19 @@ public partial class NewspaperSystemContext : DbContext
 
         modelBuilder.Entity<NewspapersPublished>(entity =>
         {
-            entity.HasKey(e => e.NewspaperId).HasName("PK__Newspape__710B3F0CD545D3E6");
+            entity.HasKey(e => e.NewspaperId).HasName("PK__Newspape__710B3F0C9E20072D");
 
             entity.ToTable("NewspapersPublished");
 
             entity.Property(e => e.NewspaperId).HasColumnName("newspaper_id");
+            entity.Property(e => e.Img)
+                .HasMaxLength(50)
+                .IsUnicode(false)
+                .HasColumnName("img");
+            entity.Property(e => e.PdfFile)
+                .HasMaxLength(50)
+                .IsUnicode(false)
+                .HasColumnName("pdfFile");
             entity.Property(e => e.PublicationDate)
                 .HasColumnType("date")
                 .HasColumnName("publication_date");
@@ -155,7 +159,7 @@ public partial class NewspaperSystemContext : DbContext
 
         modelBuilder.Entity<Order>(entity =>
         {
-            entity.HasKey(e => e.OrderId).HasName("PK__Orders__465962290FA0475E");
+            entity.HasKey(e => e.OrderId).HasName("PK__Orders__46596229DC30B4AF");
 
             entity.Property(e => e.OrderId).HasColumnName("order_id");
             entity.Property(e => e.CustId).HasColumnName("cust_id");
@@ -174,7 +178,7 @@ public partial class NewspaperSystemContext : DbContext
 
         modelBuilder.Entity<OrderDetail>(entity =>
         {
-            entity.HasKey(e => e.DetailsId).HasName("PK__OrderDet__C3E443F4D48A1F58");
+            entity.HasKey(e => e.DetailsId).HasName("PK__OrderDet__C3E443F4863663EA");
 
             entity.Property(e => e.DetailsId).HasColumnName("details_id");
             entity.Property(e => e.AdContent)
@@ -218,7 +222,7 @@ public partial class NewspaperSystemContext : DbContext
 
         modelBuilder.Entity<PagesInNewspaper>(entity =>
         {
-            entity.HasKey(e => e.PageId).HasName("PK__PagesInN__637F305AEE2295A5");
+            entity.HasKey(e => e.PageId).HasName("PK__PagesInN__637F305A67D47659");
 
             entity.ToTable("PagesInNewspaper");
 
@@ -233,7 +237,7 @@ public partial class NewspaperSystemContext : DbContext
 
         modelBuilder.Entity<PlacingAdsInPage>(entity =>
         {
-            entity.HasKey(e => e.PlaceInPageId).HasName("PK__PlacingA__384AF263CFA82635");
+            entity.HasKey(e => e.PlaceInPageId).HasName("PK__PlacingA__384AF263A64956F5");
 
             entity.ToTable("PlacingAdsInPage");
 
@@ -252,7 +256,7 @@ public partial class NewspaperSystemContext : DbContext
 
         modelBuilder.Entity<WordAdSubCategory>(entity =>
         {
-            entity.HasKey(e => e.WordCategoryId).HasName("PK__WordAdSu__2CA95CCDEE4EE31C");
+            entity.HasKey(e => e.WordCategoryId).HasName("PK__WordAdSu__2CA95CCD0B6EDA6B");
 
             entity.Property(e => e.WordCategoryId).HasColumnName("wordCategory_id");
             entity.Property(e => e.WordCategoryName)

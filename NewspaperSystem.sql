@@ -7,7 +7,9 @@
 CREATE TABLE NewspapersPublished
 (
 	newspaper_id INT PRIMARY KEY IDENTITY(1, 1),
-	publication_date DATE NOT NULL
+	publication_date DATE NOT NULL,
+	pdfFile VARCHAR(50) NOT NULL,
+	img VARCHAR(50) NOT NULL
 )
 
 -- קטגורית פרסומות
@@ -105,7 +107,15 @@ CREATE TABLE PlacingAdsInPage
 ------------------------------------------------------
 
 INSERT INTO NewspapersPublished
-VALUES('2023-02-07')
+VALUES('2023-02-07', 'finalNewspaper2.pdf', 'newspaperimg.png')
+GO
+
+INSERT INTO NewspapersPublished
+VALUES('2023-03-07', 'finalNewspaper2.pdf', 'newspaperimg.png')
+GO
+
+INSERT INTO NewspapersPublished
+VALUES('2023-02-15', 'finalNewspaper2.pdf', 'newspaperimg.png')
 GO
 
 ------------------------------------------------------

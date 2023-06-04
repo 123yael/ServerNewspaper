@@ -11,5 +11,9 @@ namespace DTO.Repository
         public int NewspaperId { get; set; }
 
         public DateTime PublicationDate { get; set; }
+
+        public string PdfFile { get; set; } = null!;
+
+        public string Img { get; set; } = null!;
     }
 }
