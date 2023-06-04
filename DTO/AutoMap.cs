@@ -10,6 +10,15 @@ using DAL.Models;
 
 namespace DTO
 {
+    public class DateResolver : IValueResolver<NewspapersPublished, NewspapersPublishedDTO, string>
+    {
+        public string Resolve(NewspapersPublished source, NewspapersPublishedDTO destination, string destMember, ResolutionContext context)
+        {
+            var date = source.PublicationDate;
+            return date.ToString("MM/dd/yyyy");
+        }
+    }
+
     public class AutoMap : Profile
     {
         public AutoMap()
@@ -32,15 +41,15 @@ namespace DTO
             opt.MapFrom(src => src.Details.DetailsId)); ;
 
             CreateMap<NewspapersPublishedDTO, NewspapersPublished>();
-            CreateMap<NewspapersPublished, NewspapersPublishedDTO>();
+            CreateMap<NewspapersPublished, NewspapersPublishedDTO>()
+                .ForMember(dest =>
+            dest.PublicationDate, opt =>
+            opt.MapFrom(src => src.PublicationDate.ToString("MM/dd/yyyy")));
 
             CreateMap<OrderDTO, Order>();
             CreateMap<Order, OrderDTO>();
 
             CreateMap<OrderDetailDTO, OrderDetail>();
-            //    .ForMember(dest =>
-            //dest.Size, opt =>
-            //opt.MapFrom(src => src.SizeId != null ? new AdSize { SizeId = src.SizeId.Value } : null));
             CreateMap<OrderDetail, OrderDetailDTO>().ForMember(dest =>
             dest.SizeId, opt =>
             opt.MapFrom(src => src.Size.SizeId));

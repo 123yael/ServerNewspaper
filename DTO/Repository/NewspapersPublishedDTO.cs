@@ -10,7 +10,7 @@ namespace DTO.Repository
     {
         public int NewspaperId { get; set; }
 
-        public DateTime PublicationDate { get; set; }
+        public string PublicationDate { get; set; }
 
         public string PdfFile { get; set; } = null!;
 
