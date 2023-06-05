@@ -10,15 +10,6 @@ using DAL.Models;
 
 namespace DTO
 {
-    public class DateResolver : IValueResolver<NewspapersPublished, NewspapersPublishedDTO, string>
-    {
-        public string Resolve(NewspapersPublished source, NewspapersPublishedDTO destination, string destMember, ResolutionContext context)
-        {
-            var date = source.PublicationDate;
-            return date.ToString("MM/dd/yyyy");
-        }
-    }
-
     public class AutoMap : Profile
     {
         public AutoMap()
