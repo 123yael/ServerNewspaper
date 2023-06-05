@@ -44,7 +44,7 @@ namespace DTO
             CreateMap<NewspapersPublished, NewspapersPublishedDTO>()
                 .ForMember(dest =>
             dest.PublicationDate, opt =>
-            opt.MapFrom(src => src.PublicationDate.ToString("MM/dd/yyyy")));
+            opt.MapFrom(src => src.PublicationDate.ToString("dd.MM.yyyy")));
 
             CreateMap<OrderDTO, Order>();
             CreateMap<Order, OrderDTO>();
