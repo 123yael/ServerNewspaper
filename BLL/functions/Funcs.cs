@@ -22,12 +22,22 @@ using PdfSharp.Drawing.Layout;
 using static System.Net.Mime.MediaTypeNames;
 using DAL.Actions.Classes;
 using System.Data.SqlTypes;
+using System.Reflection.Metadata;
+using DocumentFormat.OpenXml.EMMA;
+using DocumentFormat.OpenXml.Packaging;
+using DocumentFormat.OpenXml.Wordprocessing;
+using Text = DocumentFormat.OpenXml.Wordprocessing.Text;
+using Document = DocumentFormat.OpenXml.Wordprocessing.Document;
+using PageSize = PdfSharp.PageSize;
+using DocumentFormat.OpenXml;
 
 namespace BLL.functions
 {
     public class Funcs : IFuncs
     {
         static IMapper _Mapper;
+
+        private string myPath = "C:\\Users\\YAEL\\OneDrive\\שולחן העבודה\\";
 
         static Funcs()
         {
@@ -46,6 +56,8 @@ namespace BLL.functions
         ICustomerActions _customerActions;
         IOrderActions _order;
         INewspapersPublishedActions _newspapersPublished;
+        private object codeLines;
+
         public Funcs(IAdSizeActions adSize,
             IOrderDetailActions ordersDetailActions,
             IDatesForOrderDetailActions datesForOrderDetailActions,
@@ -450,13 +462,128 @@ namespace BLL.functions
             document.Save(filename);
         }
 
-        
+        //פונקציה שכותבת לתוך קובץ word
+        public void FirstWord(string filePath, string[] codeLines)
+        {
+            Console.WriteLine("hello");
+            // Create a new Word document
+            using (WordprocessingDocument wordDocument = WordprocessingDocument.Create(filePath, WordprocessingDocumentType.Document))
+            {
+                //// Add a new main document part
+                //MainDocumentPart mainPart = wordDocument.AddMainDocumentPart();
 
-        // --------------------------------------------------------------------------------------
-        // ----------------------- כל מה שקשור להזמנת פרסומת -----------------------------------
-        // --------------------------------------------------------------------------------------
+                //// Create a new document tree
+                //Document document = new Document();
+                //Body body = new Body();
 
-        // פונקציה שממירה מערך dto של פרטי הזמנה ומערך רגיל של פרטי הזמנה
+                //// Create a new paragraph and run
+                //Paragraph paragraph = new Paragraph();
+                //Run run = new Run();
+                //Text text = new Text(code);
+
+                //// Add the text to the run
+                //run.Append(text);
+
+                //// Add the run to the paragraph
+                //paragraph.Append(run);
+
+                //// Add the paragraph to the body
+                //body.Append(paragraph);
+
+                //// Add the body to the document
+                //document.Append(body);
+
+                //// Add the document to the main document part
+                //mainPart.Document = document;
+
+                //// Save the changes
+                //mainPart.Document.Save();
+
+                ///--------------------------------------------
+                ///--------------------------------------------
+                ///--------------------------------------------
+
+                // Add a new main document part
+                MainDocumentPart mainPart = wordDocument.AddMainDocumentPart();
+
+                // Create a new document tree
+                Document document = new Document();
+                Body body = new Body();
+
+                // Create a new table
+                Table table = new Table();
+                TableProperties tableProperties = new TableProperties(
+                    new TableBorders(
+                        new TopBorder(),
+                        new BottomBorder(),
+                        new LeftBorder(),
+                        new RightBorder(),
+                        new InsideHorizontalBorder(),
+                        new InsideVerticalBorder()
+                    )
+                );
+                table.AppendChild(tableProperties);
+
+                // Set the number of columns
+                int numColumns = 4;
+
+                // Calculate the number of rows needed based on the number of code lines and the number of columns
+                int numRows = (int)Math.Ceiling((double)codeLines.Length / numColumns);
+
+                // Loop through each row
+                for (int i = 0; i < numRows; i++)
+                {
+                    TableRow row = new TableRow();
+
+                    // Loop through each column
+                    for (int j = 0; j < numColumns; j++)
+                    {
+                        // Calculate the index of the current code line
+                        int index = i + j * numRows;
+
+                        // Create a new cell
+                        TableCell cell = new TableCell();
+
+                        // If there is a code line for this cell, add it to the cell
+                        if (index < codeLines.Length)
+                        {
+                            Paragraph paragraph = new Paragraph();
+                            Run run = new Run();
+                            Text text = new Text(codeLines[index]);
+                            run.Append(text);
+                            paragraph.Append(run);
+                            cell.Append(paragraph);
+                        }
+
+                        // Add the cell to the row
+                        row.Append(cell);
+                    }
+
+                    // Add the row to the table
+                    table.Append(row);
+                }
+
+                // Add the table to the body
+                body.Append(table);
+
+                // Add the body to the document
+                document.Append(body);
+
+                // Add the document to the main document part
+                mainPart.Document = document;
+
+                // Save the changes
+                mainPart.Document.Save();
+            }
+        }
+
+
+
+        //--------------------------------------------------------------------------------------
+        //----------------------- כל מה שקשור להזמנת פרסומת -----------------------------------
+        //--------------------------------------------------------------------------------------
+
+        //פונקציה שממירה מערך dto של פרטי הזמנה ומערך רגיל של פרטי הזמנה
         private List<OrderDetail> ListOrderDetailDTOToListOrderDetail(List<OrderDetailDTO> listOrderDetails)
         {
             List<OrderDetail> orderDetails = new List<OrderDetail>();
