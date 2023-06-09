@@ -471,187 +471,187 @@ namespace BLL.functions
         {
             Console.WriteLine("hello");
             // Create a new Word document
-            using (WordprocessingDocument wordDocument = WordprocessingDocument.Create(filePath, WordprocessingDocumentType.Document))
-            {
-                #region
-                //// Add a new main document part
-                //MainDocumentPart mainPart = wordDocument.AddMainDocumentPart();
+            //using (WordprocessingDocument wordDocument = WordprocessingDocument.Create(filePath, WordprocessingDocumentType.Document))
+            //{
+            //    #region
+            //    //// Add a new main document part
+            //    //MainDocumentPart mainPart = wordDocument.AddMainDocumentPart();
 
-                //// Create a new document tree
-                //Document document = new Document();
-                //Body body = new Body();
+            //    //// Create a new document tree
+            //    //Document document = new Document();
+            //    //Body body = new Body();
 
-                //// Create a new paragraph and run
-                //Paragraph paragraph = new Paragraph();
-                //Run run = new Run();
-                //Text text = new Text(code);
+            //    //// Create a new paragraph and run
+            //    //Paragraph paragraph = new Paragraph();
+            //    //Run run = new Run();
+            //    //Text text = new Text(code);
 
-                //// Add the text to the run
-                //run.Append(text);
+            //    //// Add the text to the run
+            //    //run.Append(text);
 
-                //// Add the run to the paragraph
-                //paragraph.Append(run);
+            //    //// Add the run to the paragraph
+            //    //paragraph.Append(run);
 
-                //// Add the paragraph to the body
-                //body.Append(paragraph);
+            //    //// Add the paragraph to the body
+            //    //body.Append(paragraph);
 
-                //// Add the body to the document
-                //document.Append(body);
+            //    //// Add the body to the document
+            //    //document.Append(body);
 
-                //// Add the document to the main document part
-                //mainPart.Document = document;
+            //    //// Add the document to the main document part
+            //    //mainPart.Document = document;
 
-                //// Save the changes
-                //mainPart.Document.Save();
+            //    //// Save the changes
+            //    //mainPart.Document.Save();
 
-                ///--------------------------------------------
-                ///--------------------------------------------
-                ///--------------------------------------------
-                #endregion
+            //    ///--------------------------------------------
+            //    ///--------------------------------------------
+            //    ///--------------------------------------------
+            //    #endregion
 
-                // Add a new main document part
-                MainDocumentPart mainPart = wordDocument.AddMainDocumentPart();
+            //    // Add a new main document part
+            //    MainDocumentPart mainPart = wordDocument.AddMainDocumentPart();
 
-                // Create a new document tree
-                Document document = new Document();
-                Body body = new Body();
+            //    // Create a new document tree
+            //    Document document = new Document();
+            //    Body body = new Body();
 
-                // Create a new table
-                Table table = new Table();
-                TableProperties tableProperties = new TableProperties(
-                    new TableBorders(
-                        new TopBorder(),
-                        new BottomBorder(),
-                        new LeftBorder(),
-                        new RightBorder(),
-                        new InsideHorizontalBorder(),
-                        new InsideVerticalBorder()
-                    )
-                );
-                table.AppendChild(tableProperties);
+            //    // Create a new table
+            //    Table table = new Table();
+            //    TableProperties tableProperties = new TableProperties(
+            //        new TableBorders(
+            //            new TopBorder(),
+            //            new BottomBorder(),
+            //            new LeftBorder(),
+            //            new RightBorder(),
+            //            new InsideHorizontalBorder(),
+            //            new InsideVerticalBorder()
+            //        )
+            //    );
+            //    table.AppendChild(tableProperties);
 
-                // Set the number of columns
-                int numColumns = 4;
+            //    // Set the number of columns
+            //    int numColumns = 4;
 
-                // Calculate the number of rows needed based on the number of code lines and the number of columns
-                int numRows = (int)Math.Ceiling((double)codeLines.Length / numColumns);
+            //    // Calculate the number of rows needed based on the number of code lines and the number of columns
+            //    int numRows = (int)Math.Ceiling((double)codeLines.Length / numColumns);
 
-                // Loop through each row
-                for (int i = 0; i < numRows; i++)
-                {
-                    TableRow row = new TableRow();
+            //    // Loop through each row
+            //    for (int i = 0; i < numRows; i++)
+            //    {
+            //        TableRow row = new TableRow();
 
-                    // Loop through each column
-                    for (int j = 0; j < numColumns; j++)
-                    {
-                        // Calculate the index of the current code line
-                        int index = i + j * numRows;
+            //        // Loop through each column
+            //        for (int j = 0; j < numColumns; j++)
+            //        {
+            //            // Calculate the index of the current code line
+            //            int index = i + j * numRows;
 
-                        // Create a new cell
-                        TableCell cell = new TableCell();
+            //            // Create a new cell
+            //            TableCell cell = new TableCell();
 
-                        //כתיבת כותרת
-                        if (index < codeLines.Length && codeLines[index].Contains("Title"))
-                        {
-                            Paragraph titleParagraph = new Paragraph();
-                            Run titleRun = new Run();
-                            Text titleText = new Text(codeLines[index]);
-                            titleRun.Append(titleText);
-                            titleRun.RunProperties = new RunProperties(new Bold(), new FontSize() { Val = "24" }, new Justification() { Val = JustificationValues.Right });
-                            titleParagraph.Append(titleRun);
-                            cell.Append(titleParagraph);
-                        }
-                        // If there is a code line for this cell, add it to the cell
-                        else
-                        if (index < codeLines.Length)
-                        {
-                            Paragraph paragraph = new Paragraph();
-                            Run run = new Run();
-                            Text text = new Text(codeLines[index]);
-                            run.Append(text);
-                            paragraph.Append(run);
-                            cell.Append(paragraph);
-                        }
+            //            //כתיבת כותרת
+            //            if (index < codeLines.Length && codeLines[index].Contains("Title"))
+            //            {
+            //                Paragraph titleParagraph = new Paragraph();
+            //                Run titleRun = new Run();
+            //                Text titleText = new Text(codeLines[index]);
+            //                titleRun.Append(titleText);
+            //                titleRun.RunProperties = new RunProperties(new Bold(), new FontSize() { Val = "24" }, new Justification() { Val = JustificationValues.Right });
+            //                titleParagraph.Append(titleRun);
+            //                cell.Append(titleParagraph);
+            //            }
+            //            // If there is a code line for this cell, add it to the cell
+            //            else
+            //            if (index < codeLines.Length)
+            //            {
+            //                Paragraph paragraph = new Paragraph();
+            //                Run run = new Run();
+            //                Text text = new Text(codeLines[index]);
+            //                run.Append(text);
+            //                paragraph.Append(run);
+            //                cell.Append(paragraph);
+            //            }
 
-                        // Add the cell to the row
-                        row.Append(cell);
-                    }
+            //            // Add the cell to the row
+            //            row.Append(cell);
+            //        }
 
-                    // Add the row to the table
-                    table.Append(row);
-                }
+            //        // Add the row to the table
+            //        table.Append(row);
+            //    }
 
-                // Add the table to the body
-                body.Append(table);
+            //    // Add the table to the body
+            //    body.Append(table);
 
-                // Add the body to the document
-                document.Append(body);
+            //    // Add the body to the document
+            //    document.Append(body);
 
-                // Add the document to the main document part
-                mainPart.Document = document;
+            //    // Add the document to the main document part
+            //    mainPart.Document = document;
 
-                // Save the changes
-                mainPart.Document.Save();
+            //    // Save the changes
+            //    mainPart.Document.Save();
 
-                var PDFdocument = wordDocument;
-                PDFdocument.SaveAs("C:\\Users\\שירה בוריה\\Desktop\\myFile1.pdf");
+            //    var PDFdocument = wordDocument;
+            //    PDFdocument.SaveAs("C:\\Users\\שירה בוריה\\Desktop\\myFile1.pdf");
 
-                //המרה מוורד לפי די אף
-                /*using (DocumentConverter documentConverter = new DocumentConverter())
-                {
-                    var format = DocumentFormat.Pdf;
-                    var jobData = DocumentConverterJobs.CreateJobData(inFile, outFile, format);
-                    jobData.JobName = "conversion job";
-                    var job = documentConverter.Jobs.CreateJob(jobData);
-                    documentConverter.Jobs.RunJob(job);
-                }*/
+            //    //המרה מוורד לפי די אף
+            //    /*using (DocumentConverter documentConverter = new DocumentConverter())
+            //    {
+            //        var format = DocumentFormat.Pdf;
+            //        var jobData = DocumentConverterJobs.CreateJobData(inFile, outFile, format);
+            //        jobData.JobName = "conversion job";
+            //        var job = documentConverter.Jobs.CreateJob(jobData);
+            //        documentConverter.Jobs.RunJob(job);
+            //    }*/
 
-                //function from Microsoft
-                #region
-                /*
-                using (WordprocessingDocument doc = WordprocessingDocument.Create(filePath, WordprocessingDocumentType.Document))
+            //    //function from Microsoft
+            //    #region
+            //    /*
+            //    using (WordprocessingDocument doc = WordprocessingDocument.Create(filePath, WordprocessingDocumentType.Document))
 
-                {
+            //    {
 
-                    //// Defines the MainDocumentPart            
-                    MainDocumentPart mainDocumentPart = doc.AddMainDocumentPart();
-                    mainDocumentPart.Document = new Document();
-                    Body body = mainDocumentPart.Document.AppendChild(new Body());
+            //        //// Defines the MainDocumentPart            
+            //        MainDocumentPart mainDocumentPart = doc.AddMainDocumentPart();
+            //        mainDocumentPart.Document = new Document();
+            //        Body body = mainDocumentPart.Document.AppendChild(new Body());
 
-                    //// Create a new table
-                    Table tbl = new Table();
+            //        //// Create a new table
+            //        Table tbl = new Table();
 
-                    //// Create a new row
-                    TableRow tr = new TableRow();
+            //        //// Create a new row
+            //        TableRow tr = new TableRow();
 
-                    //// Add a cell to each column in the row
-                    string text = "Hi my name is Yael and Im working on the final project";
-                    string text2 = "Sing us a song you'r the Piano Man";
-                    TableCell tcName1 = new TableCell(new Paragraph(new Run(new Text(text))));
-                    TableCell tcId1 = new TableCell(new Paragraph(new Run(new Text(text2))));
+            //        //// Add a cell to each column in the row
+            //        string text = "Hi my name is Yael and Im working on the final project";
+            //        string text2 = "Sing us a song you'r the Piano Man";
+            //        TableCell tcName1 = new TableCell(new Paragraph(new Run(new Text(text))));
+            //        TableCell tcId1 = new TableCell(new Paragraph(new Run(new Text(text2))));
 
-                    //// Add the cells to the row
-                    tr.Append(tcName1, tcId1);
+            //        //// Add the cells to the row
+            //        tr.Append(tcName1, tcId1);
 
-                    // Create a new row
-                    TableRow tr1 = new TableRow();
-                    TableCell tcName2 = new TableCell(new Paragraph(new Run(new Text("Anand"))));
-                    TableCell tcId2 = new TableCell(new Paragraph(new Run(new Text("2"))));
+            //        // Create a new row
+            //        TableRow tr1 = new TableRow();
+            //        TableCell tcName2 = new TableCell(new Paragraph(new Run(new Text("Anand"))));
+            //        TableCell tcId2 = new TableCell(new Paragraph(new Run(new Text("2"))));
 
-                    //// Add the cells to the row
-                    tr1.Append(tcName2, tcId2);
+            //        //// Add the cells to the row
+            //        tr1.Append(tcName2, tcId2);
 
-                    //// Add the rows to the table
+            //        //// Add the rows to the table
 
-                    tbl.AppendChild(tr);
-                    tbl.AppendChild(tr1);
+            //        tbl.AppendChild(tr);
+            //        tbl.AppendChild(tr1);
 
-                    //// Add the table to the body
-                    body.AppendChild(tbl);
+            //        //// Add the table to the body
+            //        body.AppendChild(tbl);
 
-                    mainDocumentPart.Document.Save();*/
-                #endregion
-            }
+            //        mainDocumentPart.Document.Save();*/
+            //    #endregion
+            //}
         }
 
         /*public void ConvertWordToPdf(string inputFilePath, string outputFilePath)
