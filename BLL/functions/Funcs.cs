@@ -30,6 +30,10 @@ using Text = DocumentFormat.OpenXml.Wordprocessing.Text;
 using Document = DocumentFormat.OpenXml.Wordprocessing.Document;
 using PageSize = PdfSharp.PageSize;
 using DocumentFormat.OpenXml;
+using DocumentFormat.OpenXml.Spreadsheet;
+
+//using Microsoft.Office.Interop.Word;
+//using Application = Microsoft.Office.Interop.Word.Application;
 
 namespace BLL.functions
 {
@@ -469,6 +473,7 @@ namespace BLL.functions
             // Create a new Word document
             using (WordprocessingDocument wordDocument = WordprocessingDocument.Create(filePath, WordprocessingDocumentType.Document))
             {
+                #region
                 //// Add a new main document part
                 //MainDocumentPart mainPart = wordDocument.AddMainDocumentPart();
 
@@ -502,6 +507,7 @@ namespace BLL.functions
                 ///--------------------------------------------
                 ///--------------------------------------------
                 ///--------------------------------------------
+                #endregion
 
                 // Add a new main document part
                 MainDocumentPart mainPart = wordDocument.AddMainDocumentPart();
@@ -544,7 +550,19 @@ namespace BLL.functions
                         // Create a new cell
                         TableCell cell = new TableCell();
 
+                        //כתיבת כותרת
+                        if (index < codeLines.Length && codeLines[index].Contains("Title"))
+                        {
+                            Paragraph titleParagraph = new Paragraph();
+                            Run titleRun = new Run();
+                            Text titleText = new Text(codeLines[index]);
+                            titleRun.Append(titleText);
+                            titleRun.RunProperties = new RunProperties(new Bold(), new FontSize() { Val = "24" }, new Justification() { Val = JustificationValues.Right });
+                            titleParagraph.Append(titleRun);
+                            cell.Append(titleParagraph);
+                        }
                         // If there is a code line for this cell, add it to the cell
+                        else
                         if (index < codeLines.Length)
                         {
                             Paragraph paragraph = new Paragraph();
@@ -574,10 +592,90 @@ namespace BLL.functions
 
                 // Save the changes
                 mainPart.Document.Save();
+
+                var PDFdocument = wordDocument;
+                PDFdocument.SaveAs("C:\\Users\\שירה בוריה\\Desktop\\myFile1.pdf");
+
+                //המרה מוורד לפי די אף
+                /*using (DocumentConverter documentConverter = new DocumentConverter())
+                {
+                    var format = DocumentFormat.Pdf;
+                    var jobData = DocumentConverterJobs.CreateJobData(inFile, outFile, format);
+                    jobData.JobName = "conversion job";
+                    var job = documentConverter.Jobs.CreateJob(jobData);
+                    documentConverter.Jobs.RunJob(job);
+                }*/
+
+                //function from Microsoft
+                #region
+                /*
+                using (WordprocessingDocument doc = WordprocessingDocument.Create(filePath, WordprocessingDocumentType.Document))
+
+                {
+
+                    //// Defines the MainDocumentPart            
+                    MainDocumentPart mainDocumentPart = doc.AddMainDocumentPart();
+                    mainDocumentPart.Document = new Document();
+                    Body body = mainDocumentPart.Document.AppendChild(new Body());
+
+                    //// Create a new table
+                    Table tbl = new Table();
+
+                    //// Create a new row
+                    TableRow tr = new TableRow();
+
+                    //// Add a cell to each column in the row
+                    string text = "Hi my name is Yael and Im working on the final project";
+                    string text2 = "Sing us a song you'r the Piano Man";
+                    TableCell tcName1 = new TableCell(new Paragraph(new Run(new Text(text))));
+                    TableCell tcId1 = new TableCell(new Paragraph(new Run(new Text(text2))));
+
+                    //// Add the cells to the row
+                    tr.Append(tcName1, tcId1);
+
+                    // Create a new row
+                    TableRow tr1 = new TableRow();
+                    TableCell tcName2 = new TableCell(new Paragraph(new Run(new Text("Anand"))));
+                    TableCell tcId2 = new TableCell(new Paragraph(new Run(new Text("2"))));
+
+                    //// Add the cells to the row
+                    tr1.Append(tcName2, tcId2);
+
+                    //// Add the rows to the table
+
+                    tbl.AppendChild(tr);
+                    tbl.AppendChild(tr1);
+
+                    //// Add the table to the body
+                    body.AppendChild(tbl);
+
+                    mainDocumentPart.Document.Save();*/
+                #endregion
             }
         }
 
+        /*public void ConvertWordToPdf(string inputFilePath, string outputFilePath)
+        {
+            // Create an instance of the Word application
+            Application word = new Application();
 
+            // Create a new document object
+            Document doc = new Document();
+
+            // Open the input file
+            object inputFile = inputFilePath;
+            doc = word.Documents.Open(ref inputFile);
+
+            // Save the document as a PDF file
+            object outputFile = outputFilePath;
+            object fileFormat = WdExportFormat.wdExportFormatPDF;
+            doc.ExportAsFixedFormat(outputFilePath, fileFormat);
+
+            // Close the document and the Word application
+            doc.Close();
+            word.Quit();
+        }*/
+    
 
         //--------------------------------------------------------------------------------------
         //----------------------- כל מה שקשור להזמנת פרסומת -----------------------------------
@@ -608,7 +706,7 @@ namespace BLL.functions
         // ומחזירה רשימה של קודים של פרטי הזמנות
         private List<int> EnterOrderDetails(List<OrderDetail> orderDetails)
         {
-            List<int> ordersIds = new List<int>(); 
+            List<int> ordersIds = new List<int>();
             foreach (var orderDetail in orderDetails)
                 ordersIds.Add(_ordersDetailActions.AddNewOrderDetail(orderDetail));
             return ordersIds;
@@ -637,10 +735,11 @@ namespace BLL.functions
         {
             List<OrderDetail> orderDetails = ListOrderDetailDTOToListOrderDetail(listOrderDetails).ToList();
             List<int> orderDetailsIds = EnterOrderDetails(orderDetails);
-            Order newOrder = new Order() { 
-                CustId = GetIdByCustomer(customer), 
-                OrderDate = DateTime.Now, 
-                OrderFinalPrice = FinalPrice(orderDetails) 
+            Order newOrder = new Order()
+            {
+                CustId = GetIdByCustomer(customer),
+                OrderDate = DateTime.Now,
+                OrderFinalPrice = FinalPrice(orderDetails)
             };
             EnterDates(listDates, orderDetailsIds);
             _order.AddNewOrder(newOrder);
