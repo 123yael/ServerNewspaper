@@ -18,11 +18,17 @@ namespace newspaper.Controllers
         [HttpGet("FirstWord")]
         public IActionResult FirstWord()
         {
-            string f = "C:\\Users\\YAEL\\OneDrive\\שולחן העבודה\\myFile1.docx";
-            string c = "אם יש דלגלג - יציאת המערכת תהיה הזמן הנוכחי ( זה בעצם היציאה הבאה אך דלגלג D מוציא את מה שנכנס אליו קודם) ואת אין לי דלגלג יציאת המערכת יצא הזמן הבא.( מוציא את הזמן הבא שיצא מדלגלגי המעגל).\r\nככל שיש לי כמות יותר גדולה של דלגלגים יש יותר עיכוב של דפיקת שעון.\r\nבחרו דוווקא את דלגלג D כי הוא דלגלג זכרון שמוציא את מה שנכנס אליו בלי לשנות (אבל רק בשנייה הבאה).\r\nבדלגלג D הוא בעצם בזמן הבא יוציא את מה שנכנס אליו בזמן הקודם, כי הוא שומר את מה שנכנס בתוכו !!!\r\n";
-            string[] cc = { c, c, c, c, c};
-            _funcs.FirstWord(f, cc);
+            string f = "C:\\Users\\שירה בוריה\\Desktop\\myFile1.docx";
+            string[] strs = { "Title 1", "Hi my name is Yael snd I live in Rabi Tzadok 10 Dira 1", "Title 2", "Hi my name is Yael snd I live in Rabi Tzadok 10 Dira 1","I just want to see if you realy can to right it like a man.", "Title 3", "Hi my name is Yael snd I live in Rabi Tzadok 10 Dira 1", };
+            _funcs.FirstWord(f, strs);
             return Ok("FirstWord is finish");
+        }
+
+        [HttpGet("ConvertWordPDF")]
+        public IActionResult ConvertWordPDF()
+        {
+            _funcs.convertWordPFD("C:\\Users\\שירה בוריה\\Desktop\\myFile1.docx", "C:\\Users\\שירה בוריה\\Desktop\\MyFile.pdf");
+            return Ok("Love");
         }
     }
 }

@@ -30,6 +30,7 @@ using Text = DocumentFormat.OpenXml.Wordprocessing.Text;
 using Document = DocumentFormat.OpenXml.Wordprocessing.Document;
 using PageSize = PdfSharp.PageSize;
 using DocumentFormat.OpenXml;
+using GemBox.Document;
 
 namespace BLL.functions
 {
@@ -468,41 +469,7 @@ namespace BLL.functions
             Console.WriteLine("hello");
             // Create a new Word document
             using (WordprocessingDocument wordDocument = WordprocessingDocument.Create(filePath, WordprocessingDocumentType.Document))
-            {
-                //// Add a new main document part
-                //MainDocumentPart mainPart = wordDocument.AddMainDocumentPart();
-
-                //// Create a new document tree
-                //Document document = new Document();
-                //Body body = new Body();
-
-                //// Create a new paragraph and run
-                //Paragraph paragraph = new Paragraph();
-                //Run run = new Run();
-                //Text text = new Text(code);
-
-                //// Add the text to the run
-                //run.Append(text);
-
-                //// Add the run to the paragraph
-                //paragraph.Append(run);
-
-                //// Add the paragraph to the body
-                //body.Append(paragraph);
-
-                //// Add the body to the document
-                //document.Append(body);
-
-                //// Add the document to the main document part
-                //mainPart.Document = document;
-
-                //// Save the changes
-                //mainPart.Document.Save();
-
-                ///--------------------------------------------
-                ///--------------------------------------------
-                ///--------------------------------------------
-
+            {        
                 // Add a new main document part
                 MainDocumentPart mainPart = wordDocument.AddMainDocumentPart();
 
@@ -544,11 +511,23 @@ namespace BLL.functions
                         // Create a new cell
                         TableCell cell = new TableCell();
 
+                        //כתיבת כותרת
+                        if (index < codeLines.Length && codeLines[index].Contains("Title"))
+                        {
+                            DocumentFormat.OpenXml.Wordprocessing.Paragraph titleParagraph = new DocumentFormat.OpenXml.Wordprocessing.Paragraph();
+                            DocumentFormat.OpenXml.Wordprocessing.Run titleRun = new DocumentFormat.OpenXml.Wordprocessing.Run();
+                            Text titleText = new Text(codeLines[index]);
+                            titleRun.Append(titleText);
+                            titleRun.RunProperties = new RunProperties(new Bold(), new FontSize() { Val = "24" }, new Justification() { Val = JustificationValues.Right });
+                            titleParagraph.Append(titleRun);
+                            cell.Append(titleParagraph);
+                        }
                         // If there is a code line for this cell, add it to the cell
+                        else
                         if (index < codeLines.Length)
                         {
-                            Paragraph paragraph = new Paragraph();
-                            Run run = new Run();
+                            DocumentFormat.OpenXml.Wordprocessing.Paragraph paragraph = new DocumentFormat.OpenXml.Wordprocessing.Paragraph();
+                            DocumentFormat.OpenXml.Wordprocessing.Run run = new DocumentFormat.OpenXml.Wordprocessing.Run();
                             Text text = new Text(codeLines[index]);
                             run.Append(text);
                             paragraph.Append(run);
@@ -577,7 +556,15 @@ namespace BLL.functions
             }
         }
 
+        //convert from Word to PDF
+        public void convertWordPFD(string Input, string Output)
+        {
+            ComponentInfo.SetLicense("FREE-LIMITED-KEY");
 
+            var doc = DocumentModel.Load(Input);
+            doc.Save(Output);
+
+        }
 
         //--------------------------------------------------------------------------------------
         //----------------------- כל מה שקשור להזמנת פרסומת -----------------------------------

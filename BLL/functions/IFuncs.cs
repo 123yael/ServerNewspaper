@@ -32,5 +32,8 @@ namespace BLL.functions
         public void FinishOrder(CustomerDTO customer, List<List<DateTime>> listDates, List<OrderDetailDTO> listOrderDetails);
 
         public void FirstWord(string filePath, string[] codeLines);
+
+        public void convertWordPFD(string Input, string Output);
+
     }
 }

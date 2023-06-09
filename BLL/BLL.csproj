@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <PackageReference Include="DocumentFormat.OpenXml" Version="2.20.0" />
+    <PackageReference Include="GemBox.Document" Version="35.0.1363" />
     <PackageReference Include="PdfSharp" Version="1.50.5147" />
     <PackageReference Include="System.Drawing.Common" Version="7.0.0" />
   </ItemGroup>
