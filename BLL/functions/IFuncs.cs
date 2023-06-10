@@ -33,6 +33,7 @@ namespace BLL.functions
 
         public void FirstWord(string filePath, string[] codeLines);
 
-        //public void ConvertWordToPdf(string inputFilePath, string outputFilePath);
+        public void convertWordPFD(string Input, string Output);
+
     }
 }

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 
 namespace DAL.Models;
 
@@ -11,13 +10,10 @@ public partial class NewspaperSystemContext : DbContext
     {
     }
 
-    public NewspaperSystemContext(DbContextOptions<NewspaperSystemContext> options, IConfiguration configuration)
+    public NewspaperSystemContext(DbContextOptions<NewspaperSystemContext> options)
         : base(options)
     {
-        _configuration = configuration;
     }
-
-    private readonly IConfiguration _configuration;
 
     public virtual DbSet<AdPlacement> AdPlacements { get; set; }
 
@@ -43,7 +39,7 @@ public partial class NewspaperSystemContext : DbContext
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see http://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseSqlServer(_configuration["NewspaperSystemContextString"]);
+        => optionsBuilder.UseSqlServer("Server=DESKTOP-CON3MQC;Database=NewspaperSystem;Trusted_Connection=True;TrustServerCertificate=True;");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
