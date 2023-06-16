@@ -51,5 +51,14 @@ namespace DAL.Actions.Classes
                 _dbNewspapers.SaveChanges();
             }
         }
+
+        public OrderDetail GetOrderDetailsById(int? id)
+        {
+            OrderDetail orderDetail = GetAllOrderDetails().FirstOrDefault(x => x.DetailsId == id);
+            if (orderDetail == null)
+                return null;
+            else
+                return orderDetail;
+        }
     }
 }

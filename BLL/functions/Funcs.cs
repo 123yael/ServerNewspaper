@@ -626,6 +626,89 @@ namespace BLL.functions
             EnterDates(listDates, orderDetailsIds);
             _order.AddNewOrder(newOrder);
         }
+        
+        public List<OrderDetailDTO> GetAllOrderDetails()
+        {
+            var orderDetailsDTO = new List<OrderDetailDTO>();
+            List<OrderDetail> details = _ordersDetailActions.GetAllOrderDetails();
+            foreach (var detail in details)
+                orderDetailsDTO.Add(_Mapper.Map<OrderDetail, OrderDetailDTO>(detail));
+            return orderDetailsDTO;
+        }
+
+        public List<DatesForOrderDetailDTO> GetAllDatesForDetails()
+        {
+            var datesForDetailsDTO = new List<DatesForOrderDetailDTO>();
+            List<DatesForOrderDetail> datesForOrderDetails = _datesForOrderDetailActions.GetAllDatesForOrderDetails();
+            foreach (var date in datesForOrderDetails)
+                datesForDetailsDTO.Add(_Mapper.Map<DatesForOrderDetail, DatesForOrderDetailDTO>(date));
+            return datesForDetailsDTO;
+        }
+        //מכאן התחילו השינויים ליום 10/06/2023
+        //שיבוץ העיתון
+
+
+        public void Shabets()
+        {
+            //שליפת כל פרטי ההזמנות וכן את כל פרטי ההזמנות של התאריך הקרוב.
+            List<OrderDetailDTO> orderDetailDTOs = GetAllOrderDetails();
+            List<DatesForOrderDetailDTO> allDates = GetAllDatesForDetails();
+            List<int> detailsIds = new List<int>();
+            //מעבר על כל התאריכים ושליפת הפרטי ההזמנה הרלוונטיים לתאריך הקרוב
+            foreach(var date in allDates)
+            {
+                if(date.Date == DateTime.Today)
+                {
+                    detailsIds.Add((int)date.DetailsId);
+                }
+            }
+            // רשימה עם פרטי הזמנה רלוונטיים
+            List<OrderDetailDTO> relevanteAds = new List<OrderDetailDTO>();
+            foreach (int id in detailsIds)
+                relevanteAds.Add(_Mapper.Map<OrderDetail, OrderDetailDTO>(_ordersDetailActions.GetOrderDetailsById(id)));
+            
+            //מיון כל ההזמנות למילים ופרסומות
+            List<OrderDetailDTO> allRelevantFileAds = new List<OrderDetailDTO>();
+            List<OrderDetailDTO> allRelevantWordAds = new List<OrderDetailDTO>();
+
+            foreach (OrderDetailDTO detail in relevanteAds)
+            {
+                if(detail.AdFile != null)
+                    allRelevantFileAds.Add(detail);
+                else
+                    if(detail.AdContent != null)
+                    allRelevantWordAds.Add(detail);
+            }
+
+            //מיון הפרסומות לפי גודל
+            List<AdSizeDTO> adSizeDTOs = GetAllAdSize();
+            List<OrderDetailDTO> allDetailsFileAds = new List<OrderDetailDTO>();
+            foreach (AdSizeDTO size in adSizeDTOs)
+                foreach(OrderDetailDTO detail in allRelevantFileAds)
+                    if (detail.SizeId == size.SizeId)
+                        allDetailsFileAds.Add(detail);//עכשיו הרשימה ממוינת לפי גודל הפרסומות מהגדול לקטן
+
+            //רשימה של כל תתי הקטגוריות
+            List<WordAdSubCategoryDTO> categories = GetAllWordAdSubCategories();
+            //רשימה של כל פרטי ההזמנה ממוינים לפי קטגוריות
+            List<OrderDetailDTO> allDetailsWordAds = new List<OrderDetailDTO>();
+            //רשימה שתכיל תת קטגוריה ומיד אח"כ את כל המודעות שלה
+            List<string> wordAdToPrint = new List<string>();
+            foreach (WordAdSubCategoryDTO category in categories)
+            {
+                wordAdToPrint.Add(category.WordCategoryName);
+                foreach (OrderDetailDTO detail in allRelevantWordAds)
+                {
+                    if(detail.WordCategoryId == category.WordCategoryId)
+                    {
+                        allDetailsWordAds.Add(detail);
+                        wordAdToPrint.Add(detail.AdContent);
+                    }
+                }
+            }
+
+
+        }
     }
 }
 
