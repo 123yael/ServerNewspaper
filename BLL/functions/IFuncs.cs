@@ -35,5 +35,8 @@ namespace BLL.functions
 
         public void convertWordPFD(string Input, string Output);
 
+        public List<OrderDetailDTO> GetAllOrderDetails();
+
+        public void Shabets();
     }
 }
