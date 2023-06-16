@@ -9,6 +9,8 @@ using DocumentFormat.OpenXml.Drawing.Wordprocessing;
 using PIC = DocumentFormat.OpenXml.Drawing.Pictures;
 using DW = DocumentFormat.OpenXml.Drawing.Wordprocessing;
 
+
+
 namespace newspaper.Controllers
 {
     [Route("api/[controller]")]
@@ -38,6 +40,15 @@ namespace newspaper.Controllers
         {
             _funcs.convertWordPFD(myPath + "myFile1.docx", myPath + "MyFile.pdf");
             return Ok("Love");
+        }
+
+        [HttpGet("InsertImageIntoWordDocument")]
+        public IActionResult InsertImageIntoWordDocument()
+        {
+            string document = @"C:\Users\YAEL\OneDrive\שולחן העבודה\inset.docx";
+            string fileName = @"C:\Users\YAEL\OneDrive\תמונות\h.jpg";
+            _funcs.InsertAPicture(document, fileName);
+            return Ok("");
         }
     }
 }

@@ -19,8 +19,7 @@ namespace newspaper.Controllers
         [HttpGet("GetAllOrderDetails")]
         public IActionResult GetAllOrderDetails()
         {
-            _funcs.GetAllOrderDetails();
-            return Ok("");
+            return Ok(_funcs.GetAllOrderDetails());
         }
     }
 }
