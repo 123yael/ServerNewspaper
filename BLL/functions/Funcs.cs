@@ -28,9 +28,17 @@ using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 using Text = DocumentFormat.OpenXml.Wordprocessing.Text;
 using Document = DocumentFormat.OpenXml.Wordprocessing.Document;
+using Paragraph = DocumentFormat.OpenXml.Wordprocessing.Paragraph;
+using Run = DocumentFormat.OpenXml.Wordprocessing.Run;
 using PageSize = PdfSharp.PageSize;
 using DocumentFormat.OpenXml;
 using GemBox.Document;
+
+// עבור תמונה
+using PIC = DocumentFormat.OpenXml.Drawing.Pictures;
+using A = DocumentFormat.OpenXml.Drawing;
+using DW = DocumentFormat.OpenXml.Drawing.Wordprocessing;
+using DocumentFormat.OpenXml.Vml;
 
 namespace BLL.functions
 {
@@ -336,87 +344,66 @@ namespace BLL.functions
             document.Save(filename);
         }
 
+        // פונקציה שממינת את את רשימת הפרסומות
+        private List<OrderDetail> SortBySize(List<OrderDetail> orderDetails)
+        {
+            return orderDetails.OrderByDescending(x => x.Size?.SizeHeight)
+                .ThenByDescending(x => x.Size?.SizeWidth)
+                .ToList();
+        }
+
         public void Create(string filename)
         {
+            // מערך של הזמנות רלונטיות לתאריך של יציאת העיתון הנוכחי - יתמלא בהמשך
             List<OrderDetail> RelevantOrders = new List<OrderDetail>();
+            // מערך של כל ההזמנות עם התאריכים
             List<DatesForOrderDetail> DatesList = _datesForOrderDetailActions.GetAllDatesForOrderDetails();
-
-            //שליפת ההזמנות של היום
+            // מילוי מערך של הזמנות רלונטיות מתוך מערך ההזמנות המלא
             foreach (DatesForOrderDetail date in DatesList)
-                if (date.Date == DateTime.Today)
+                if (date.Date == new DateTime(2023, 02, 07))
                     RelevantOrders.Add(date.Details);
-
             // הגדרה של עיתון חדש
             List<string[,]> pagesMats = new List<string[,]>();
+            // שורת קסם להרצת קוד שכותב לתוך קובץ pdf
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+            // יצירת עמוד חגש בעיתון pdf
             PdfDocument document = new PdfDocument();
+            // הגדתרת font שאיתו נכתוב לתוך העיתון
             XFont font = new XFont("FbHenryeta Regular", 20, XFontStyle.BoldItalic);
-            // הוספת עמוד אחד לעיתון
+            // הוספת עמוד אחד למטריצת העיתון
             pagesMats.Add(new string[4, 8]);
+            // הגדרת רשימה של עמודים בעיתון pdf
             List<PdfPage> pages = new List<PdfPage>();
+            // הוספת עמוד ה pdf לרשימת עמודי ה pdf
             pages.Add(document.AddPage());
-            PdfPage page = pages[0];// pages.Count - 1];
+            // העמוד pdf שאיתו כרגע אנחנו מתעסקים
+            PdfPage page = pages[0];
+            // הגדרת גודל העמוד בעיתון ה pdf
             page.Size = PageSize.Quarto;
+            // הגדרת משתנה שדרכו אנו כותבים לתוך עיתון pdf
             XGraphics gfx = XGraphics.FromPdfPage(page);
-
+            // כתובת כותרת תחתונה לעיתון pdf
             gfx.DrawString("   םוסרפה לעי ---------------------------------------------------------", font,
                     XBrushes.Black, new XRect(0, -10, page.Width, page.Height),
                     XStringFormats.BottomLeft);
+            // שליחה לפונקציה של מיון הרשימה שיהיה מהפרסומת הגדולה לפרסומת הקטנה
+            RelevantOrders = SortBySize(RelevantOrders);
 
             // עוברים על על המודעות הרלונטיות ומכניסים לרשימת העיתון
             foreach (OrderDetail detail in RelevantOrders)
             {
                 // משתנה שאומר האם היה מקום למודעה
                 bool Shubatz = false;
+                // רוחב התמונה הנוכחית
                 int Width = (int)(detail.Size.SizeWidth);
+                // גובה התמונה הנוכחית
                 int Height = (int)(detail.Size.SizeHeight);
-                //צריכה לעבור עבור כל פרטי הזמנה האם הם נכנסות בעמוד או לא
-                //בכוונה הלולאה היא רגילה כדי שבשביל ה'דאבל' נוכל לראות האם העמוד הבא ג"כ פנוי
+                // צריכה לעבור עבור כל פרטי הזמנה האם הם נכנסות בעמוד או לא
+                // בכוונה הלולאה היא רגילה כדי שבשביל ה'דאבל' נוכל לראות האם העמוד הבא ג"כ פנוי
                 for (int k = 0; k < pagesMats.Count; k++)
                 {
                     // הכנסת העמוד הנוכחי למטריצת עזר חדשה
                     string[,] matPage = pagesMats[k];
-
-                    #region dell
-
-                    //דאבל
-                    //undefined
-
-                    //עמוד שלם
-                    //if (detail.SizeId == 2)
-                    //{
-                    //    Width = matPage.GetLength(0);
-                    //    Height = matPage.GetLength(1);
-                    //}
-
-                    //חצי רוחב
-                    //else if (detail.SizeId == 3)
-                    //{
-                    //    Width = matPage.GetLength(0);
-                    //    Height = matPage.GetLength(1) / 2;
-                    //}
-
-                    //חצי אורך
-                    //else if (detail.SizeId == 4)
-                    //{
-                    //    Width = matPage.GetLength(0) / 2;
-                    //    Height = matPage.GetLength(1);
-                    //}
-
-                    //רבע
-                    //else if (detail.SizeId == 5)
-                    //{
-                    //    Width = matPage.GetLength(0) / 2;
-                    //    Height = matPage.GetLength(1) / 2;
-                    //}
-
-                    //1/16
-                    //else if (detail.SizeId == 6)
-                    //{
-                    //    Width = matPage.GetLength(0) / 4;
-                    //    Height = matPage.GetLength(1) / 4;
-                    //}
-                    #endregion
 
                     bool isEmpty;
 
@@ -425,16 +412,19 @@ namespace BLL.functions
                         for (int j = 0; j < matPage.GetLength(1) && !Shubatz; j = j + Height)
                         {
                             isEmpty = true;
+                            // אם המשבצת הראשונה ריקה צריך לודא שכל המשבצות ריקות
                             if (matPage[i, j] == null)
                             {
                                 for (int q = i; q < i + Width && isEmpty; q++)
                                     for (int l = j; l < j + Height && isEmpty; l++)
+                                        // אם המקום תופוס
                                         if (matPage[q, l] != null)
                                             isEmpty = false;
                             }
+                            // אם המשבצת הראשונה מלאה בטוח שאין מקום במיקום זה
                             else
                                 isEmpty = false;
-                            // בדיקה אם אכן יש מקום למודעה - אז להוסיף
+                            // בדיקה אם אכן יש מקום למודעה - אז להוסיף את המודעה
                             if (isEmpty)
                             {
                                 DrawImageOnPage(page, gfx, Width, Height, matPage, detail, i, j);
@@ -446,17 +436,22 @@ namespace BLL.functions
                 // במקרה שהשיבוץ באחד מהדפים הקודמים לא הצליח
                 if (!Shubatz)
                 {
-                    // יצירת דף חדש בעיתון
+                    // יצירת דף חדש במטריצת העיתון
                     string[,] newPage = new string[4, 8];
+                    // הוספת עמוד חדש לעיתון ה pdf
                     pages.Add(document.AddPage());
+                    // עדכון מטריצת העמוד הנוכחי לעמוד האחרון ברשימת המטריצות
                     page = pages[pages.Count - 1];
+                    // הגדרת גודלו של העמוד
                     page.Size = PageSize.Quarto;
                     gfx = XGraphics.FromPdfPage(page);
+                    // הוספת כותרת תחתונה לעמוד
                     gfx.DrawString("   םוסרפה לעי ---------------------------------------------------------", font,
                         XBrushes.Black, new XRect(0, -10, page.Width, page.Height),
                         XStringFormats.BottomLeft);
+                    // הוספת התמונה לעמוד החדש שבטוח שיש בו מקום
                     DrawImageOnPage(page, gfx, Width, Height, newPage, detail, 0, 0);
-                    // הוספת העמוד לעיתון
+                    // הוספת העמוד לעיתון ה pdf
                     pagesMats.Add(newPage);
                 }
             }
@@ -466,7 +461,6 @@ namespace BLL.functions
         //פונקציה שכותבת לתוך קובץ word
         public void FirstWord(string filePath, string[] codeLines)
         {
-            Console.WriteLine("hello");
             // Create a new Word document
             using (WordprocessingDocument wordDocument = WordprocessingDocument.Create(filePath, WordprocessingDocumentType.Document))
             {        
@@ -514,8 +508,8 @@ namespace BLL.functions
                         //כתיבת כותרת
                         if (index < codeLines.Length && codeLines[index].Contains("Title"))
                         {
-                            DocumentFormat.OpenXml.Wordprocessing.Paragraph titleParagraph = new DocumentFormat.OpenXml.Wordprocessing.Paragraph();
-                            DocumentFormat.OpenXml.Wordprocessing.Run titleRun = new DocumentFormat.OpenXml.Wordprocessing.Run();
+                            Paragraph titleParagraph = new Paragraph();
+                            Run titleRun = new Run();
                             Text titleText = new Text(codeLines[index]);
                             titleRun.Append(titleText);
                             titleRun.RunProperties = new RunProperties(new Bold(), new FontSize() { Val = "24" }, new Justification() { Val = JustificationValues.Right });
@@ -526,8 +520,8 @@ namespace BLL.functions
                         else
                         if (index < codeLines.Length)
                         {
-                            DocumentFormat.OpenXml.Wordprocessing.Paragraph paragraph = new DocumentFormat.OpenXml.Wordprocessing.Paragraph();
-                            DocumentFormat.OpenXml.Wordprocessing.Run run = new DocumentFormat.OpenXml.Wordprocessing.Run();
+                            Paragraph paragraph = new Paragraph();
+                            Run run = new Run();
                             Text text = new Text(codeLines[index]);
                             run.Append(text);
                             paragraph.Append(run);

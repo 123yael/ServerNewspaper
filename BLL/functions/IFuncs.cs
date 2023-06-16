@@ -35,5 +35,7 @@ namespace BLL.functions
 
         public void convertWordPFD(string Input, string Output);
 
+        public void Create2(string filename);
+
     }
 }
