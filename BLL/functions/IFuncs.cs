@@ -24,6 +24,8 @@ namespace BLL.functions
 
         public void WriteToPdf(string filename);
 
+        public List<OrderDetailDTO> GetAllOrderDetails();
+
         public List<WordAdSubCategoryDTO> GetAllWordAdSubCategories();
 
         public int GetIdByCustomer(CustomerDTO customer);
@@ -35,9 +37,15 @@ namespace BLL.functions
 
         public void convertWordPFD(string Input, string Output);
 
-        public List<OrderDetailDTO> GetAllOrderDetails();
+        //public void Create2(string filename);
 
         public void Shabets();
 
+<<<<<<< HEAD
+=======
+        public void ConvertPdfToWord(string pdfFilePath, string wordFilePath);
+
+
+>>>>>>> b3ff3dd7ea6f5569d3e0151668b2107c679663a0
     }
 }
