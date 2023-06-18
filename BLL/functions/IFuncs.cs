@@ -41,7 +41,8 @@ namespace BLL.functions
 
         public void Shabets();
 
-        public void InsertAPicture(string document, string fileName);
+        public void ConvertPdfToWord(string pdfFilePath, string wordFilePath);
+
 
     }
 }

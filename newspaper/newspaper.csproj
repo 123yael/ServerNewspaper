@@ -19,6 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="wwwroot\TempWord\" />
     <Folder Include="wwwroot\NewspapersImg\" />
   </ItemGroup>
 

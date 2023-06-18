@@ -18,10 +18,13 @@ namespace newspaper.Controllers
     public class WordController : ControllerBase
     {
         private readonly IFuncs _funcs;
+        public static IWebHostEnvironment _environment;
 
-        public WordController(IFuncs funcs)
+        public WordController(IWebHostEnvironment environment, IFuncs funcs)
         {
             this._funcs = funcs;
+            _environment = environment;
+
         }
 
         private string myPath = "C:\\Users\\YAEL\\OneDrive\\שולחן העבודה\\";
@@ -42,13 +45,14 @@ namespace newspaper.Controllers
             return Ok("Love");
         }
 
-        [HttpGet("InsertImageIntoWordDocument")]
-        public IActionResult InsertImageIntoWordDocument()
+
+        [HttpGet("ConvertPdfToWord")]
+        public IActionResult ConvertPdfToWord()
         {
-            string document = @"C:\Users\YAEL\OneDrive\שולחן העבודה\inset.docx";
-            string fileName = @"C:\Users\YAEL\OneDrive\תמונות\h.jpg";
-            _funcs.InsertAPicture(document, fileName);
-            return Ok("");
+            string pdfFilePath = _environment.WebRootPath + "\\NewspapersPdf\\finalNewspaper2.pdf";
+            string wordFilePath = _environment.WebRootPath + "\\TempWord\\finalNewspaper2.docx";
+            _funcs.ConvertPdfToWord(pdfFilePath, wordFilePath);
+            return Ok("hello");
         }
     }
 }
