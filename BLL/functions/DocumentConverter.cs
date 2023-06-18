@@ -1,14 +1,13 @@
-﻿        using Leadtools; 
-using Leadtools.Codecs; 
-using Leadtools.Document.Writer; 
-using Leadtools.Svg; 
-//using LeadtoolsExamples.Common; 
-using Leadtools.Document; 
-using Leadtools.Caching; 
-using Leadtools.Annotations.Engine; 
-using Leadtools.Ocr; 
-using Leadtools.Document.Converter; 
-//using Leadtools.Annotations.Rendering;
+﻿
+using DocumentFormat.OpenXml;
+using DocumentFormat.OpenXml.Drawing;
+using DocumentFormat.OpenXml.Drawing.Wordprocessing;
+using DocumentFormat.OpenXml.Packaging;
+using DocumentFormat.OpenXml.Wordprocessing;
+using System;
+using System.IO;
+using Run = DocumentFormat.OpenXml.Wordprocessing.Run;
+
 namespace BLL.functions
 {
     public class DocumentConverter
@@ -48,5 +47,6 @@ namespace BLL.functions
                 }
             }*/
         }
+
     }
 }

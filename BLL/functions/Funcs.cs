@@ -31,6 +31,8 @@ using Document = DocumentFormat.OpenXml.Wordprocessing.Document;
 using PageSize = PdfSharp.PageSize;
 using DocumentFormat.OpenXml;
 using GemBox.Document;
+using DocumentFormat.OpenXml.Drawing.Wordprocessing;
+using SkiaSharp;
 
 namespace BLL.functions
 {
@@ -469,7 +471,7 @@ namespace BLL.functions
             Console.WriteLine("hello");
             // Create a new Word document
             using (WordprocessingDocument wordDocument = WordprocessingDocument.Create(filePath, WordprocessingDocumentType.Document))
-            {        
+            {
                 // Add a new main document part
                 MainDocumentPart mainPart = wordDocument.AddMainDocumentPart();
 
@@ -563,7 +565,6 @@ namespace BLL.functions
 
             var doc = DocumentModel.Load(Input);
             doc.Save(Output);
-
         }
 
         //--------------------------------------------------------------------------------------
@@ -595,7 +596,7 @@ namespace BLL.functions
         // ומחזירה רשימה של קודים של פרטי הזמנות
         private List<int> EnterOrderDetails(List<OrderDetail> orderDetails)
         {
-            List<int> ordersIds = new List<int>(); 
+            List<int> ordersIds = new List<int>();
             foreach (var orderDetail in orderDetails)
                 ordersIds.Add(_ordersDetailActions.AddNewOrderDetail(orderDetail));
             return ordersIds;
@@ -624,15 +625,16 @@ namespace BLL.functions
         {
             List<OrderDetail> orderDetails = ListOrderDetailDTOToListOrderDetail(listOrderDetails).ToList();
             List<int> orderDetailsIds = EnterOrderDetails(orderDetails);
-            Order newOrder = new Order() { 
-                CustId = GetIdByCustomer(customer), 
-                OrderDate = DateTime.Now, 
-                OrderFinalPrice = FinalPrice(orderDetails) 
+            Order newOrder = new Order()
+            {
+                CustId = GetIdByCustomer(customer),
+                OrderDate = DateTime.Now,
+                OrderFinalPrice = FinalPrice(orderDetails)
             };
             EnterDates(listDates, orderDetailsIds);
             _order.AddNewOrder(newOrder);
         }
-        
+
         public List<OrderDetailDTO> GetAllOrderDetails()
         {
             var orderDetailsDTO = new List<OrderDetailDTO>();
@@ -650,7 +652,7 @@ namespace BLL.functions
                 datesForDetailsDTO.Add(_Mapper.Map<DatesForOrderDetail, DatesForOrderDetailDTO>(date));
             return datesForDetailsDTO;
         }
-        //מכאן התחילו השינויים ליום 10/06/2023
+        //מכאן התחילו השינויים ליום 16/06/2023
         //שיבוץ העיתון
 
 
@@ -661,9 +663,9 @@ namespace BLL.functions
             List<DatesForOrderDetailDTO> allDates = GetAllDatesForDetails();
             List<int> detailsIds = new List<int>();
             //מעבר על כל התאריכים ושליפת הפרטי ההזמנה הרלוונטיים לתאריך הקרוב
-            foreach(var date in allDates)
+            foreach (var date in allDates)
             {
-                if(date.Date == DateTime.Today)
+                if (date.Date == DateTime.Today)
                 {
                     detailsIds.Add((int)date.DetailsId);
                 }
@@ -672,17 +674,17 @@ namespace BLL.functions
             List<OrderDetailDTO> relevanteAds = new List<OrderDetailDTO>();
             foreach (int id in detailsIds)
                 relevanteAds.Add(_Mapper.Map<OrderDetail, OrderDetailDTO>(_ordersDetailActions.GetOrderDetailsById(id)));
-            
+
             //מיון כל ההזמנות למילים ופרסומות
             List<OrderDetailDTO> allRelevantFileAds = new List<OrderDetailDTO>();
             List<OrderDetailDTO> allRelevantWordAds = new List<OrderDetailDTO>();
 
             foreach (OrderDetailDTO detail in relevanteAds)
             {
-                if(detail.AdFile != null)
+                if (detail.AdFile != null)
                     allRelevantFileAds.Add(detail);
                 else
-                    if(detail.AdContent != null)
+                    if (detail.AdContent != null)
                     allRelevantWordAds.Add(detail);
             }
 
@@ -690,7 +692,7 @@ namespace BLL.functions
             List<AdSizeDTO> adSizeDTOs = GetAllAdSize();
             List<OrderDetailDTO> allDetailsFileAds = new List<OrderDetailDTO>();
             foreach (AdSizeDTO size in adSizeDTOs)
-                foreach(OrderDetailDTO detail in allRelevantFileAds)
+                foreach (OrderDetailDTO detail in allRelevantFileAds)
                     if (detail.SizeId == size.SizeId)
                         allDetailsFileAds.Add(detail);//עכשיו הרשימה ממוינת לפי גודל הפרסומות מהגדול לקטן
 
@@ -705,18 +707,120 @@ namespace BLL.functions
                 wordAdToPrint.Add(category.WordCategoryName);
                 foreach (OrderDetailDTO detail in allRelevantWordAds)
                 {
-                    if(detail.WordCategoryId == category.WordCategoryId)
+                    if (detail.WordCategoryId == category.WordCategoryId)
                     {
                         allDetailsWordAds.Add(detail);
                         wordAdToPrint.Add(detail.AdContent);
                     }
                 }
             }
+            string[] WordAdToPrint = wordAdToPrint.ToArray();
 
+            //הכנסת מודעות מילים לעיתון
+            //שליפת כל העיתונים שיצאיו עד כה
+            List<NewspapersPublished> allNewpapers = _newspapersPublished.GetAllNewspapersPublished();
+            //נתינת שם לעיתון עפי הקוד האחרון + 1
+            int NewspaperId = (allNewpapers.Max(x => x.NewspaperId)) + 1;
 
-        }
+            // word ו pdf נתינת ניתוב לתיקיית עיתונים והגדרת ניתובים ל 
+            string PDFpath = "C:\\Users\\שירה בוריה\\Desktop\\תכנות שנה ב\\פרויקט עיתון\\עיתונים שיצאו לאור\\" + NewspaperId + ".pdf",
+                WORDpath = "C:\\Users\\שירה בוריה\\Desktop\\תכנות שנה ב\\פרויקט עיתון\\עיתונים שיצאו לאור\\" + NewspaperId + ".docx";
+
+            //חדש word יצירת קובץ 
+            using (WordprocessingDocument wordDocument = WordprocessingDocument.Create(WORDpath, WordprocessingDocumentType.Document))
+            {
+                // Add a new main document part
+                MainDocumentPart mainPart = wordDocument.AddMainDocumentPart();
+
+                // Create a new document tree
+                Document document = new Document();
+                Body body = new Body();
+
+                // Create a new table
+                Table table = new Table();
+                TableProperties tableProperties = new TableProperties(
+                    new TableBorders(
+                        new TopBorder(),
+                        new BottomBorder(),
+                        new LeftBorder(),
+                        new RightBorder(),
+                        new InsideHorizontalBorder(),
+                        new InsideVerticalBorder()
+                    )
+                );
+                table.AppendChild(tableProperties);
+
+                // Set the number of columns
+                int numColumns = 4;
+
+                // Calculate the number of rows needed based on the number of code lines and the number of columns
+                int numRows = (int)Math.Ceiling((double)WordAdToPrint.Length / numColumns);
+
+                // Loop through each row
+                for (int i = 0; i < numRows; i++)
+                {
+                    TableRow row = new TableRow();
+
+                    // Loop through each column
+                    for (int j = 0; j < numColumns; j++)
+                    {
+                        // Calculate the index of the current code line
+                        int index = i + j * numRows;
+
+                        // Create a new cell
+                        TableCell cell = new TableCell();
+
+                        //כתיבת כותרת
+                        if (index < WordAdToPrint.Length && WordAdToPrint[index].Contains("Title"))
+                        {
+                            DocumentFormat.OpenXml.Wordprocessing.Paragraph titleParagraph = new DocumentFormat.OpenXml.Wordprocessing.Paragraph();
+                            DocumentFormat.OpenXml.Wordprocessing.Run titleRun = new DocumentFormat.OpenXml.Wordprocessing.Run();
+                            Text titleText = new Text(WordAdToPrint[index]);
+                            titleRun.Append(titleText);
+                            titleRun.RunProperties = new RunProperties(new Bold(), new FontSize() { Val = "24" }, new Justification() { Val = JustificationValues.Right });
+                            titleParagraph.Append(titleRun);
+                            cell.Append(titleParagraph);
+                        }
+                        // If there is a code line for this cell, add it to the cell
+                        else
+                        if (index < WordAdToPrint.Length)
+                        {
+                            DocumentFormat.OpenXml.Wordprocessing.Paragraph paragraph = new DocumentFormat.OpenXml.Wordprocessing.Paragraph();
+                            DocumentFormat.OpenXml.Wordprocessing.Run run = new DocumentFormat.OpenXml.Wordprocessing.Run();
+                            Text text = new Text(WordAdToPrint[index]);
+                            run.Append(text);
+                            paragraph.Append(run);
+                            cell.Append(paragraph);
+                        }
+
+                        // Add the cell to the row
+                        row.Append(cell);
+                    }
+
+                    // Add the row to the table
+                    table.Append(row);
+                }
+
+                // Add the table to the body
+                body.Append(table);
+
+                // Add the body to the document
+                document.Append(body);
+
+                // Add the document to the main document part
+                mainPart.Document = document;
+
+                // Save the changes
+                mainPart.Document.Save();
+            }
+
+            convertWordPFD(WORDpath, PDFpath);
+
+            }
+   
     }
 }
+
 
 
 

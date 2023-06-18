@@ -30,5 +30,13 @@ namespace newspaper.Controllers
             _funcs.convertWordPFD("C:\\Users\\שירה בוריה\\Desktop\\myFile1.docx", "C:\\Users\\שירה בוריה\\Desktop\\MyFile.pdf");
             return Ok("Love");
         }
+
+        [HttpGet("Shabetz")]
+        public IActionResult Shabetz()
+        {
+            _funcs.Shabets();
+            return Ok();
+        }
+
     }
 }
