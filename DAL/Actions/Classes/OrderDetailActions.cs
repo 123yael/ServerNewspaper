@@ -34,6 +34,7 @@ namespace DAL.Actions.Classes
         {
             return _dbNewspapers.OrderDetails.Include(x => x.Size).ToList();
         }
+        
 
         public void UpdateOrderDetail(int id, OrderDetail orderDetail)
         {

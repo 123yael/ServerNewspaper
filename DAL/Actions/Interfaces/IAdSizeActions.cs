@@ -17,5 +17,8 @@ namespace DAL.Actions.Interfaces
         public void UpdateAdSize(int id, AdSize adSize);
 
         public void DeleteAdSize(int id);
+
+        public AdSize getSizeById(int id);
+
     }
 }

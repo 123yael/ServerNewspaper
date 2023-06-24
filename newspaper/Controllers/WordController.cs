@@ -45,7 +45,7 @@ namespace newspaper.Controllers
             return Ok("Love");
         }
 
-<<<<<<< HEAD
+
         [HttpGet("Shabetz")]
         public IActionResult Shabetz()
         {
@@ -53,7 +53,7 @@ namespace newspaper.Controllers
             return Ok();
         }
 
-=======
+
 
         [HttpGet("ConvertPdfToWord")]
         public IActionResult ConvertPdfToWord()
@@ -63,6 +63,5 @@ namespace newspaper.Controllers
             _funcs.ConvertPdfToWord(pdfFilePath, wordFilePath);
             return Ok("hello");
         }
->>>>>>> b3ff3dd7ea6f5569d3e0151668b2107c679663a0
     }
 }

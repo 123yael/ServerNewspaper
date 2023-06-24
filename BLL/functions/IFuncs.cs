@@ -20,7 +20,7 @@ namespace BLL.functions
         public void AddAdFileToPdf3();
 
         public void GeneratePDF(string filename, string imageLoc);
-        public void Create(string filename);
+        public void Create(string filename, List<OrderDetailDTO> RelevantOrdersDTO);
 
         public void WriteToPdf(string filename);
 
@@ -41,11 +41,8 @@ namespace BLL.functions
 
         public void Shabets();
 
-<<<<<<< HEAD
-=======
         public void ConvertPdfToWord(string pdfFilePath, string wordFilePath);
 
 
->>>>>>> b3ff3dd7ea6f5569d3e0151668b2107c679663a0
     }
 }

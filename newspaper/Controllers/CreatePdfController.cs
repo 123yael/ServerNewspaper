@@ -41,12 +41,14 @@ namespace newspaper.Controllers
             return Ok("finish!!!");
         }
 
-        [HttpGet("Create")]
-        public IActionResult Create()
-        {
-            _funcs.Create("C:\\Users\\YAEL\\OneDrive\\שולחן העבודה\\finalNewspaper2.pdf");
-            return Ok("finish!!!");
-        }
+        //בכל מקרה שמתמשים בפונקציה הזאת בתוך הפונקציה של השיבוץ
+
+        //[HttpGet("Create")]
+        //public IActionResult Create()
+        //{
+        //    _funcs.Create("C:\\Users\\YAEL\\OneDrive\\שולחן העבודה\\finalNewspaper2.pdf");
+        //    return Ok("finish!!!");
+        //}
 
         // הפונקציה של כתיבה נורמלית ל pdf
         [HttpGet("WriteToPdf")]

@@ -197,7 +197,7 @@ namespace BLL.functions
             gfx.DrawString("Hello, World!", font, XBrushes.Black,
             new XRect(0, 0, page.Width, page.Height), XStringFormats.Center);
             // Save the document...
-            const string filename = "C:\\Users\\YAEL\\OneDrive\\שולחן העבודה\\HelloWorld.pdf";
+            const string filename = "C:\\Users\\שירה בוריה\\Desktop\\Output.pdf";
             document.Save(filename);
             // ...and start a viewer.
             //Process.Start(new ProcessStartInfo { FileName = filename, UseShellExecute = true });
@@ -247,6 +247,7 @@ namespace BLL.functions
             gfx.DrawImage(image, x, y, width, height);
         }
 
+
         public void AddAdFileToPdf3()
         {
             // שורה נחוצה עבור הרצת הקוד הבא
@@ -280,14 +281,14 @@ namespace BLL.functions
             //Process.Start(new ProcessStartInfo { FileName = filename, UseShellExecute = true });
             //Process.Start(filename);
         }
-        private void DrawImageOnPage(PdfPage page, XGraphics gfx, int Width, int Height, string[,] matPage, OrderDetail detail, int i, int j)
+        private void DrawImageOnPage(PdfPage page, XGraphics gfx, int Width, int Height, string[,] matPage, string ImagePath, int i, int j)
         {
             int w = ((int)(page.Width) - 16) / 4;
             int h = ((int)(page.Height) - 48) / 8;
-            DrawImage(gfx, detail.AdFile, 16 + w * i, 16 + h * j, w * Width - 16, h * Height - 16);
+            DrawImage(gfx, ImagePath, 16 + w * i, 16 + h * j, w * Width - 16, h * Height - 16);
             for (int q = i; q < i + Width; q++)
                 for (int l = j; l < j + Height; l++)
-                    matPage[q, l] = detail.AdFile;
+                    matPage[q, l] = ImagePath;
         }
 
         // פונקצהי כתיבה לתוך דף pdf
@@ -355,8 +356,9 @@ namespace BLL.functions
                 .ToList();
         }
 
-        public void Create(string filename)
+        public void Create(string filename, List<OrderDetailDTO> RelevantOrdersDTO)
         {
+            /*
             // מערך של הזמנות רלונטיות לתאריך של יציאת העיתון הנוכחי - יתמלא בהמשך
             List<OrderDetail> RelevantOrders = new List<OrderDetail>();
             // מערך של כל ההזמנות עם התאריכים
@@ -364,7 +366,7 @@ namespace BLL.functions
             // מילוי מערך של הזמנות רלונטיות מתוך מערך ההזמנות המלא
             foreach (DatesForOrderDetail date in DatesList)
                 if (date.Date == new DateTime(2023, 02, 07))
-                    RelevantOrders.Add(date.Details);
+                    RelevantOrders.Add(date.Details);*/
             // הגדרה של עיתון חדש
             List<string[,]> pagesMats = new List<string[,]>();
             // שורת קסם להרצת קוד שכותב לתוך קובץ pdf
@@ -390,7 +392,17 @@ namespace BLL.functions
                     XBrushes.Black, new XRect(0, -10, page.Width, page.Height),
                     XStringFormats.BottomLeft);
             // שליחה לפונקציה של מיון הרשימה שיהיה מהפרסומת הגדולה לפרסומת הקטנה
-            RelevantOrders = SortBySize(RelevantOrders);
+            //אין צורך במיון הרשימה כבר ממוינת
+            //RelevantOrders = SortBySize(RelevantOrders);
+            List<OrderDetail> RelevantOrders = new List<OrderDetail>();
+            //של קשרי הגומלין לא מתמלא מאליו? size למה ה 
+            OrderDetail temp = new OrderDetail();
+            foreach (OrderDetailDTO detail in RelevantOrdersDTO)
+            {
+                temp = _Mapper.Map<OrderDetailDTO, OrderDetail>(detail);
+                temp.Size = _adSize.getSizeById((int)temp.SizeId);
+                RelevantOrders.Add(temp);
+            }
 
             // עוברים על על המודעות הרלונטיות ומכניסים לרשימת העיתון
             foreach (OrderDetail detail in RelevantOrders)
@@ -398,64 +410,67 @@ namespace BLL.functions
                 // משתנה שאומר האם היה מקום למודעה
                 bool Shubatz = false;
                 // רוחב התמונה הנוכחית
-                int Width = (int)(detail.Size.SizeWidth);
-                // גובה התמונה הנוכחית
-                int Height = (int)(detail.Size.SizeHeight);
+                if (detail.Size != null) {
+                    int Width = (int)(detail.Size.SizeWidth);
+                    // גובה התמונה הנוכחית
+                    int Height = (int)(detail.Size.SizeHeight);
                 // צריכה לעבור עבור כל פרטי הזמנה האם הם נכנסות בעמוד או לא
                 // בכוונה הלולאה היא רגילה כדי שבשביל ה'דאבל' נוכל לראות האם העמוד הבא ג"כ פנוי
                 for (int k = 0; k < pagesMats.Count; k++)
-                {
-                    // הכנסת העמוד הנוכחי למטריצת עזר חדשה
-                    string[,] matPage = pagesMats[k];
-
-                    bool isEmpty;
-
-                    for (int i = 0; i < matPage.GetLength(0) && !Shubatz; i = i + Width)
                     {
-                        for (int j = 0; j < matPage.GetLength(1) && !Shubatz; j = j + Height)
+                        // הכנסת העמוד הנוכחי למטריצת עזר חדשה
+                        string[,] matPage = pagesMats[k];
+
+                        bool isEmpty;
+
+                        for (int i = 0; i < matPage.GetLength(0) && !Shubatz; i = i + Width)
                         {
-                            isEmpty = true;
-                            // אם המשבצת הראשונה ריקה צריך לודא שכל המשבצות ריקות
-                            if (matPage[i, j] == null)
+                            for (int j = 0; j < matPage.GetLength(1) && !Shubatz; j = j + Height)
                             {
-                                for (int q = i; q < i + Width && isEmpty; q++)
-                                    for (int l = j; l < j + Height && isEmpty; l++)
-                                        // אם המקום תופוס
-                                        if (matPage[q, l] != null)
-                                            isEmpty = false;
-                            }
-                            // אם המשבצת הראשונה מלאה בטוח שאין מקום במיקום זה
-                            else
-                                isEmpty = false;
-                            // בדיקה אם אכן יש מקום למודעה - אז להוסיף את המודעה
-                            if (isEmpty)
-                            {
-                                DrawImageOnPage(page, gfx, Width, Height, matPage, detail, i, j);
-                                Shubatz = true;
+                                isEmpty = true;
+                                // אם המשבצת הראשונה ריקה צריך לודא שכל המשבצות ריקות
+                                if (matPage[i, j] == null)
+                                {
+                                    for (int q = i; q < i + Width && isEmpty; q++)
+                                        for (int l = j; l < j + Height && isEmpty; l++)
+                                            // אם המקום תופוס
+                                            if (matPage[q, l] != null)
+                                                isEmpty = false;
+                                }
+                                // אם המשבצת הראשונה מלאה בטוח שאין מקום במיקום זה
+                                else
+                                    isEmpty = false;
+                                // בדיקה אם אכן יש מקום למודעה - אז להוסיף את המודעה
+                                if (isEmpty)
+                                {
+                                    DrawImageOnPage(page, gfx, Width, Height, matPage, detail.AdFile, i, j);
+                                    Shubatz = true;
+                                }
                             }
                         }
                     }
-                }
-                // במקרה שהשיבוץ באחד מהדפים הקודמים לא הצליח
-                if (!Shubatz)
-                {
-                    // יצירת דף חדש במטריצת העיתון
-                    string[,] newPage = new string[4, 8];
-                    // הוספת עמוד חדש לעיתון ה pdf
-                    pages.Add(document.AddPage());
-                    // עדכון מטריצת העמוד הנוכחי לעמוד האחרון ברשימת המטריצות
-                    page = pages[pages.Count - 1];
-                    // הגדרת גודלו של העמוד
-                    page.Size = PageSize.Quarto;
-                    gfx = XGraphics.FromPdfPage(page);
-                    // הוספת כותרת תחתונה לעמוד
-                    gfx.DrawString("   םוסרפה לעי ---------------------------------------------------------", font,
-                        XBrushes.Black, new XRect(0, -10, page.Width, page.Height),
-                        XStringFormats.BottomLeft);
-                    // הוספת התמונה לעמוד החדש שבטוח שיש בו מקום
-                    DrawImageOnPage(page, gfx, Width, Height, newPage, detail, 0, 0);
-                    // הוספת העמוד לעיתון ה pdf
-                    pagesMats.Add(newPage);
+
+                    // במקרה שהשיבוץ באחד מהדפים הקודמים לא הצליח
+                    if (!Shubatz)
+                    {
+                        // יצירת דף חדש במטריצת העיתון
+                        string[,] newPage = new string[4, 8];
+                        // הוספת עמוד חדש לעיתון ה pdf
+                        pages.Add(document.AddPage());
+                        // עדכון מטריצת העמוד הנוכחי לעמוד האחרון ברשימת המטריצות
+                        page = pages[pages.Count - 1];
+                        // הגדרת גודלו של העמוד
+                        page.Size = PageSize.Quarto;
+                        gfx = XGraphics.FromPdfPage(page);
+                        // הוספת כותרת תחתונה לעמוד
+                        gfx.DrawString("   םוסרפה לעי ---------------------------------------------------------", font,
+                            XBrushes.Black, new XRect(0, -10, page.Width, page.Height),
+                            XStringFormats.BottomLeft);
+                        // הוספת התמונה לעמוד החדש שבטוח שיש בו מקום
+                        DrawImageOnPage(page, gfx, Width, Height, newPage, detail.AdFile, 0, 0);
+                        // הוספת העמוד לעיתון ה pdf
+                        pagesMats.Add(newPage);
+                    }
                 }
             }
             document.Save(filename);
@@ -665,6 +680,8 @@ namespace BLL.functions
                 datesForDetailsDTO.Add(_Mapper.Map<DatesForOrderDetail, DatesForOrderDetailDTO>(date));
             return datesForDetailsDTO;
         }
+
+
         //מכאן התחילו השינויים ליום 16/06/2023
         //שיבוץ העיתון
 
@@ -701,6 +718,17 @@ namespace BLL.functions
                     allRelevantWordAds.Add(detail);
             }
 
+            //מציאת הניתוב הרלוונטי ושם העיתון הנוכחי
+            //שליפת כל העיתונים שיצאיו עד כה
+            List<NewspapersPublished> allNewpapers = _newspapersPublished.GetAllNewspapersPublished();
+            //נתינת שם לעיתון עפי הקוד האחרון + 1
+            int NewspaperId = (allNewpapers.Max(x => x.NewspaperId)) + 1;
+
+            // word ו pdf נתינת ניתוב לתיקיית עיתונים והגדרת ניתובים ל 
+            string PDFpath = "C:\\Users\\שירה בוריה\\Desktop\\תכנות שנה ב\\פרויקט עיתון\\עיתונים שיצאו לאור\\" + NewspaperId + ".pdf",
+                WORDpath = "C:\\Users\\שירה בוריה\\Desktop\\תכנות שנה ב\\פרויקט עיתון\\עיתונים שיצאו לאור\\" + NewspaperId + ".docx";
+
+
             //מיון הפרסומות לפי גודל
             List<AdSizeDTO> adSizeDTOs = GetAllAdSize();
             List<OrderDetailDTO> allDetailsFileAds = new List<OrderDetailDTO>();
@@ -708,6 +736,11 @@ namespace BLL.functions
                 foreach (OrderDetailDTO detail in allRelevantFileAds)
                     if (detail.SizeId == size.SizeId)
                         allDetailsFileAds.Add(detail);//עכשיו הרשימה ממוינת לפי גודל הפרסומות מהגדול לקטן
+            //PDF אחרי שמיינו את כל הגדלים אפשר פשוט להכניס את כל המודעות לעיתון 
+            //הבעיה היא שהכנסת המודעות היא אינה רציפה וכל מודעת יכולה לדרוס את השניה
+            //נכניס את המודעות לעיתון
+            Create("C:\\Users\\שירה בוריה\\Desktop\\תכנות שנה ב\\פרויקט עיתון\\עיתונים שיצאו לאור\\Pictures.pdf", allRelevantFileAds);
+
 
             //רשימה של כל תתי הקטגוריות
             List<WordAdSubCategoryDTO> categories = GetAllWordAdSubCategories();
@@ -730,15 +763,7 @@ namespace BLL.functions
             string[] WordAdToPrint = wordAdToPrint.ToArray();
 
             //הכנסת מודעות מילים לעיתון
-            //שליפת כל העיתונים שיצאיו עד כה
-            List<NewspapersPublished> allNewpapers = _newspapersPublished.GetAllNewspapersPublished();
-            //נתינת שם לעיתון עפי הקוד האחרון + 1
-            int NewspaperId = (allNewpapers.Max(x => x.NewspaperId)) + 1;
-
-            // word ו pdf נתינת ניתוב לתיקיית עיתונים והגדרת ניתובים ל 
-            string PDFpath = "C:\\Users\\שירה בוריה\\Desktop\\תכנות שנה ב\\פרויקט עיתון\\עיתונים שיצאו לאור\\" + NewspaperId + ".pdf",
-                WORDpath = "C:\\Users\\שירה בוריה\\Desktop\\תכנות שנה ב\\פרויקט עיתון\\עיתונים שיצאו לאור\\" + NewspaperId + ".docx";
-
+            
             //חדש word יצירת קובץ 
             using (WordprocessingDocument wordDocument = WordprocessingDocument.Create(WORDpath, WordprocessingDocumentType.Document))
             {
