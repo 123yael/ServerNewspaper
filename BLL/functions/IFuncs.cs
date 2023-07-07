@@ -1,4 +1,5 @@
-﻿using DTO.Repository;
+﻿using DAL.Models;
+using DTO.Repository;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,7 +21,7 @@ namespace BLL.functions
         public void AddAdFileToPdf3();
 
         public void GeneratePDF(string filename, string imageLoc);
-        public void Create(string filename, List<OrderDetailDTO> RelevantOrdersDTO);
+        public void Create(string filename, List<OrderDetail> RelevantOrdersDTO);
 
         public void WriteToPdf(string filename);
 

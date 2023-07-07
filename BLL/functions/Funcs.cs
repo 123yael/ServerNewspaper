@@ -49,7 +49,7 @@ namespace BLL.functions
     {
         static IMapper _Mapper;
 
-        private string myPath = "C:\\Users\\YAEL\\OneDrive\\שולחן העבודה\\";
+        private string myPath = "C:\\Users\\YAEL\\OneDrive\\שולחן העבודה\\temps";
 
         static Funcs()
         {
@@ -127,6 +127,8 @@ namespace BLL.functions
                 adPlacementDTO.Add(_Mapper.Map<AdPlacement, AdPlacementDTO>(adPlacement));
             return adPlacementDTO;
         }
+
+        
         #endregion
 
         #region Customer
@@ -243,7 +245,7 @@ namespace BLL.functions
         }
         private void DrawImage(XGraphics gfx, string jpegSamplePath, int x, int y, int width, int height)
         {
-            XImage image = XImage.FromFile(jpegSamplePath);
+            XImage image = XImage.FromFile("C:\\yael\\programming\\final_project\\newspaperProject\\server\\newspaper\\newspaper\\wwwroot\\Upload\\" + jpegSamplePath);
             gfx.DrawImage(image, x, y, width, height);
         }
 
@@ -281,7 +283,7 @@ namespace BLL.functions
             //Process.Start(new ProcessStartInfo { FileName = filename, UseShellExecute = true });
             //Process.Start(filename);
         }
-        private void DrawImageOnPage(PdfPage page, XGraphics gfx, int Width, int Height, string[,] matPage, string ImagePath, int i, int j)
+        private void DrawImageOnPage(PdfPage page, XGraphics gfx, int Width, int Height, string[,] matPage, String ImagePath, int i, int j)
         {
             int w = ((int)(page.Width) - 16) / 4;
             int h = ((int)(page.Height) - 48) / 8;
@@ -356,7 +358,7 @@ namespace BLL.functions
                 .ToList();
         }
 
-        public void Create(string filename, List<OrderDetailDTO> RelevantOrdersDTO)
+        public void Create(string filename, List<OrderDetail> RelevantOrders)
         {
             /*
             // מערך של הזמנות רלונטיות לתאריך של יציאת העיתון הנוכחי - יתמלא בהמשך
@@ -374,7 +376,7 @@ namespace BLL.functions
             // יצירת עמוד חגש בעיתון pdf
             PdfDocument document = new PdfDocument();
             // הגדתרת font שאיתו נכתוב לתוך העיתון
-            XFont font = new XFont("FbHenryeta Regular", 20, XFontStyle.BoldItalic);
+            XFont font = new XFont("Ink Free", 20, XFontStyle.BoldItalic);
             // הוספת עמוד אחד למטריצת העיתון
             pagesMats.Add(new string[4, 8]);
             // הגדרת רשימה של עמודים בעיתון pdf
@@ -388,21 +390,21 @@ namespace BLL.functions
             // הגדרת משתנה שדרכו אנו כותבים לתוך עיתון pdf
             XGraphics gfx = XGraphics.FromPdfPage(page);
             // כתובת כותרת תחתונה לעיתון pdf
-            gfx.DrawString("   םוסרפה לעי ---------------------------------------------------------", font,
+            gfx.DrawString("   ----------------------------------------------------- Yael advertising", font,
                     XBrushes.Black, new XRect(0, -10, page.Width, page.Height),
                     XStringFormats.BottomLeft);
-            // שליחה לפונקציה של מיון הרשימה שיהיה מהפרסומת הגדולה לפרסומת הקטנה
-            //אין צורך במיון הרשימה כבר ממוינת
-            //RelevantOrders = SortBySize(RelevantOrders);
-            List<OrderDetail> RelevantOrders = new List<OrderDetail>();
-            //של קשרי הגומלין לא מתמלא מאליו? size למה ה 
-            OrderDetail temp = new OrderDetail();
-            foreach (OrderDetailDTO detail in RelevantOrdersDTO)
-            {
-                temp = _Mapper.Map<OrderDetailDTO, OrderDetail>(detail);
-                temp.Size = _adSize.getSizeById((int)temp.SizeId);
-                RelevantOrders.Add(temp);
-            }
+            //// שליחה לפונקציה של מיון הרשימה שיהיה מהפרסומת הגדולה לפרסומת הקטנה
+            ////אין צורך במיון הרשימה כבר ממוינת
+            ////RelevantOrders = SortBySize(RelevantOrders);
+            //List<OrderDetail> RelevantOrders = new List<OrderDetail>();
+            ////של קשרי הגומלין לא מתמלא מאליו? size למה ה 
+            //OrderDetail temp = new OrderDetail();
+            //foreach (OrderDetailDTO detail in RelevantOrdersDTO)
+            //{
+            //    temp = _Mapper.Map<OrderDetailDTO, OrderDetail>(detail);
+            //    temp.Size = _adSize.getSizeById((int)temp.SizeId);
+            //    RelevantOrders.Add(temp);
+            //}
 
             // עוברים על על המודעות הרלונטיות ומכניסים לרשימת העיתון
             foreach (OrderDetail detail in RelevantOrders)
@@ -410,13 +412,14 @@ namespace BLL.functions
                 // משתנה שאומר האם היה מקום למודעה
                 bool Shubatz = false;
                 // רוחב התמונה הנוכחית
-                if (detail.Size != null) {
+                if (detail.Size != null)
+                {
                     int Width = (int)(detail.Size.SizeWidth);
                     // גובה התמונה הנוכחית
                     int Height = (int)(detail.Size.SizeHeight);
-                // צריכה לעבור עבור כל פרטי הזמנה האם הם נכנסות בעמוד או לא
-                // בכוונה הלולאה היא רגילה כדי שבשביל ה'דאבל' נוכל לראות האם העמוד הבא ג"כ פנוי
-                for (int k = 0; k < pagesMats.Count; k++)
+                    // צריכה לעבור עבור כל פרטי הזמנה האם הם נכנסות בעמוד או לא
+                    // בכוונה הלולאה היא רגילה כדי שבשביל ה'דאבל' נוכל לראות האם העמוד הבא ג"כ פנוי
+                    for (int k = 0; k < pagesMats.Count; k++)
                     {
                         // הכנסת העמוד הנוכחי למטריצת עזר חדשה
                         string[,] matPage = pagesMats[k];
@@ -463,7 +466,7 @@ namespace BLL.functions
                         page.Size = PageSize.Quarto;
                         gfx = XGraphics.FromPdfPage(page);
                         // הוספת כותרת תחתונה לעמוד
-                        gfx.DrawString("   םוסרפה לעי ---------------------------------------------------------", font,
+                        gfx.DrawString("   ----------------------------------------------------- Yael advertising", font,
                             XBrushes.Black, new XRect(0, -10, page.Width, page.Height),
                             XStringFormats.BottomLeft);
                         // הוספת התמונה לעמוד החדש שבטוח שיש בו מקום
@@ -604,11 +607,14 @@ namespace BLL.functions
 
         // פונקציה שמכניסה פרטי הזמנות למסד הנתונים
         // ומחזירה רשימה של קודים של פרטי הזמנות
-        private List<int> EnterOrderDetails(List<OrderDetail> orderDetails)
+        private List<int> EnterOrderDetails(List<OrderDetail> orderDetails, int orderId)
         {
             List<int> ordersIds = new List<int>();
             foreach (var orderDetail in orderDetails)
+            {
+                orderDetail.OrderId = orderId;
                 ordersIds.Add(_ordersDetailActions.AddNewOrderDetail(orderDetail));
+            }
             return ordersIds;
         }
 
@@ -652,15 +658,15 @@ namespace BLL.functions
         public void FinishOrder(CustomerDTO customer, List<List<DateTime>> listDates, List<OrderDetailDTO> listOrderDetails)
         {
             List<OrderDetail> orderDetails = ListOrderDetailDTOToListOrderDetail(listOrderDetails).ToList();
-            List<int> orderDetailsIds = EnterOrderDetails(orderDetails);
             Order newOrder = new Order()
             {
                 CustId = GetIdByCustomer(customer),
                 OrderDate = DateTime.Now,
                 OrderFinalPrice = FinalPrice(orderDetails)
             };
-            EnterDates(listDates, orderDetailsIds);
             _order.AddNewOrder(newOrder);
+            List<int> orderDetailsIds = EnterOrderDetails(orderDetails, newOrder.OrderId);
+            EnterDates(listDates, orderDetailsIds);
         }
 
         public List<OrderDetailDTO> GetAllOrderDetails()
@@ -685,85 +691,93 @@ namespace BLL.functions
         //מכאן התחילו השינויים ליום 16/06/2023
         //שיבוץ העיתון
 
-
         public void Shabets()
         {
-            //שליפת כל פרטי ההזמנות וכן את כל פרטי ההזמנות של התאריך הקרוב.
-            List<OrderDetailDTO> orderDetailDTOs = GetAllOrderDetails();
-            List<DatesForOrderDetailDTO> allDates = GetAllDatesForDetails();
-            List<int> detailsIds = new List<int>();
-            //מעבר על כל התאריכים ושליפת הפרטי ההזמנה הרלוונטיים לתאריך הקרוב
+            //// שליפת כל פרטי ההזמנות וכן את כל פרטי ההזמנות של התאריך הקרוב.
+            //List<OrderDetailDTO> orderDetailDTOs = GetAllOrderDetails();
+            //List<DatesForOrderDetailDTO> allDates = GetAllDatesForDetails();
+            //List<int> detailsIds = new List<int>();
+            //// מעבר על כל התאריכים ושליפת הפרטי ההזמנה הרלוונטיים לתאריך הקרוב
+            //foreach (var date in allDates)
+            //{
+            //    if (date.Date == DateTime.Today)
+            //    {
+            //        detailsIds.Add((int)date.DetailsId);
+            //    }
+            //}
+            //// רשימה עם פרטי הזמנה רלוונטיים
+            //List<OrderDetailDTO> relevanteAds = new List<OrderDetailDTO>();
+            //foreach (int id in detailsIds)
+            //    relevanteAds.Add(_Mapper.Map<OrderDetail, OrderDetailDTO>(_ordersDetailActions.GetOrderDetailsById(id)));
+            
+            // זה בקיצור שליפת כל פרטי ההזמנות הרלונטיות
+            List<DatesForOrderDetail> allDates = _datesForOrderDetailActions.GetAllDatesForOrderDetails();//GetAllDatesForDetails();
+            List<OrderDetail> relevanteAds = new List<OrderDetail>();
             foreach (var date in allDates)
-            {
-                if (date.Date == DateTime.Today)
-                {
-                    detailsIds.Add((int)date.DetailsId);
-                }
-            }
-            // רשימה עם פרטי הזמנה רלוונטיים
-            List<OrderDetailDTO> relevanteAds = new List<OrderDetailDTO>();
-            foreach (int id in detailsIds)
-                relevanteAds.Add(_Mapper.Map<OrderDetail, OrderDetailDTO>(_ordersDetailActions.GetOrderDetailsById(id)));
+                if (date.Date == new DateTime(2023, 07, 04))
+                    relevanteAds.Add(date.Details);
 
-            //מיון כל ההזמנות למילים ופרסומות
-            List<OrderDetailDTO> allRelevantFileAds = new List<OrderDetailDTO>();
-            List<OrderDetailDTO> allRelevantWordAds = new List<OrderDetailDTO>();
+            // הגדרת רשימות של מודעות מילים ומודעות פרסומת
+            List<OrderDetail> allRelevantFileAds = new List<OrderDetail>();
+            List<OrderDetail> allRelevantWordAds = new List<OrderDetail>();
 
-            foreach (OrderDetailDTO detail in relevanteAds)
-            {
+            // מיון כל ההזמנות הרלונטיות למילים ופרסומות
+            foreach (OrderDetail detail in relevanteAds)
                 if (detail.AdFile != null)
                     allRelevantFileAds.Add(detail);
-                else
-                    if (detail.AdContent != null)
+                else if (detail.AdContent != null)
                     allRelevantWordAds.Add(detail);
-            }
 
             //מציאת הניתוב הרלוונטי ושם העיתון הנוכחי
             //שליפת כל העיתונים שיצאיו עד כה
             List<NewspapersPublished> allNewpapers = _newspapersPublished.GetAllNewspapersPublished();
             //נתינת שם לעיתון עפי הקוד האחרון + 1
             int NewspaperId = (allNewpapers.Max(x => x.NewspaperId)) + 1;
-
             // word ו pdf נתינת ניתוב לתיקיית עיתונים והגדרת ניתובים ל 
-            string PDFpath = "C:\\Users\\שירה בוריה\\Desktop\\תכנות שנה ב\\פרויקט עיתון\\עיתונים שיצאו לאור\\" + NewspaperId + ".pdf",
-                WORDpath = "C:\\Users\\שירה בוריה\\Desktop\\תכנות שנה ב\\פרויקט עיתון\\עיתונים שיצאו לאור\\" + NewspaperId + ".docx";
+            string PDFpath = myPath + "\\" + NewspaperId + ".pdf",
+                WORDpath = myPath + "\\" + NewspaperId + ".docx";
 
 
             //מיון הפרסומות לפי גודל
-            List<AdSizeDTO> adSizeDTOs = GetAllAdSize();
-            List<OrderDetailDTO> allDetailsFileAds = new List<OrderDetailDTO>();
-            foreach (AdSizeDTO size in adSizeDTOs)
-                foreach (OrderDetailDTO detail in allRelevantFileAds)
-                    if (detail.SizeId == size.SizeId)
-                        allDetailsFileAds.Add(detail);//עכשיו הרשימה ממוינת לפי גודל הפרסומות מהגדול לקטן
+            //List<AdSizeDTO> adSizeDTOs = GetAllAdSize();
+            //List<OrderDetailDTO> allDetailsFileAds = new List<OrderDetailDTO>();
+            //foreach (AdSizeDTO size in adSizeDTOs)
+            //    foreach (OrderDetailDTO detail in allRelevantFileAds)
+            //        if (detail.SizeId == size.SizeId)
+            //            allDetailsFileAds.Add(detail);
+            // מיון המודעות בקצרה
+            allRelevantFileAds = SortBySize(allRelevantFileAds);
+
+            //עכשיו הרשימה ממוינת לפי גודל הפרסומות מהגדול לקטן
             //PDF אחרי שמיינו את כל הגדלים אפשר פשוט להכניס את כל המודעות לעיתון 
             //הבעיה היא שהכנסת המודעות היא אינה רציפה וכל מודעת יכולה לדרוס את השניה
             //נכניס את המודעות לעיתון
-            Create("C:\\Users\\שירה בוריה\\Desktop\\תכנות שנה ב\\פרויקט עיתון\\עיתונים שיצאו לאור\\Pictures.pdf", allRelevantFileAds);
+            List<OrderDetailDTO> od = new List<OrderDetailDTO>();
+            foreach (OrderDetail detail in allRelevantFileAds)
+                od.Add(_Mapper.Map<OrderDetail, OrderDetailDTO>(detail));
+            Create(myPath + "\\Pictures.pdf", allRelevantFileAds);
 
 
             //רשימה של כל תתי הקטגוריות
             List<WordAdSubCategoryDTO> categories = GetAllWordAdSubCategories();
             //רשימה של כל פרטי ההזמנה ממוינים לפי קטגוריות
-            List<OrderDetailDTO> allDetailsWordAds = new List<OrderDetailDTO>();
+            List<OrderDetail> allDetailsWordAds = new List<OrderDetail>();
             //רשימה שתכיל תת קטגוריה ומיד אח"כ את כל המודעות שלה
             List<string> wordAdToPrint = new List<string>();
             foreach (WordAdSubCategoryDTO category in categories)
             {
                 wordAdToPrint.Add(category.WordCategoryName);
-                foreach (OrderDetailDTO detail in allRelevantWordAds)
-                {
+                foreach (OrderDetail detail in allRelevantWordAds)
                     if (detail.WordCategoryId == category.WordCategoryId)
                     {
                         allDetailsWordAds.Add(detail);
                         wordAdToPrint.Add(detail.AdContent);
                     }
-                }
             }
             string[] WordAdToPrint = wordAdToPrint.ToArray();
 
             //הכנסת מודעות מילים לעיתון
-            
+
             //חדש word יצירת קובץ 
             using (WordprocessingDocument wordDocument = WordprocessingDocument.Create(WORDpath, WordprocessingDocumentType.Document))
             {
@@ -854,8 +868,8 @@ namespace BLL.functions
 
             convertWordPFD(WORDpath, PDFpath);
 
-            }
-   
+        }
+
     }
 }
 
