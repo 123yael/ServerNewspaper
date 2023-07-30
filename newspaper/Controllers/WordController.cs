@@ -28,14 +28,6 @@ namespace newspaper.Controllers
 
         private string myPath = "C:\\Users\\YAEL\\OneDrive\\שולחן העבודה\\";
 
-        //[HttpGet("FirstWord")]
-        //public IActionResult FirstWord()
-        //{
-        //    string f = myPath + "myFile1.docx";
-        //    string[] strs = { "Title 1", "Hi my name is Yael snd I live in Rabi Tzadok 10 Dira 1", "Title 2", "Hi my name is Yael snd I live in Rabi Tzadok 10 Dira 1","I just want to see if you realy can to right it like a man.", "Title 3", "Hi my name is Yael snd I live in Rabi Tzadok 10 Dira 1", };
-        //    _funcs.FirstWord(f, strs);
-        //    return Ok("FirstWord is finish");
-        //}
 
         [HttpGet("ConvertWordPDF")]
         public IActionResult ConvertWordPDF()
@@ -45,13 +37,13 @@ namespace newspaper.Controllers
         }
 
 
-        //[HttpGet("Shabetz")]
-        //public IActionResult Shabetz()
-        //{
-        //    string pdfFilePath = _environment.WebRootPath + "\\NewspapersPdf\\pdfTemplate.pdf";
-        //    _funcs.Shabets(pdfFilePath);
-        //    return Ok();
-        //}
+        [HttpGet("Shabetz")]
+        public IActionResult Shabetz()
+        {
+            string pdfFilePath = _environment.WebRootPath + "\\NewspapersPdf\\pdfTemplate.pdf";
+            _funcs.Shabets(pdfFilePath);
+            return Ok();
+        }
 
 
 
@@ -64,13 +56,13 @@ namespace newspaper.Controllers
             return Ok("hello");
         }
 
-        //[HttpGet("CompleteWordTemplate")]
-        //public IActionResult CompleteWordTemplate()
-        //{
-        //    string wordFilePath = _environment.WebRootPath + @"\TempWord\wordsLeft.dotx";
-        //    _funcs.CompleteWordTemplate(wordFilePath, _environment.WebRootPath+ @"\TempWord");
-        //    return Ok("i finish to replace");
-        //}
+        [HttpGet("CompleteWordTemplate")]
+        public IActionResult CompleteWordTemplate()
+        {
+            string wordFilePath = _environment.WebRootPath + @"\TempWord\wordsLeft.dotx";
+            _funcs.CompleteWordTemplate(wordFilePath, _environment.WebRootPath + @"\TempWord");
+            return Ok("i finish to replace");
+        }
 
 
         [HttpGet("CreateWordAd")]
@@ -80,13 +72,6 @@ namespace newspaper.Controllers
             _funcs.CreateWordAd(wordFilePath, _environment.WebRootPath + @"\TempWord");
             return Ok("i finish to replace CreateWordAd");
         }
-
-        //[HttpGet("aaa")]
-        //public IActionResult aaa()
-        //{
-        //    fff.aaa();
-        //    return Ok("aaa");
-        //}
 
 
         //[HttpGet("bbb")]

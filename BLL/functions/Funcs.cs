@@ -48,7 +48,6 @@ namespace BLL.functions
         INewspapersPublishedActions _newspapersPublished;
         private object codeLines;
 
-
         public Funcs(IAdSizeActions adSize,
             IOrderDetailActions ordersDetailActions,
             IDatesForOrderDetailActions datesForOrderDetailActions,
@@ -160,199 +159,23 @@ namespace BLL.functions
 
         #endregion
 
-        //פונקציה שמוסיפה תמונה לקובץ pdf
-        public void AddAdFileToPdf()
+        #region OrderDetail
+        
+        private List<OrderDetail> FromListOrderDetailDTOToListOrderDetail(List<OrderDetailDTO> listOrderDetails)
         {
-            // שורה נחוצה עבור הרצת הקוד הבא
-            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-            // שלום עולם
-            // Create a new PDF document -- יצירת קובץ חדש
-            PdfDocument document = new PdfDocument();
-            document.Info.Title = "Created with PDFsharp";
-            // Create an empty page - יצירת עמוד ריק חדש
-            PdfPage page = document.AddPage();
-            // Get an XGraphics object for drawing
-            XGraphics gfx = XGraphics.FromPdfPage(page);
-            // Create a font - יצירת פונט חדש
-            XFont font = new XFont("Snap ITC", 20, XFontStyle.BoldItalic);
-            // Draw the text
-            gfx.DrawString("Hello, World!", font, XBrushes.Black,
-            new XRect(0, 0, page.Width, page.Height), XStringFormats.Center);
-            // Save the document...
-            const string filename = "C:\\Users\\שירה בוריה\\Desktop\\Output.pdf";
-            document.Save(filename);
-            // ...and start a viewer.
-            //Process.Start(new ProcessStartInfo { FileName = filename, UseShellExecute = true });
-            //Process.Start(filename);
-        }
-        public void GeneratePDF(string filename, string imageLoc)
-        {
-            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-
-            PdfDocument document = new PdfDocument();
-
-            // Create an empty page or load existing
-            // קביעת גודל עמוד ב pdf
-
-            // Get an XGraphics object for drawing
-            int counter = 0;
-
-            PdfPage page1 = document.AddPage();
-            page1.Size = PageSize.Quarto;
-            int w = (int)page1.Width - 32;
-            int h = (int)page1.Height - 64;
-            XGraphics gfx1 = XGraphics.FromPdfPage(page1);
-            DrawImage(gfx1, imageLoc, 16, 16, w, h);
-
-            PdfPage page2 = document.AddPage();
-            page2.Size = PageSize.Quarto;
-            XGraphics gfx2 = XGraphics.FromPdfPage(page2);
-            w = (w / 2) - 8;
-            h = (h / 2) - 8;
-            DrawImage(gfx2, imageLoc, 16, 16, w, h);
-            DrawImage(gfx2, imageLoc, 32 + w, 16, w, h);
-            DrawImage(gfx2, imageLoc, 32 + w, 32 + h, w, h);
-            DrawImage(gfx2, imageLoc, 16, 32 + h, w, h);
-
-            PdfPage page3 = document.AddPage();
-            page3.Size = PageSize.Quarto;
-            XGraphics gfx3 = XGraphics.FromPdfPage(page3);
-            DrawImage(gfx2, imageLoc, 16, 32 + h, w, h);
-
-            // Save and start View
-            document.Save(filename);
-            //Process.Start(filename);
-        }
-        private void DrawImage(XGraphics gfx, string jpegSamplePath, int x, int y, int width, int height)
-        {
-            XImage image = XImage.FromFile("C:\\yael\\final_project\\newspaperProject\\server\\newspaper\\newspaper\\wwwroot\\Upload\\" + jpegSamplePath);
-            gfx.DrawImage(image, x, y, width, height);
-        }
-        public void AddAdFileToPdf3()
-        {
-            // שורה נחוצה עבור הרצת הקוד הבא
-            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-            // שלום עולם
-            // Create a new PDF document -- יצירת קובץ חדש
-            PdfDocument document = new PdfDocument();
-            XFont font = new XFont("Times", 20, XFontStyle.BoldItalic);
-            PageSize[] pageSizes = (PageSize[])Enum.GetValues(typeof(PageSize));
-            foreach (PageSize pageSize in pageSizes)
-            {
-                if (pageSize == PageSize.Undefined)
-                    continue;
-                PdfPage page = document.AddPage();
-                page.Size = pageSize;
-                XGraphics gfx = XGraphics.FromPdfPage(page);
-                gfx.DrawString(pageSize.ToString(), font, XBrushes.DarkCyan,
-                    new XRect(0, 0, page.Width, page.Height),
-                    XStringFormats.Center);
-                page = document.AddPage();
-                page.Size = pageSize;
-                page.Orientation = PageOrientation.Landscape;
-                gfx = XGraphics.FromPdfPage(page);
-                gfx.DrawString(pageSize + "(landscape)", font,
-                    XBrushes.DarkCyan, new XRect(0, 0, page.Width, page.Height),
-                    XStringFormats.Center);
-            }
-            const string filename = "C:\\Users\\YAEL\\OneDrive\\שולחן העבודה\\PageSizes_tempfile.pdf";
-            document.Save(filename);
-            // ...and start a viewer.
-            //Process.Start(new ProcessStartInfo { FileName = filename, UseShellExecute = true });
-            //Process.Start(filename);
-        }
-        private void DrawImageOnPage(PdfPage page, XGraphics gfx, int Width, int Height, string[,] matPage, String ImagePath, int i, int j)
-        {
-            int w = ((int)(page.Width) - 16) / 4;
-            int h = ((int)(page.Height) - 48) / 8;
-            DrawImage(gfx, ImagePath, 16 + w * i, 16 + h * j, w * Width - 16, h * Height - 16);
-            for (int q = i; q < i + Width; q++)
-                for (int l = j; l < j + Height; l++)
-                    matPage[q, l] = ImagePath;
+            List<OrderDetail> orderDetails = new List<OrderDetail>();
+            foreach (OrderDetailDTO orderD in listOrderDetails)
+                orderDetails.Add(_Mapper.Map<OrderDetailDTO, OrderDetail>(orderD));
+            return orderDetails;
         }
 
-        //פונקצהי כתיבה לתוך דף pdf
-        public void WriteToPdf(string filename)
+        public List<OrderDetailDTO> GetAllOrderDetails()
         {
-            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-            PdfDocument document = new PdfDocument();
-            XFont font = new XFont("Arial", 11, XFontStyle.Regular);
-            List<PdfPage> pages = new List<PdfPage>();
-            pages.Add(document.AddPage());
-            PdfPage page = pages[0];// pages.Count - 1];
-            page.Size = PageSize.Quarto;
-            XGraphics gfx = XGraphics.FromPdfPage(page);
-
-            List<DatesForOrderDetail> allDates = _datesForOrderDetailActions.GetAllDatesForOrderDetails();//GetAllDatesForDetails();
-            List<OrderDetail> relevanteAds = new List<OrderDetail>();
-            DateTime dateOfPrint = new DateTime(2023, 07, 25);
-            foreach (var date in allDates)
-                if (date.Date == dateOfPrint)
-                    relevanteAds.Add(date.Details);
-
-            List<OrderDetail> allRelevantWordAds = new List<OrderDetail>();
-
-            foreach (OrderDetail detail in relevanteAds)
-                if (detail.AdContent != null)
-                    allRelevantWordAds.Add(detail);
-
-            //רשימה של כל תתי הקטגוריות
-            List<WordAdSubCategoryDTO> categories = GetAllWordAdSubCategories();
-            //רשימה של כל פרטי ההזמנה ממוינים לפי קטגוריות
-            List<OrderDetail> allDetailsWordAds = new List<OrderDetail>();
-            //רשימה שתכיל תת קטגוריה ומיד אח"כ את כל המודעות שלה
-            List<string> wordAdToPrint = new List<string>();
-            foreach (WordAdSubCategoryDTO category in categories)
-            {
-                wordAdToPrint.Add(category.WordCategoryName);
-                foreach (OrderDetail detail in allRelevantWordAds)
-                    if (detail.WordCategoryId == category.WordCategoryId)
-                    {
-                        allDetailsWordAds.Add(detail);
-                        wordAdToPrint.Add(detail.AdContent);
-                    }
-            }
-            string res = "";
-            Break lineBreak = new Break();
-            //string[] WordAdToPrint = wordAdToPrint.ToArray();
-            foreach (string item in wordAdToPrint)
-            {
-                if (item.IndexOf(" ") == -1)
-                    res += item + "\r\n";
-                else
-                    res += " " + item + "\n\n";
-
-            }
-
-            string t = "Hello friends, my name is Yael Malkin I live in " +
-                "Beit Shemesh in the Rama B. I want to tell you about " +
-                "one of my hobbies: I love to bake. Before every Sabbath " +
-                "before I started studying programming, I would sit down " +
-                "with cake and dessert recipes and pick out some recipes " +
-                "I hadn’t made in the last 3 months so as not to bore my " +
-                "family and also identify new types of cakes.\r\nSix " +
-                "years ago, when I was in elementary school at the age " +
-                "of thirteen, one day a friend from eighth grade called " +
-                "me and asked me if I could join a group in a class that " +
-                "is learning cake design because one girl is missing to " +
-                "close the group, I thought and in the end I decided to " +
-                "join.\r\nToday I can say that since then I have been " +
-                "Always busy designing cakes and 3 years ago I even " +
-                "started selling them.\r\nThink I would not join the " +
-                "class,\r\nJust look at how worth it is to identify " +
-                "opportunities and take advantage of them.\r\n";
-
-
-            int w = ((int)(page.Width) - 16) / 4;
-            int h = ((int)(page.Height) - 48) / 8;
-
-            XTextFormatter tf = new XTextFormatter(gfx);
-            //XRect rect = new XRect(8, 8, page.Width/4, page.Height);
-            XRect rect = new XRect(16 + w * 0, 16 + h * 0, w * 1 - 16, h * 4 - 16);
-            gfx.DrawRectangle(XBrushes.White, rect);
-            tf.Alignment = XParagraphAlignment.Justify;
-            tf.DrawString(res, font, XBrushes.Black, rect, XStringFormats.TopLeft);
-            document.Save(filename);
+            List<OrderDetailDTO> orderDetailsDTO = new List<OrderDetailDTO>();
+            List<OrderDetail> details = _ordersDetailActions.GetAllOrderDetails();
+            foreach (var detail in details)
+                orderDetailsDTO.Add(_Mapper.Map<OrderDetail, OrderDetailDTO>(detail));
+            return orderDetailsDTO;
         }
 
         //פונקציה שממינת את את רשימת הפרסומות
@@ -361,6 +184,39 @@ namespace BLL.functions
             return orderDetails.OrderByDescending(x => x.Size?.SizeHeight)
                 .ThenByDescending(x => x.Size?.SizeWidth)
                 .ToList();
+        }
+
+        #endregion
+
+        #region DatesForOrderDetail
+
+        private List<DatesForOrderDetailDTO> GetAllDatesForDetails()
+        {
+            var datesForDetailsDTO = new List<DatesForOrderDetailDTO>();
+            List<DatesForOrderDetail> datesForOrderDetails = _datesForOrderDetailActions.GetAllDatesForOrderDetails();
+            foreach (var date in datesForOrderDetails)
+                datesForDetailsDTO.Add(_Mapper.Map<DatesForOrderDetail, DatesForOrderDetailDTO>(date));
+            return datesForDetailsDTO;
+        }
+
+        #endregion
+
+        #region PdfSharp
+
+        private void DrawImage(XGraphics gfx, string jpegSamplePath, int x, int y, int width, int height)
+        {
+            XImage image = XImage.FromFile("C:\\yael\\final_project\\newspaperProject\\server\\newspaper\\newspaper\\wwwroot\\Upload\\" + jpegSamplePath);
+            gfx.DrawImage(image, x, y, width, height);
+        }
+
+        private void DrawImageOnPage(PdfPage page, XGraphics gfx, int Width, int Height, string[,] matPage, String ImagePath, int i, int j)
+        {
+            int w = ((int)(page.Width) - 16) / 4;
+            int h = ((int)(page.Height) - 48) / 8;
+            DrawImage(gfx, ImagePath, 16 + w * i, 16 + h * j, w * Width - 16, h * Height - 16);
+            for (int q = i; q < i + Width; q++)
+                for (int l = j; l < j + Height; l++)
+                    matPage[q, l] = ImagePath;
         }
 
         public void Create(string filename, List<OrderDetail> relevantOrders)
@@ -459,236 +315,6 @@ namespace BLL.functions
             pdfDocument.Save(filename);
         }
 
-        //פונקציה שכותבת לתוך קובץ word
-        public void FirstWord(string filePath, string[] codeLines)
-        {
-            // Create a new Word document
-            using (WordprocessingDocument wordDocument = WordprocessingDocument.Create(filePath, WordprocessingDocumentType.Document))
-            {
-                // Add a new main document part
-                MainDocumentPart mainPart = wordDocument.AddMainDocumentPart();
-
-                // Create a new document tree
-                Document document = new Document();
-                Body body = new Body();
-
-                // Create a new table
-                Table table = new Table();
-                TableProperties tableProperties = new TableProperties(
-                    new TableBorders(
-                        new TopBorder(),
-                        new BottomBorder(),
-                        new LeftBorder(),
-                        new RightBorder(),
-                        new InsideHorizontalBorder(),
-                        new InsideVerticalBorder()
-                    )
-                );
-                table.AppendChild(tableProperties);
-
-                // Set the number of columns
-                int numColumns = 4;
-
-                // Calculate the number of rows needed based on the number of code lines and the number of columns
-                int numRows = (int)Math.Ceiling((double)codeLines.Length / numColumns);
-
-                // Loop through each row
-                for (int i = 0; i < numRows; i++)
-                {
-                    TableRow row = new TableRow();
-
-                    // Loop through each column
-                    for (int j = 0; j < numColumns; j++)
-                    {
-                        // Calculate the index of the current code line
-                        int index = i + j * numRows;
-
-                        // Create a new cell
-                        TableCell cell = new TableCell();
-
-                        //כתיבת כותרת
-                        if (index < codeLines.Length && codeLines[index].Contains("Title"))
-                        {
-                            Paragraph titleParagraph = new Paragraph();
-                            Run titleRun = new Run();
-                            Text titleText = new Text(codeLines[index]);
-                            titleRun.Append(titleText);
-                            titleRun.RunProperties = new RunProperties(new Bold(), new FontSize() { Val = "24" }, new Justification() { Val = JustificationValues.Right });
-                            titleParagraph.Append(titleRun);
-                            cell.Append(titleParagraph);
-                        }
-                        // If there is a code line for this cell, add it to the cell
-                        else
-                        if (index < codeLines.Length)
-                        {
-                            Paragraph paragraph = new Paragraph();
-                            Run run = new Run();
-                            Text text = new Text(codeLines[index]);
-                            run.Append(text);
-                            paragraph.Append(run);
-                            cell.Append(paragraph);
-                        }
-
-                        // Add the cell to the row
-                        row.Append(cell);
-                    }
-
-                    // Add the row to the table
-                    table.Append(row);
-                }
-
-                // Add the table to the body
-                body.Append(table);
-
-                // Add the body to the document
-                document.Append(body);
-
-                // Add the document to the main document part
-                mainPart.Document = document;
-
-                // Save the changes
-                mainPart.Document.Save();
-            }
-        }
-
-        //convert from Word to PDF
-        public void ConvertFromWordToPdf(string Input, string Output)
-        {
-            ComponentInfo.SetLicense("FREE-LIMITED-KEY");
-            var doc = DocumentModel.Load(Input);
-            doc.Save(Output);
-        }
-
-        //--------------------------------------------------------------------------------------
-        //----------------------- כל מה שקשור להזמנת פרסומת -----------------------------------
-        //--------------------------------------------------------------------------------------
-
-        // פונקציה שממירה מערך dto של פרטי הזמנה ומערך רגיל של פרטי הזמנה
-        private List<OrderDetail> ListOrderDetailDTOToListOrderDetail(List<OrderDetailDTO> listOrderDetails)
-        {
-            List<OrderDetail> orderDetails = new List<OrderDetail>();
-            foreach (OrderDetailDTO orderD in listOrderDetails)
-                orderDetails.Add(_Mapper.Map<OrderDetailDTO, OrderDetail>(orderD));
-            return orderDetails;
-        }
-
-        // פונקציה שמקבלת מערך של פרטי הזמנות ומחזירה את הסכום הכללי שלהם
-        private decimal FinalPrice(List<OrderDetail> orderDetails)
-        {
-            decimal sum = 0;
-            List<AdSize> listAdSize = _adSize.GetAllAdSizes();
-            foreach (OrderDetail od in orderDetails)
-            {
-                sum += listAdSize.FirstOrDefault(s => s.SizeId == od.SizeId).SizePrice;
-            }
-            return sum;
-        }
-
-        // פונקציה שמכניסה פרטי הזמנות למסד הנתונים
-        // ומחזירה רשימה של קודים של פרטי הזמנות
-        private List<int> EnterOrderDetails(List<OrderDetail> orderDetails, int orderId)
-        {
-            List<int> ordersIds = new List<int>();
-            foreach (var orderDetail in orderDetails)
-            {
-                orderDetail.OrderId = orderId;
-                ordersIds.Add(_ordersDetailActions.AddNewOrderDetail(orderDetail));
-            }
-            return ordersIds;
-        }
-
-        // פונקציה שמקבלת רשימה של רשימות של תאריכים ורשימה של תז של פרטי המנות ומכניסה למסד הנתונים
-        private void EnterDates(List<List<DateTime>> listDates, List<int> orderDetailsIds)
-        {
-            DatesForOrderDetail datesForOrderDetail;
-            for (int i = 0; i < orderDetailsIds.Count; i++)
-            {
-                foreach (var date in listDates[i])
-                {
-                    datesForOrderDetail = new DatesForOrderDetail();
-                    datesForOrderDetail.Date = date;
-                    datesForOrderDetail.DetailsId = orderDetailsIds[i];
-                    datesForOrderDetail.DateStatus = false;
-                    _datesForOrderDetailActions.AddNewDateForOrderDetail(datesForOrderDetail);
-                }
-            }
-        }
-
-        public void ConvertPdfToWord(string pdfFilePath, string wordFilePath)
-        {
-
-            // Create a new instance of the PDF Focus .Net library
-            PdfFocus pdfFocus = new PdfFocus();
-
-            // Load the PDF file using PDF Focus .Net
-            pdfFocus.OpenPdf(pdfFilePath);
-
-            // Save the PDF file as a Word file using PDF Focus .Net
-            if (pdfFocus.PageCount > 0)
-            {
-                pdfFocus.WordOptions.Format = PdfFocus.CWordOptions.eWordDocument.Docx;
-                pdfFocus.ToWord(wordFilePath);
-            }
-        }
-
-
-        // פונקציה שמקבלת לקוח, מערך של פרטי הזמנות ומערך של מערכים לתאריכים
-        // הפונקציה מכניסה למסד הנתונים הזמנה וכל מה שהיא קיבלה
-        public void FinishOrder(CustomerDTO customer, List<List<DateTime>> listDates, List<OrderDetailDTO> listOrderDetails)
-        {
-            List<OrderDetail> orderDetails = ListOrderDetailDTOToListOrderDetail(listOrderDetails).ToList();
-            Order newOrder = new Order()
-            {
-                CustId = GetIdByCustomer(customer),
-                OrderDate = DateTime.Now,
-                OrderFinalPrice = FinalPrice(orderDetails)
-            };
-            _order.AddNewOrder(newOrder);
-            List<int> orderDetailsIds = EnterOrderDetails(orderDetails, newOrder.OrderId);
-            EnterDates(listDates, orderDetailsIds);
-        }
-
-        public static int CountWords(string sentence)
-        {
-            sentence = sentence.Trim();
-            if (string.IsNullOrEmpty(sentence))
-                return 0;
-            string[] words = sentence.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-            return words.Length;
-        }
-
-        public void FinishOrderAdWords(CustomerDTO customer, List<List<DateTime>> listDates, List<OrderDetailDTO> listOrderDetails)
-        {
-            List<OrderDetail> orderDetails = ListOrderDetailDTOToListOrderDetail(listOrderDetails).ToList();
-            Order newOrder = new Order()
-            {
-                CustId = GetIdByCustomer(customer),
-                OrderDate = DateTime.Now,
-                OrderFinalPrice = CountWords(listOrderDetails[0].AdContent)
-            };
-            _order.AddNewOrder(newOrder);
-            List<int> orderDetailsIds = EnterOrderDetails(orderDetails, newOrder.OrderId);
-            EnterDates(listDates, orderDetailsIds);
-        }
-
-        public List<OrderDetailDTO> GetAllOrderDetails()
-        {
-            List<OrderDetailDTO> orderDetailsDTO = new List<OrderDetailDTO>();
-            List<OrderDetail> details = _ordersDetailActions.GetAllOrderDetails();
-            foreach (var detail in details)
-                orderDetailsDTO.Add(_Mapper.Map<OrderDetail, OrderDetailDTO>(detail));
-            return orderDetailsDTO;
-        }
-
-        public List<DatesForOrderDetailDTO> GetAllDatesForDetails()
-        {
-            var datesForDetailsDTO = new List<DatesForOrderDetailDTO>();
-            List<DatesForOrderDetail> datesForOrderDetails = _datesForOrderDetailActions.GetAllDatesForOrderDetails();
-            foreach (var date in datesForOrderDetails)
-                datesForDetailsDTO.Add(_Mapper.Map<DatesForOrderDetail, DatesForOrderDetailDTO>(date));
-            return datesForDetailsDTO;
-        }
-
         public void Shabets(string pathPdf)
         {
             // זה בקיצור שליפת כל פרטי ההזמנות הרלונטיות
@@ -724,6 +350,129 @@ namespace BLL.functions
 
         }
 
+        #endregion
+
+        #region Converts
+
+        public void ConvertFromWordToPdf(string Input, string Output)
+        {
+            ComponentInfo.SetLicense("FREE-LIMITED-KEY");
+            var doc = DocumentModel.Load(Input);
+            doc.Save(Output);
+        }
+
+        public void ConvertPdfToWord(string pdfFilePath, string wordFilePath)
+        {
+
+            // Create a new instance of the PDF Focus .Net library
+            PdfFocus pdfFocus = new PdfFocus();
+
+            // Load the PDF file using PDF Focus .Net
+            pdfFocus.OpenPdf(pdfFilePath);
+
+            // Save the PDF file as a Word file using PDF Focus .Net
+            if (pdfFocus.PageCount > 0)
+            {
+                pdfFocus.WordOptions.Format = PdfFocus.CWordOptions.eWordDocument.Docx;
+                pdfFocus.ToWord(wordFilePath);
+            }
+        }
+
+        #endregion
+
+        #region FinishOrder
+
+        // פונקציה שמכניסה פרטי הזמנות למסד הנתונים ומחזירה רשימה של קודים של פרטי הזמנות
+        private List<int> EnterOrderDetails(List<OrderDetail> orderDetails, int orderId)
+        {
+            List<int> ordersIds = new List<int>();
+            foreach (var orderDetail in orderDetails)
+            {
+                orderDetail.OrderId = orderId;
+                ordersIds.Add(_ordersDetailActions.AddNewOrderDetail(orderDetail));
+            }
+            return ordersIds;
+        }
+
+        // פונקציה שמקבלת רשימה של רשימות של תאריכים ורשימה של תז של פרטי המנות ומכניסה למסד הנתונים
+        private void EnterDates(List<List<DateTime>> listDates, List<int> orderDetailsIds)
+        {
+            DatesForOrderDetail datesForOrderDetail;
+            for (int i = 0; i < orderDetailsIds.Count; i++)
+            {
+                foreach (var date in listDates[i])
+                {
+                    datesForOrderDetail = new DatesForOrderDetail();
+                    datesForOrderDetail.Date = date;
+                    datesForOrderDetail.DetailsId = orderDetailsIds[i];
+                    datesForOrderDetail.DateStatus = false;
+                    _datesForOrderDetailActions.AddNewDateForOrderDetail(datesForOrderDetail);
+                }
+            }
+        }
+
+        #region FinishOrderFiles
+
+        // פונקציה שמקבלת מערך של פרטי הזמנות ומחזירה את הסכום הכללי שלהם
+        private decimal FinalPrice(List<OrderDetail> orderDetails)
+        {
+            decimal sum = 0;
+            List<AdSize> listAdSize = _adSize.GetAllAdSizes();
+            foreach (OrderDetail od in orderDetails)
+            {
+                sum += listAdSize.FirstOrDefault(s => s.SizeId == od.SizeId).SizePrice;
+            }
+            return sum;
+        }
+
+        // פונקציה שמקבלת לקוח, מערך של פרטי הזמנות ומערך של מערכים לתאריכים
+        // הפונקציה מכניסה למסד הנתונים הזמנה וכל מה שהיא קיבלה
+        public void FinishOrder(CustomerDTO customer, List<List<DateTime>> listDates, List<OrderDetailDTO> listOrderDetails)
+        {
+            List<OrderDetail> orderDetails = FromListOrderDetailDTOToListOrderDetail(listOrderDetails).ToList();
+            Order newOrder = new Order()
+            {
+                CustId = GetIdByCustomer(customer),
+                OrderDate = DateTime.Now,
+                OrderFinalPrice = FinalPrice(orderDetails)
+            };
+            _order.AddNewOrder(newOrder);
+            List<int> orderDetailsIds = EnterOrderDetails(orderDetails, newOrder.OrderId);
+            EnterDates(listDates, orderDetailsIds);
+        }
+
+        #endregion
+
+        #region FinishOrderWords
+
+        public static int CountWords(string sentence)
+        {
+            sentence = sentence.Trim();
+            if (string.IsNullOrEmpty(sentence))
+                return 0;
+            string[] words = sentence.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            return words.Length;
+        }
+
+        public void FinishOrderAdWords(CustomerDTO customer, List<List<DateTime>> listDates, List<OrderDetailDTO> listOrderDetails)
+        {
+            List<OrderDetail> orderDetails = FromListOrderDetailDTOToListOrderDetail(listOrderDetails).ToList();
+            Order newOrder = new Order()
+            {
+                CustId = GetIdByCustomer(customer),
+                OrderDate = DateTime.Now,
+                OrderFinalPrice = CountWords(listOrderDetails[0].AdContent)
+            };
+            _order.AddNewOrder(newOrder);
+            List<int> orderDetailsIds = EnterOrderDetails(orderDetails, newOrder.OrderId);
+            EnterDates(listDates, orderDetailsIds);
+        }
+
+        #endregion
+
+        #endregion
+
+        #region FunctionsByOpenXml
 
         public void CompleteWordTemplate(string fullname, string path)
         {
@@ -740,6 +489,7 @@ namespace BLL.functions
             File.Copy(tempFileFullName, path + @"\temp\stam.docx", true);
             CreateOneDocAndCopyToDest(tempFileFullName, path + @"\temp\stam.docx");
         }
+
         private void ReplaceUserWordTemplates(WordprocessingDocument myDoc)
         {
             var mainPart = myDoc.MainDocumentPart;
@@ -794,6 +544,7 @@ namespace BLL.functions
             keyValues.Add("myAdsWords", "");
             SearchAndReplaceLike(mainPart!.Document, keyValues);
         }
+
         public void CreateOneDocAndCopyToDest(string sourceCopy, string dest)
         {
             using (WordprocessingDocument myDoc = WordprocessingDocument.Open(sourceCopy, true))
@@ -826,23 +577,19 @@ namespace BLL.functions
             }
         }
 
+        // פונקציה שמקבלת קובץ ומילון של בוקמרקים ומחליפה אותם
         public void SearchAndReplaceLike(Document doc, Dictionary<string, string> dict)
         {
             var allParas = doc.Descendants<DocumentFormat.OpenXml.Wordprocessing.Text>();
-
 
             RunProperties runProperties = new RunProperties();
             Color color = new Color() { Val = "FF0000" }; // Replace "FF0000" with your desired color code
             runProperties.Append(color);
 
-
-
             // Create a new Break element to represent the line break
             Break lineBreak = new Break();
 
             // Add the line break after the replaced text
-
-
             foreach (Text item in allParas)
             {
                 foreach (KeyValuePair<string, string> itm in dict)
@@ -865,8 +612,9 @@ namespace BLL.functions
 
         }
 
+        #endregion
 
-
+        #region CreateWordsAdByOpenXml
 
         /// <summary>
         /// CreateWordAd - מקבלת שם של קובץ dotx ואותו היא מעתיקה
@@ -886,7 +634,6 @@ namespace BLL.functions
 
         private void WriteToWordAd(string tempFileFullName)
         {
-
             DateTime dateOfPrint = new DateTime(2023, 07, 25);
 
             List<DatesForOrderDetail> allDates = _datesForOrderDetailActions.GetAllDatesForOrderDetails();
@@ -973,10 +720,8 @@ namespace BLL.functions
             }
         }
 
+        #endregion
 
     }
 }
-
-
-
 

@@ -16,14 +16,7 @@ namespace BLL.functions
 
         public List<NewspapersPublishedDTO> GetAllNewspapersPublished();
 
-        public void AddAdFileToPdf();
-
-        public void AddAdFileToPdf3();
-
-        public void GeneratePDF(string filename, string imageLoc);
         public void Create(string filename, List<OrderDetail> RelevantOrdersDTO);
-
-        public void WriteToPdf(string filename);
 
         public List<OrderDetailDTO> GetAllOrderDetails();
 
@@ -36,8 +29,6 @@ namespace BLL.functions
 
         public void FinishOrderAdWords(CustomerDTO customer, List<List<DateTime>> listDates, List<OrderDetailDTO> listOrderDetails);
 
-        public void FirstWord(string filePath, string[] codeLines);
-
         public void ConvertFromWordToPdf(string Input, string Output);
 
         public void Shabets(string pathPdf);
@@ -47,7 +38,6 @@ namespace BLL.functions
         public void CompleteWordTemplate(string fullname, string path);
 
         public void CreateWordAd(string fullname, string path);
-
 
     }
 }
