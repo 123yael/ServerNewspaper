@@ -34,15 +34,19 @@ namespace BLL.functions
 
         public void FinishOrder(CustomerDTO customer, List<List<DateTime>> listDates, List<OrderDetailDTO> listOrderDetails);
 
+        public void FinishOrderAdWords(CustomerDTO customer, List<List<DateTime>> listDates, List<OrderDetailDTO> listOrderDetails);
+
         public void FirstWord(string filePath, string[] codeLines);
 
-        public void convertWordPFD(string Input, string Output);
+        public void ConvertFromWordToPdf(string Input, string Output);
 
-        //public void Create2(string filename);
-
-        public void Shabets();
+        public void Shabets(string pathPdf);
 
         public void ConvertPdfToWord(string pdfFilePath, string wordFilePath);
+
+        public void CompleteWordTemplate(string fullname, string path);
+
+        public void CreateWordAd(string fullname, string path);
 
 
     }

@@ -9,6 +9,8 @@
   <ItemGroup>
     <PackageReference Include="DocumentFormat.OpenXml" Version="2.20.0" />
     <PackageReference Include="GemBox.Document" Version="35.0.1363" />
+    <PackageReference Include="itext7" Version="8.0.0" />
+    <PackageReference Include="itext7.bouncy-castle-adapter" Version="8.0.0" />
     <PackageReference Include="PdfSharp" Version="1.50.5147" />
     <PackageReference Include="sautinsoft.pdffocus" Version="2023.5.10" />
     <PackageReference Include="System.Drawing.Common" Version="7.0.0" />

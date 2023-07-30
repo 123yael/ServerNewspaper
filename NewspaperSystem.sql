@@ -1,7 +1,7 @@
 
-CREATE DATABASE NewspapersSystem
+--CREATE DATABASE NewspapersSystem
 
-USE NewspapersSystem
+--USE NewspapersSystem
 
 -- עיתונים שיצאו לאור
 CREATE TABLE NewspapersPublished

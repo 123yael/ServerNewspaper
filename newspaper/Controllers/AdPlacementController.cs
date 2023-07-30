@@ -20,11 +20,5 @@ namespace newspaper.Controllers
         {
             return Ok(_funcs.GetAllAdPlacement());
         }
-
-        [HttpGet("IsDisablePlacment")]
-        public IActionResult IsDisablePlacment()
-        {
-            return Ok(_funcs.IsDisablePlacment());
-        }
     }
 }

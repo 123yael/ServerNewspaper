@@ -7,7 +7,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="BouncyCastle" Version="1.8.9" />
     <PackageReference Include="GroupDocs.Conversion" Version="23.5.0" />
+    <PackageReference Include="itext7" Version="8.0.0" />
     <PackageReference Include="Leadtools.Pdf" Version="22.0.0.8" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="7.0.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="7.0.0" />
@@ -21,6 +23,7 @@
   <ItemGroup>
     <Folder Include="wwwroot\TempWord\" />
     <Folder Include="wwwroot\NewspapersImg\" />
+    <Folder Include="wwwroot\TempWord\temp\" />
   </ItemGroup>
 
 </Project>

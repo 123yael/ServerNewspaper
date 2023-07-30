@@ -3,27 +3,10 @@ using DAL.Actions.Interfaces;
 using DAL.Models;
 using DTO.Repository;
 using PdfSharp.Drawing;
-using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
-using System.IO;
-using System.Reflection.PortableExecutable;
 using PdfSharp.Pdf;
-using System.Diagnostics;
 using PdfSharp;
-using Azure;
-using PdfSharp.Charting;
-using System.Drawing.Printing;
-using System.Text.Encodings.Web;
 using PdfSharp.Drawing.Layout;
-using static System.Net.Mime.MediaTypeNames;
-using DAL.Actions.Classes;
-using System.Data.SqlTypes;
-using System.Reflection.Metadata;
-using DocumentFormat.OpenXml.EMMA;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 using Text = DocumentFormat.OpenXml.Wordprocessing.Text;
@@ -33,15 +16,10 @@ using Run = DocumentFormat.OpenXml.Wordprocessing.Run;
 using PageSize = PdfSharp.PageSize;
 using DocumentFormat.OpenXml;
 using GemBox.Document;
-using DocumentFormat.OpenXml.Drawing.Wordprocessing;
-using SkiaSharp;
-
-// עבור תמונה
-using PIC = DocumentFormat.OpenXml.Drawing.Pictures;
-using A = DocumentFormat.OpenXml.Drawing;
-using DW = DocumentFormat.OpenXml.Drawing.Wordprocessing;
-using DocumentFormat.OpenXml.Vml;
 using SautinSoft;
+using Color = DocumentFormat.OpenXml.Wordprocessing.Color;
+using System;
+using PdfSharp.Pdf.IO;
 
 namespace BLL.functions
 {
@@ -49,7 +27,7 @@ namespace BLL.functions
     {
         static IMapper _Mapper;
 
-        private string myPath = "C:\\Users\\YAEL\\OneDrive\\שולחן העבודה\\temps";
+        private string myPath = "C:\\yael\\final_project\\newspaperProject\\server\\newspaper\\newspaper\\wwwroot\\TempWord";
 
         static Funcs()
         {
@@ -70,6 +48,7 @@ namespace BLL.functions
         INewspapersPublishedActions _newspapersPublished;
         private object codeLines;
 
+
         public Funcs(IAdSizeActions adSize,
             IOrderDetailActions ordersDetailActions,
             IDatesForOrderDetailActions datesForOrderDetailActions,
@@ -87,6 +66,7 @@ namespace BLL.functions
             _customerActions = customerActions;
             _order = order;
             _newspapersPublished = newspapersPublished;
+
         }
 
         #region WpAdSubCategory
@@ -128,7 +108,7 @@ namespace BLL.functions
             return adPlacementDTO;
         }
 
-        
+
         #endregion
 
         #region Customer
@@ -180,7 +160,7 @@ namespace BLL.functions
 
         #endregion
 
-        // פונקציה שמוסיפה תמונה לקובץ pdf
+        //פונקציה שמוסיפה תמונה לקובץ pdf
         public void AddAdFileToPdf()
         {
             // שורה נחוצה עבור הרצת הקוד הבא
@@ -245,11 +225,9 @@ namespace BLL.functions
         }
         private void DrawImage(XGraphics gfx, string jpegSamplePath, int x, int y, int width, int height)
         {
-            XImage image = XImage.FromFile("C:\\yael\\programming\\final_project\\newspaperProject\\server\\newspaper\\newspaper\\wwwroot\\Upload\\" + jpegSamplePath);
+            XImage image = XImage.FromFile("C:\\yael\\final_project\\newspaperProject\\server\\newspaper\\newspaper\\wwwroot\\Upload\\" + jpegSamplePath);
             gfx.DrawImage(image, x, y, width, height);
         }
-
-
         public void AddAdFileToPdf3()
         {
             // שורה נחוצה עבור הרצת הקוד הבא
@@ -293,7 +271,7 @@ namespace BLL.functions
                     matPage[q, l] = ImagePath;
         }
 
-        // פונקצהי כתיבה לתוך דף pdf
+        //פונקצהי כתיבה לתוך דף pdf
         public void WriteToPdf(string filename)
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
@@ -305,19 +283,46 @@ namespace BLL.functions
             page.Size = PageSize.Quarto;
             XGraphics gfx = XGraphics.FromPdfPage(page);
 
-            string myText = "פרוטוקול תקשורת הוא אוסף של חוקים המגדירים" +
-                " את אופן בקשת וקבלת נתונים במערכת תקשורת מסוימת וכולל כללים לייצוג " +
-                "המידע , איתות ,אימות , ותיקון שגיאות" +
-                " לצורך העברת המידע בערוץ תקשורת .פרוטוקול מוכר ופשוט " +
-                "הוא שיחת טלפון הכוללת כללים מוסכמים: הרמת " +
-                "השפופרת, קריאת \"הלו\", הצד מנגד עונה ב\"שלום\" )זהו שלב האימות( ולאחר מכן יסביר " +
-                "את מהות ההתקשרות ותתחיל" +
-                " העברת המידע. לפני ניתוק השיחה ייפרדו האנשים ב\"שלום\" או \"להתראות\". אולם" +
-                " ישנה גמישות, ואין בהכרח צורך בפרוטוקול קשיח " +
-                "ומוחלט, " +
-                "ולכן לא כל שיחת טלפון מתנהלת על-פי הפרוטוקול המדויק הנ\"ל. " +
-                "אך כאשר מדובר ברשת תקשורת בין מחשבים, שימוש בפרוטוקולים מדויקים" +
-                " הכרחי על-מנת שהצדדים יבינו זה את זה ויוכלו לספק שירותים זה לזה.";
+            List<DatesForOrderDetail> allDates = _datesForOrderDetailActions.GetAllDatesForOrderDetails();//GetAllDatesForDetails();
+            List<OrderDetail> relevanteAds = new List<OrderDetail>();
+            DateTime dateOfPrint = new DateTime(2023, 07, 25);
+            foreach (var date in allDates)
+                if (date.Date == dateOfPrint)
+                    relevanteAds.Add(date.Details);
+
+            List<OrderDetail> allRelevantWordAds = new List<OrderDetail>();
+
+            foreach (OrderDetail detail in relevanteAds)
+                if (detail.AdContent != null)
+                    allRelevantWordAds.Add(detail);
+
+            //רשימה של כל תתי הקטגוריות
+            List<WordAdSubCategoryDTO> categories = GetAllWordAdSubCategories();
+            //רשימה של כל פרטי ההזמנה ממוינים לפי קטגוריות
+            List<OrderDetail> allDetailsWordAds = new List<OrderDetail>();
+            //רשימה שתכיל תת קטגוריה ומיד אח"כ את כל המודעות שלה
+            List<string> wordAdToPrint = new List<string>();
+            foreach (WordAdSubCategoryDTO category in categories)
+            {
+                wordAdToPrint.Add(category.WordCategoryName);
+                foreach (OrderDetail detail in allRelevantWordAds)
+                    if (detail.WordCategoryId == category.WordCategoryId)
+                    {
+                        allDetailsWordAds.Add(detail);
+                        wordAdToPrint.Add(detail.AdContent);
+                    }
+            }
+            string res = "";
+            Break lineBreak = new Break();
+            //string[] WordAdToPrint = wordAdToPrint.ToArray();
+            foreach (string item in wordAdToPrint)
+            {
+                if (item.IndexOf(" ") == -1)
+                    res += item + "\r\n";
+                else
+                    res += " " + item + "\n\n";
+
+            }
 
             string t = "Hello friends, my name is Yael Malkin I live in " +
                 "Beit Shemesh in the Rama B. I want to tell you about " +
@@ -346,11 +351,11 @@ namespace BLL.functions
             XRect rect = new XRect(16 + w * 0, 16 + h * 0, w * 1 - 16, h * 4 - 16);
             gfx.DrawRectangle(XBrushes.White, rect);
             tf.Alignment = XParagraphAlignment.Justify;
-            tf.DrawString(t, font, XBrushes.Black, rect, XStringFormats.TopLeft);
+            tf.DrawString(res, font, XBrushes.Black, rect, XStringFormats.TopLeft);
             document.Save(filename);
         }
 
-        // פונקציה שממינת את את רשימת הפרסומות
+        //פונקציה שממינת את את רשימת הפרסומות
         private List<OrderDetail> SortBySize(List<OrderDetail> orderDetails)
         {
             return orderDetails.OrderByDescending(x => x.Size?.SizeHeight)
@@ -358,56 +363,34 @@ namespace BLL.functions
                 .ToList();
         }
 
-        public void Create(string filename, List<OrderDetail> RelevantOrders)
+        public void Create(string filename, List<OrderDetail> relevantOrders)
         {
-            /*
-            // מערך של הזמנות רלונטיות לתאריך של יציאת העיתון הנוכחי - יתמלא בהמשך
-            List<OrderDetail> RelevantOrders = new List<OrderDetail>();
-            // מערך של כל ההזמנות עם התאריכים
-            List<DatesForOrderDetail> DatesList = _datesForOrderDetailActions.GetAllDatesForOrderDetails();
-            // מילוי מערך של הזמנות רלונטיות מתוך מערך ההזמנות המלא
-            foreach (DatesForOrderDetail date in DatesList)
-                if (date.Date == new DateTime(2023, 02, 07))
-                    RelevantOrders.Add(date.Details);*/
+            PdfDocument pdfDocument = PdfReader.Open(filename, PdfDocumentOpenMode.Modify);
+
             // הגדרה של עיתון חדש
             List<string[,]> pagesMats = new List<string[,]>();
             // שורת קסם להרצת קוד שכותב לתוך קובץ pdf
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-            // יצירת עמוד חגש בעיתון pdf
-            PdfDocument document = new PdfDocument();
+            //// יצירת עמוד חגש בעיתון pdf
+            //PdfDocument document = new PdfDocument();
             // הגדתרת font שאיתו נכתוב לתוך העיתון
-            XFont font = new XFont("Ink Free", 20, XFontStyle.BoldItalic);
+            //XFont font = new XFont("Ink Free", 20, XFontStyle.BoldItalic);
             // הוספת עמוד אחד למטריצת העיתון
             pagesMats.Add(new string[4, 8]);
             // הגדרת רשימה של עמודים בעיתון pdf
-            List<PdfPage> pages = new List<PdfPage>();
+            //List<PdfPage> pages = new List<PdfPage>();
             // הוספת עמוד ה pdf לרשימת עמודי ה pdf
-            pages.Add(document.AddPage());
+            //pages.Add(pdfDocument.Pages.Add());
+            pdfDocument.Pages.Add();
             // העמוד pdf שאיתו כרגע אנחנו מתעסקים
-            PdfPage page = pages[0];
+            PdfPage page = pdfDocument.Pages[0];// pages[0];
             // הגדרת גודל העמוד בעיתון ה pdf
-            page.Size = PageSize.Quarto;
+            //page.Size = PageSize.Quarto;
             // הגדרת משתנה שדרכו אנו כותבים לתוך עיתון pdf
             XGraphics gfx = XGraphics.FromPdfPage(page);
-            // כתובת כותרת תחתונה לעיתון pdf
-            gfx.DrawString("   ----------------------------------------------------- Yael advertising", font,
-                    XBrushes.Black, new XRect(0, -10, page.Width, page.Height),
-                    XStringFormats.BottomLeft);
-            //// שליחה לפונקציה של מיון הרשימה שיהיה מהפרסומת הגדולה לפרסומת הקטנה
-            ////אין צורך במיון הרשימה כבר ממוינת
-            ////RelevantOrders = SortBySize(RelevantOrders);
-            //List<OrderDetail> RelevantOrders = new List<OrderDetail>();
-            ////של קשרי הגומלין לא מתמלא מאליו? size למה ה 
-            //OrderDetail temp = new OrderDetail();
-            //foreach (OrderDetailDTO detail in RelevantOrdersDTO)
-            //{
-            //    temp = _Mapper.Map<OrderDetailDTO, OrderDetail>(detail);
-            //    temp.Size = _adSize.getSizeById((int)temp.SizeId);
-            //    RelevantOrders.Add(temp);
-            //}
 
             // עוברים על על המודעות הרלונטיות ומכניסים לרשימת העיתון
-            foreach (OrderDetail detail in RelevantOrders)
+            foreach (OrderDetail detail in relevantOrders)
             {
                 // משתנה שאומר האם היה מקום למודעה
                 bool Shubatz = false;
@@ -459,16 +442,13 @@ namespace BLL.functions
                         // יצירת דף חדש במטריצת העיתון
                         string[,] newPage = new string[4, 8];
                         // הוספת עמוד חדש לעיתון ה pdf
-                        pages.Add(document.AddPage());
+                        pdfDocument.Pages.Add();
+                        //pages.Add(pdfDocument.AddPage());
                         // עדכון מטריצת העמוד הנוכחי לעמוד האחרון ברשימת המטריצות
-                        page = pages[pages.Count - 1];
+                        page = pdfDocument.Pages[pdfDocument.Pages.Count - 1];
                         // הגדרת גודלו של העמוד
-                        page.Size = PageSize.Quarto;
-                        gfx = XGraphics.FromPdfPage(page);
-                        // הוספת כותרת תחתונה לעמוד
-                        gfx.DrawString("   ----------------------------------------------------- Yael advertising", font,
-                            XBrushes.Black, new XRect(0, -10, page.Width, page.Height),
-                            XStringFormats.BottomLeft);
+                        //page.Size = PageSize.Quarto;
+                        //gfx = XGraphics.FromPdfPage(page);
                         // הוספת התמונה לעמוד החדש שבטוח שיש בו מקום
                         DrawImageOnPage(page, gfx, Width, Height, newPage, detail.AdFile, 0, 0);
                         // הוספת העמוד לעיתון ה pdf
@@ -476,7 +456,7 @@ namespace BLL.functions
                     }
                 }
             }
-            document.Save(filename);
+            pdfDocument.Save(filename);
         }
 
         //פונקציה שכותבת לתוך קובץ word
@@ -572,10 +552,9 @@ namespace BLL.functions
         }
 
         //convert from Word to PDF
-        public void convertWordPFD(string Input, string Output)
+        public void ConvertFromWordToPdf(string Input, string Output)
         {
             ComponentInfo.SetLicense("FREE-LIMITED-KEY");
-
             var doc = DocumentModel.Load(Input);
             doc.Save(Output);
         }
@@ -584,7 +563,7 @@ namespace BLL.functions
         //----------------------- כל מה שקשור להזמנת פרסומת -----------------------------------
         //--------------------------------------------------------------------------------------
 
-        //פונקציה שממירה מערך dto של פרטי הזמנה ומערך רגיל של פרטי הזמנה
+        // פונקציה שממירה מערך dto של פרטי הזמנה ומערך רגיל של פרטי הזמנה
         private List<OrderDetail> ListOrderDetailDTOToListOrderDetail(List<OrderDetailDTO> listOrderDetails)
         {
             List<OrderDetail> orderDetails = new List<OrderDetail>();
@@ -669,6 +648,29 @@ namespace BLL.functions
             EnterDates(listDates, orderDetailsIds);
         }
 
+        public static int CountWords(string sentence)
+        {
+            sentence = sentence.Trim();
+            if (string.IsNullOrEmpty(sentence))
+                return 0;
+            string[] words = sentence.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            return words.Length;
+        }
+
+        public void FinishOrderAdWords(CustomerDTO customer, List<List<DateTime>> listDates, List<OrderDetailDTO> listOrderDetails)
+        {
+            List<OrderDetail> orderDetails = ListOrderDetailDTOToListOrderDetail(listOrderDetails).ToList();
+            Order newOrder = new Order()
+            {
+                CustId = GetIdByCustomer(customer),
+                OrderDate = DateTime.Now,
+                OrderFinalPrice = CountWords(listOrderDetails[0].AdContent)
+            };
+            _order.AddNewOrder(newOrder);
+            List<int> orderDetailsIds = EnterOrderDetails(orderDetails, newOrder.OrderId);
+            EnterDates(listDates, orderDetailsIds);
+        }
+
         public List<OrderDetailDTO> GetAllOrderDetails()
         {
             List<OrderDetailDTO> orderDetailsDTO = new List<OrderDetailDTO>();
@@ -687,76 +689,75 @@ namespace BLL.functions
             return datesForDetailsDTO;
         }
 
-
-        //מכאן התחילו השינויים ליום 16/06/2023
-        //שיבוץ העיתון
-
-        public void Shabets()
+        public void Shabets(string pathPdf)
         {
-            //// שליפת כל פרטי ההזמנות וכן את כל פרטי ההזמנות של התאריך הקרוב.
-            //List<OrderDetailDTO> orderDetailDTOs = GetAllOrderDetails();
-            //List<DatesForOrderDetailDTO> allDates = GetAllDatesForDetails();
-            //List<int> detailsIds = new List<int>();
-            //// מעבר על כל התאריכים ושליפת הפרטי ההזמנה הרלוונטיים לתאריך הקרוב
-            //foreach (var date in allDates)
-            //{
-            //    if (date.Date == DateTime.Today)
-            //    {
-            //        detailsIds.Add((int)date.DetailsId);
-            //    }
-            //}
-            //// רשימה עם פרטי הזמנה רלוונטיים
-            //List<OrderDetailDTO> relevanteAds = new List<OrderDetailDTO>();
-            //foreach (int id in detailsIds)
-            //    relevanteAds.Add(_Mapper.Map<OrderDetail, OrderDetailDTO>(_ordersDetailActions.GetOrderDetailsById(id)));
-            
             // זה בקיצור שליפת כל פרטי ההזמנות הרלונטיות
-            List<DatesForOrderDetail> allDates = _datesForOrderDetailActions.GetAllDatesForOrderDetails();//GetAllDatesForDetails();
+            List<DatesForOrderDetail> allDates = _datesForOrderDetailActions.GetAllDatesForOrderDetails();
             List<OrderDetail> relevanteAds = new List<OrderDetail>();
             foreach (var date in allDates)
-                if (date.Date == new DateTime(2023, 07, 04))
+                if (date.Date == new DateTime(2023, 07, 25))
                     relevanteAds.Add(date.Details);
 
-            // הגדרת רשימות של מודעות מילים ומודעות פרסומת
+            // הגדרת רשימות של פרסומת
             List<OrderDetail> allRelevantFileAds = new List<OrderDetail>();
-            List<OrderDetail> allRelevantWordAds = new List<OrderDetail>();
 
-            // מיון כל ההזמנות הרלונטיות למילים ופרסומות
+            // מיון כל ההזמנות הרלונטיות לפרסומות
             foreach (OrderDetail detail in relevanteAds)
                 if (detail.AdFile != null)
                     allRelevantFileAds.Add(detail);
-                else if (detail.AdContent != null)
-                    allRelevantWordAds.Add(detail);
 
-            //מציאת הניתוב הרלוונטי ושם העיתון הנוכחי
-            //שליפת כל העיתונים שיצאיו עד כה
+            // מציאת הניתוב הרלוונטי ושם העיתון הנוכחי
+            // שליפת כל העיתונים שיצאיו עד כה
             List<NewspapersPublished> allNewpapers = _newspapersPublished.GetAllNewspapersPublished();
-            //נתינת שם לעיתון עפי הקוד האחרון + 1
-            int NewspaperId = (allNewpapers.Max(x => x.NewspaperId)) + 1;
+            // נתינת שם לעיתון עפי הקוד האחרון + 1
+            int newspaperId = allNewpapers.Max(x => x.NewspaperId) + 1;
             // word ו pdf נתינת ניתוב לתיקיית עיתונים והגדרת ניתובים ל 
-            string PDFpath = myPath + "\\" + NewspaperId + ".pdf",
-                WORDpath = myPath + "\\" + NewspaperId + ".docx";
+            string PDFpath = myPath + "\\regularTemplate" + ".pdf";
+            string WORDpath = myPath + "\\regularTemplate" + ".dotx";
 
-
-            //מיון הפרסומות לפי גודל
-            //List<AdSizeDTO> adSizeDTOs = GetAllAdSize();
-            //List<OrderDetailDTO> allDetailsFileAds = new List<OrderDetailDTO>();
-            //foreach (AdSizeDTO size in adSizeDTOs)
-            //    foreach (OrderDetailDTO detail in allRelevantFileAds)
-            //        if (detail.SizeId == size.SizeId)
-            //            allDetailsFileAds.Add(detail);
             // מיון המודעות בקצרה
             allRelevantFileAds = SortBySize(allRelevantFileAds);
 
-            //עכשיו הרשימה ממוינת לפי גודל הפרסומות מהגדול לקטן
-            //PDF אחרי שמיינו את כל הגדלים אפשר פשוט להכניס את כל המודעות לעיתון 
-            //הבעיה היא שהכנסת המודעות היא אינה רציפה וכל מודעת יכולה לדרוס את השניה
-            //נכניס את המודעות לעיתון
-            List<OrderDetailDTO> od = new List<OrderDetailDTO>();
-            foreach (OrderDetail detail in allRelevantFileAds)
-                od.Add(_Mapper.Map<OrderDetail, OrderDetailDTO>(detail));
-            Create(myPath + "\\Pictures.pdf", allRelevantFileAds);
+            ConvertFromWordToPdf(WORDpath, PDFpath);
 
+            Create(PDFpath, allRelevantFileAds);
+
+        }
+
+
+        public void CompleteWordTemplate(string fullname, string path)
+        {
+            string tempPath = path + @"\temp";
+            if (!Directory.Exists(tempPath)) Directory.CreateDirectory(tempPath);
+            string tempFileFullName = path + @"\temp\temp.dotx";
+            File.Copy(fullname, tempFileFullName, true);
+            using (WordprocessingDocument myDoc = WordprocessingDocument.Open(tempFileFullName, true))
+            {
+                //ReplaceUserWordTemplates(myDoc);
+                myDoc.MainDocumentPart.Document.Save();
+                myDoc.Close();
+            }
+            File.Copy(tempFileFullName, path + @"\temp\stam.docx", true);
+            CreateOneDocAndCopyToDest(tempFileFullName, path + @"\temp\stam.docx");
+        }
+        private void ReplaceUserWordTemplates(WordprocessingDocument myDoc)
+        {
+            var mainPart = myDoc.MainDocumentPart;
+            Dictionary<string, string> keyValues = new Dictionary<string, string>();
+            DateTime dateOfPrint = new DateTime(2023, 07, 25);
+
+            ////////////////////////////////////////////
+            List<DatesForOrderDetail> allDates = _datesForOrderDetailActions.GetAllDatesForOrderDetails();//GetAllDatesForDetails();
+            List<OrderDetail> relevanteAds = new List<OrderDetail>();
+            foreach (var date in allDates)
+                if (date.Date == dateOfPrint)
+                    relevanteAds.Add(date.Details);
+
+            List<OrderDetail> allRelevantWordAds = new List<OrderDetail>();
+
+            foreach (OrderDetail detail in relevanteAds)
+                if (detail.AdContent != null)
+                    allRelevantWordAds.Add(detail);
 
             //רשימה של כל תתי הקטגוריות
             List<WordAdSubCategoryDTO> categories = GetAllWordAdSubCategories();
@@ -774,101 +775,204 @@ namespace BLL.functions
                         wordAdToPrint.Add(detail.AdContent);
                     }
             }
-            string[] WordAdToPrint = wordAdToPrint.ToArray();
-
-            //הכנסת מודעות מילים לעיתון
-
-            //חדש word יצירת קובץ 
-            using (WordprocessingDocument wordDocument = WordprocessingDocument.Create(WORDpath, WordprocessingDocumentType.Document))
+            string res = "";
+            Break lineBreak = new Break();
+            //string[] WordAdToPrint = wordAdToPrint.ToArray();
+            foreach (string item in wordAdToPrint)
             {
-                // Add a new main document part
-                MainDocumentPart mainPart = wordDocument.AddMainDocumentPart();
+                if (item.IndexOf(" ") == -1)
+                    res += item + (char)13 + (char)10;// "\r\n";
+                else
+                    res += item + "\n";
 
-                // Create a new document tree
-                Document document = new Document();
-                Body body = new Body();
-
-                // Create a new table
-                Table table = new Table();
-                TableProperties tableProperties = new TableProperties(
-                    new TableBorders(
-                        new TopBorder(),
-                        new BottomBorder(),
-                        new LeftBorder(),
-                        new RightBorder(),
-                        new InsideHorizontalBorder(),
-                        new InsideVerticalBorder()
-                    )
-                );
-                table.AppendChild(tableProperties);
-
-                // Set the number of columns
-                int numColumns = 4;
-
-                // Calculate the number of rows needed based on the number of code lines and the number of columns
-                int numRows = (int)Math.Ceiling((double)WordAdToPrint.Length / numColumns);
-
-                // Loop through each row
-                for (int i = 0; i < numRows; i++)
-                {
-                    TableRow row = new TableRow();
-
-                    // Loop through each column
-                    for (int j = 0; j < numColumns; j++)
-                    {
-                        // Calculate the index of the current code line
-                        int index = i + j * numRows;
-
-                        // Create a new cell
-                        TableCell cell = new TableCell();
-
-                        //כתיבת כותרת
-                        if (index < WordAdToPrint.Length && WordAdToPrint[index].Contains("Title"))
-                        {
-                            DocumentFormat.OpenXml.Wordprocessing.Paragraph titleParagraph = new DocumentFormat.OpenXml.Wordprocessing.Paragraph();
-                            DocumentFormat.OpenXml.Wordprocessing.Run titleRun = new DocumentFormat.OpenXml.Wordprocessing.Run();
-                            Text titleText = new Text(WordAdToPrint[index]);
-                            titleRun.Append(titleText);
-                            titleRun.RunProperties = new RunProperties(new Bold(), new FontSize() { Val = "24" }, new Justification() { Val = JustificationValues.Right });
-                            titleParagraph.Append(titleRun);
-                            cell.Append(titleParagraph);
-                        }
-                        // If there is a code line for this cell, add it to the cell
-                        else
-                        if (index < WordAdToPrint.Length)
-                        {
-                            DocumentFormat.OpenXml.Wordprocessing.Paragraph paragraph = new DocumentFormat.OpenXml.Wordprocessing.Paragraph();
-                            DocumentFormat.OpenXml.Wordprocessing.Run run = new DocumentFormat.OpenXml.Wordprocessing.Run();
-                            Text text = new Text(WordAdToPrint[index]);
-                            run.Append(text);
-                            paragraph.Append(run);
-                            cell.Append(paragraph);
-                        }
-
-                        // Add the cell to the row
-                        row.Append(cell);
-                    }
-
-                    // Add the row to the table
-                    table.Append(row);
-                }
-
-                // Add the table to the body
-                body.Append(table);
-
-                // Add the body to the document
-                document.Append(body);
-
-                // Add the document to the main document part
-                mainPart.Document = document;
-
-                // Save the changes
-                mainPart.Document.Save();
             }
 
-            convertWordPFD(WORDpath, PDFpath);
+            /////////////////////////////////////////
+            string t = res;//AllAdWordsByOneString(new DateTime(2023, 07, 25));
+
+            //keyValues.Add("Title", t);
+            keyValues.Add("myAdsWords", "");
+            SearchAndReplaceLike(mainPart!.Document, keyValues);
+        }
+        public void CreateOneDocAndCopyToDest(string sourceCopy, string dest)
+        {
+            using (WordprocessingDocument myDoc = WordprocessingDocument.Open(sourceCopy, true))
+            {
+
+                myDoc.MainDocumentPart.Document.Save();
+                myDoc.Close();
+                using (WordprocessingDocument myDestDoc = WordprocessingDocument.Open(dest, true))
+                {
+                    var mainDestPart = myDestDoc.MainDocumentPart;
+
+                    Paragraph PagemainDestPartBreakParagraph = new Paragraph(new DocumentFormat.OpenXml.Wordprocessing.Run(new DocumentFormat.OpenXml.Wordprocessing.Break() { Type = BreakValues.Page }));
+                    mainDestPart.Document.Body.Append(PagemainDestPartBreakParagraph);
+
+                    string altChunkId = "AltChunkId1"; ;
+                    AlternativeFormatImportPart chunk = mainDestPart.AddAlternativeFormatImportPart(AlternativeFormatImportPartType.WordprocessingML, altChunkId);
+                    using (FileStream fileStream = File.Open(sourceCopy, FileMode.Open))
+                    {
+                        chunk.FeedData(fileStream);
+                    }
+                    AltChunk altChunk = new AltChunk();
+                    altChunk.Id = altChunkId;
+
+                    mainDestPart.Document.Body.InsertAfter(altChunk, mainDestPart.Document.Body.Elements<Paragraph>().Last());
+
+                    myDestDoc.MainDocumentPart.Document.Save();
+                    myDestDoc.Close();
+                }
+
+            }
+        }
+
+        public void SearchAndReplaceLike(Document doc, Dictionary<string, string> dict)
+        {
+            var allParas = doc.Descendants<DocumentFormat.OpenXml.Wordprocessing.Text>();
+
+
+            RunProperties runProperties = new RunProperties();
+            Color color = new Color() { Val = "FF0000" }; // Replace "FF0000" with your desired color code
+            runProperties.Append(color);
+
+
+
+            // Create a new Break element to represent the line break
+            Break lineBreak = new Break();
+
+            // Add the line break after the replaced text
+
+
+            foreach (Text item in allParas)
+            {
+                foreach (KeyValuePair<string, string> itm in dict)
+                {
+                    if (item.Text.Trim().Contains(itm.Key.Trim()))
+                    {
+                        string rText = item.Text.Replace(itm.Key.Trim(), itm.Value.Trim());
+                        Run run = new Run();
+                        run.Append(runProperties);
+                        run.Append(new Text(rText));
+
+                        run.Append(lineBreak);
+                        item.Parent.ReplaceChild(run, item);
+                        //item.Space = SpaceProcessingModeValues.Preserve;
+                        item.Text = rText + "\r\n";// item.Text.Replace(itm.Key.Trim(), itm.Value.Trim());
+
+                    }
+                }
+            }
 
         }
+
+
+
+
+        /// <summary>
+        /// CreateWordAd - מקבלת שם של קובץ dotx ואותו היא מעתיקה
+        /// ומכניסה לקובץץ ההמועתק את המודעות מילים בצורה מעוצבת
+        /// </summary>
+        /// <param name="fullname">שם של הקובץ טמפליט</param>
+        /// <param name="path">נייוט לתקיה בה תיווצר תקיה חדשה בשם temp</param>
+
+        public void CreateWordAd(string fullname, string path)
+        {
+            string tempPath = path + @"\temp";
+            if (!Directory.Exists(tempPath)) Directory.CreateDirectory(tempPath);
+            string tempFileFullName = path + @"\temp\temp.dotx";
+            File.Copy(fullname, tempFileFullName, true);
+            WriteToWordAd(tempFileFullName);
+        }
+
+        private void WriteToWordAd(string tempFileFullName)
+        {
+
+            DateTime dateOfPrint = new DateTime(2023, 07, 25);
+
+            List<DatesForOrderDetail> allDates = _datesForOrderDetailActions.GetAllDatesForOrderDetails();
+            List<OrderDetail> relevanteAds = new List<OrderDetail>();
+            foreach (var date in allDates)
+                if (date.Date == dateOfPrint)
+                    relevanteAds.Add(date.Details);
+
+            List<OrderDetail> allRelevantWordAds = new List<OrderDetail>();
+
+            foreach (OrderDetail detail in relevanteAds)
+                if (detail.AdContent != null)
+                    allRelevantWordAds.Add(detail);
+
+            //רשימה של כל תתי הקטגוריות
+            List<WordAdSubCategoryDTO> categories = GetAllWordAdSubCategories();
+            //רשימה של כל פרטי ההזמנה ממוינים לפי קטגוריות
+            List<OrderDetail> allDetailsWordAds = new List<OrderDetail>();
+            //רשימה שתכיל תת קטגוריה ומיד אח"כ את כל המודעות שלה
+            List<string> wordAdToPrint = new List<string>();
+            foreach (WordAdSubCategoryDTO category in categories)
+            {
+                //wordAdToPrint.Add(category.WordCategoryName);
+                using (WordprocessingDocument myDestDoc = WordprocessingDocument.Open(tempFileFullName, true))
+                {
+                    MainDocumentPart mainPart = myDestDoc.MainDocumentPart;
+
+                    Body body = mainPart.Document.Body;
+
+                    Paragraph newParagraph = new Paragraph();
+                    ParagraphProperties paragraphProperties = new ParagraphProperties();
+
+                    Justification justification = new Justification() { Val = JustificationValues.Center };
+                    paragraphProperties.Append(justification);
+
+                    Shading shading = new Shading() { Val = ShadingPatternValues.Solid, Color = "C435FF" };
+                    paragraphProperties.Append(shading);
+
+                    RunProperties runProperties = new RunProperties();
+
+                    Bold bold = new Bold();
+                    runProperties.Append(bold);
+
+                    Color color = new Color() { Val = "FFFFFF" }; // For example, red color
+                    runProperties.Append(color);
+
+                    Text t = new Text(category.WordCategoryName);
+
+                    Run run = new Run();
+                    run.Append(runProperties);
+                    run.Append(t);
+
+                    newParagraph.Append(paragraphProperties);
+                    newParagraph.Append(run);
+                    body.Append(newParagraph);
+
+                    mainPart.Document.Save();
+
+                }
+                foreach (OrderDetail detail in allRelevantWordAds)
+                    if (detail.WordCategoryId == category.WordCategoryId)
+                    {
+                        using (WordprocessingDocument myDestDoc = WordprocessingDocument.Open(tempFileFullName, true))
+                        {
+                            MainDocumentPart mainPart = myDestDoc.MainDocumentPart;
+
+                            Body body = mainPart.Document.Body;
+
+                            Paragraph newParagraph = new Paragraph();
+                            ParagraphProperties paragraphProperties = new ParagraphProperties();
+
+                            Justification justification = new Justification() { Val = JustificationValues.Both };
+                            paragraphProperties.Append(justification);
+
+                            Run run = new Run(new Text("• " + detail.AdContent));
+                            newParagraph.Append(paragraphProperties);
+                            newParagraph.Append(run);
+
+                            body.Append(newParagraph);
+
+                            mainPart.Document.Save();
+                        }
+                    }
+            }
+        }
+
 
     }
 }

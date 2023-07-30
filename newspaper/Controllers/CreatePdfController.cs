@@ -54,7 +54,7 @@ namespace newspaper.Controllers
         [HttpGet("WriteToPdf")]
         public IActionResult WriteToPdf()
         {
-            _funcs.WriteToPdf("C:\\Users\\YAEL\\OneDrive\\שולחן העבודה\\words.pdf");
+            _funcs.WriteToPdf("C:\\Users\\eliah\\Desktop\\words.pdf");
             return Ok("finish!!!");
         }
     }

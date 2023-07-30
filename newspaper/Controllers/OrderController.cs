@@ -22,5 +22,12 @@ namespace newspaper.Controllers
             _funcs.FinishOrder(finishOrder.Customer, finishOrder.ListDates, finishOrder.ListOrderDetails);
             return Ok("finishOrder");
         }
+
+        [HttpPost("FinishOrderAdWords")]
+        public IActionResult FinishOrderAdWords([FromBody] FinishOrderDTO finishOrder)
+        {
+            _funcs.FinishOrderAdWords(finishOrder.Customer, finishOrder.ListDates, finishOrder.ListOrderDetails);
+            return Ok("finishOrder");
+        }
     }
 }
