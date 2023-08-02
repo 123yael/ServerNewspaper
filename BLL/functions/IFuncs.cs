@@ -10,34 +10,84 @@ namespace BLL.functions
 {
     public interface IFuncs
     {
-        public List<AdSizeDTO> GetAllAdSize();
-
-        public List<AdPlacementDTO> GetAllAdPlacement();
-
-        public List<NewspapersPublishedDTO> GetAllNewspapersPublished();
-
-        public void Create(string filename, List<OrderDetail> RelevantOrdersDTO);
-
-        public List<OrderDetailDTO> GetAllOrderDetails();
+        #region WpAdSubCategory
 
         public List<WordAdSubCategoryDTO> GetAllWordAdSubCategories();
 
-        public int GetIdByCustomer(CustomerDTO customer);
+        #endregion
+
+        #region AdSize
+
+        public List<AdSizeDTO> GetAllAdSize();
+
+        #endregion
+
+        #region AdPlacement
+
+        public List<AdPlacementDTO> GetAllAdPlacement();
+
+        #endregion
+
+        #region Customer
+
         public CustomerDTO GetCustomerByEmailAndPass(string email, string pass);
 
-        public void FinishOrder(CustomerDTO customer, List<List<DateTime>> listDates, List<OrderDetailDTO> listOrderDetails);
+        public int GetIdByCustomer(CustomerDTO customer);
 
-        public void FinishOrderAdWords(CustomerDTO customer, List<List<DateTime>> listDates, List<OrderDetailDTO> listOrderDetails);
+        #endregion
 
-        public void ConvertFromWordToPdf(string Input, string Output);
+        #region NewspapersPublished
 
-        public void Shabets(string pathPdf);
+        public List<NewspapersPublishedDTO> GetAllNewspapersPublished();
+
+        #endregion
+
+        #region OrderDetail
+
+        public List<OrderDetailDTO> GetAllOrderDetails();
+
+        #endregion
+
+        //#region PdfSharp
+
+        //public void Shabets(string pathPdf);
+
+        //public void Create(string filename, List<OrderDetail> RelevantOrdersDTO);
+
+        //#endregion
+
+        #region Converts
 
         public void ConvertPdfToWord(string pdfFilePath, string wordFilePath);
 
+        public void ConvertFromWordToPdf(string Input, string Output);
+
+        #endregion
+
+        #region FinishOrder
+
+        public void FinishOrder(CustomerDTO customer, List<DateTime> listDates, List<OrderDetailDTO> listOrderDetails);
+
+        public void FinishOrderAdWords(CustomerDTO customer, List<DateTime> listDates, List<OrderDetailDTO> listOrderDetails);
+
+        #endregion
+
+        #region FunctionsByOpenXml
+
         public void CompleteWordTemplate(string fullname, string path);
+
+        #endregion
+
+        #region CreateWordsAdByOpenXml
 
         public void CreateWordAd(string fullname, string path);
 
+        #endregion
+
+        #region IText
+
+        public void Shabets(string pathPdf);
+
+        #endregion
     }
 }
