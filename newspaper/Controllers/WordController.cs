@@ -73,15 +73,5 @@ namespace newspaper.Controllers
             return Ok("i finish to replace CreateWordAd");
         }
 
-
-        //[HttpGet("bbb")]
-        //public IActionResult bbb()
-        //{
-        //    string pdfFilePath = _environment.WebRootPath + "\\NewspapersPdf\\pdfTemplate.pdf";
-        //    _funcs.Shabets(pdfFilePath);
-        //    return Ok("bbb");
-        //}
-
-
     }
 }

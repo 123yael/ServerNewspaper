@@ -1,4 +1,5 @@
-﻿using BLL.functions;
+﻿using BLL.Exceptions;
+using BLL.functions;
 using DTO.Repository;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -26,6 +27,24 @@ namespace newspaper.Controllers
         public IActionResult GetCustomerByEmailAndPass(string email, string pass)
         {
             return Ok(_funcs.GetCustomerByEmailAndPass(email, pass));
+        }
+
+        [HttpPost("SignUp")]
+        public IActionResult SignUp([FromBody] CustomerDTO cust)
+        {
+            try
+            {
+                CustomerDTO customerDTO = _funcs.SignUp(cust);
+                return Ok(customerDTO);
+            }
+            catch (UserAlreadyExistsException)
+            {
+                return StatusCode(409);
+            }
+            catch (Exception)
+            {
+                return StatusCode(500);
+            }
         }
     }
 }

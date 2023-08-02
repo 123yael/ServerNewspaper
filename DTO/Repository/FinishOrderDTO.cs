@@ -10,7 +10,7 @@ namespace DTO.Repository
     {
         public CustomerDTO Customer { get; set; }
 
-        public List<List<DateTime>> ListDates { get; set; }
+        public List<DateTime> ListDates { get; set; }
 
         public List<OrderDetailDTO> ListOrderDetails { get; set; }
 

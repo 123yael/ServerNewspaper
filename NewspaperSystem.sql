@@ -155,19 +155,6 @@ VALUES('Chani', 'Malkin', 'malkin.chany@gmail.com', '0543488561', '3333')
 GO
 
 ------------------------------------------------------
-INSERT INTO Orders
-VALUES(1, 500, '2023-02-01')
-GO
-
-INSERT INTO Orders
-VALUES(2, 700, '2023-02-02')
-GO
-
-INSERT INTO Orders
-VALUES(3, 1000, '2023-02-03')
-GO
-
-------------------------------------------------------
 
 INSERT INTO AdSizes
 VALUES('Whole page', 8, 4, 1000, 'locationPictures/WholePage.png')
@@ -224,41 +211,3 @@ GO
 INSERT INTO WordAdSubCategories
 VALUES('general')
 GO
-
-------------------------------------------------------
-
-INSERT INTO OrderDetails
-VALUES(1, 2, null, null, 'C:\yael\cakes\עוגות של יעל\IMG_2461.JPG', 6, 1, 1)
-GO
-
-INSERT INTO OrderDetails
-VALUES(1, 3, null, null, 'C:\yael\cakes\עוגות של יעל\IMG_1786.JPG', 6, 1, 1)
-GO
-
-INSERT INTO OrderDetails
-VALUES(2, 4, null, null, 'C:\yael\cakes\עוגות של יעל\IMG_2982.JPG', 3, 3, 1)
-GO
-
-INSERT INTO OrderDetails
-VALUES(3, 5, null, null, 'C:\yael\cakes\עוגות של יעל\image.jpg', 1, 2, 1)
-GO
-
-------------------------------------------------------
-
-INSERT INTO DatesForOrderDetails
-VALUES(1, '2023-02-07', 0)
-GO
-
-INSERT INTO DatesForOrderDetails
-VALUES(2, '2023-02-07', 0)
-GO
-
-INSERT INTO DatesForOrderDetails
-VALUES(3, '2023-02-07', 0)
-GO
-
-INSERT INTO DatesForOrderDetails
-VALUES(4, '2023-02-07', 0)
-GO
-
-------------------------------------------------------
