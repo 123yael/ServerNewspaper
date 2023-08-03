@@ -52,7 +52,25 @@ namespace BLL.functions
 
         #region PdfSharp
 
-        public void Shabets(string pathPdf);
+        public List<NewspapersPublishedDTO> GetAllNewspapersPublished();
+
+        #endregion
+
+        #region OrderDetail
+
+        public List<OrderDetailDTO> GetAllOrderDetails();
+
+        #endregion
+
+        //#region PdfSharp
+
+        //public void Shabets(string pathPdf);
+
+        //public void Create(string filename, List<OrderDetail> RelevantOrdersDTO);
+
+        //#endregion
+
+        #region Converts
 
         public void Inlay(string first, string regular, string words, List<OrderDetail> placeCoverFileAds, List<OrderDetail> placeBackFileAds, List<OrderDetail> placeNormalFileAds);
 

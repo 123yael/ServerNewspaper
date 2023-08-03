@@ -342,6 +342,26 @@ namespace BLL.functions
                         index = -1;
                     }
                 }
+                else if (index == temp.Count - 1)
+                {
+                    if (temp == placeCoverFileAds && flag == false)
+                    {
+                        flag = true;
+                        pc = index;
+                        temp = placeNormalFileAds;
+                        index = -1;
+                    }
+                    else if (temp == placeNormalFileAds && pc < placeCoverFileAds.Count - 1)
+                    {
+                        temp = placeCoverFileAds;
+                        index = pc - 1;
+                    }
+                    else if (temp == placeNormalFileAds || temp == placeCoverFileAds)
+                    {
+                        temp = placeBackFileAds;
+                        index = -1;
+                    }
+                }
             }
             document.Save(first);
         }
