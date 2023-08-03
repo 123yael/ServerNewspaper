@@ -344,19 +344,14 @@ namespace BLL.functions
                 }
                 else if (index == temp.Count - 1)
                 {
-                    if (temp == placeCoverFileAds && flag == false)
+                    if (temp == placeCoverFileAds)
                     {
-                        flag = true;
-                        pc = index;
-                        temp = placeNormalFileAds;
+                        for (int i = index + 1; i < placeCoverFileAds.Count; i++)
+                            placeNormalFileAds.Add(placeCoverFileAds[i]);
                         index = -1;
+                        temp = SortBySizeDesc(placeNormalFileAds);
                     }
-                    else if (temp == placeNormalFileAds && pc < placeCoverFileAds.Count - 1)
-                    {
-                        temp = placeCoverFileAds;
-                        index = pc - 1;
-                    }
-                    else if (temp == placeNormalFileAds || temp == placeCoverFileAds)
+                    else if (temp != placeBackFileAds)
                     {
                         temp = placeBackFileAds;
                         index = -1;
@@ -389,9 +384,10 @@ namespace BLL.functions
             List<OrderDetail> placeNormalFileAds = new List<OrderDetail>();
             List<OrderDetail> manegerFiles = new List<OrderDetail>();
             foreach (OrderDetail detail in allRelevantFileAds)
-                if (detail.Order!.Cust.CustEmail == "malkin.yaeli@gmail.com")
-                    manegerFiles.Add(detail);
-                else if (detail.PlaceId == 1)
+                //if (detail.Order!.Cust.CustEmail == "malkin.yaeli@gmail.com")
+                //    manegerFiles.Add(detail);
+                //else 
+                if (detail.PlaceId == 1)
                     placeCoverFileAds.Add(detail);
                 else if (detail.PlaceId == 2)
                     placeBackFileAds.Add(detail);
