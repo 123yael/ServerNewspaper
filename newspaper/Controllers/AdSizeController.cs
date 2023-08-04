@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System;
-using BLL.functions;
+using BLL.Functions;
 
 namespace newspaper.Controllers
 {

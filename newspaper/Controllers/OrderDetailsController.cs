@@ -1,4 +1,4 @@
-﻿using BLL.functions;
+﻿using BLL.Functions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System;

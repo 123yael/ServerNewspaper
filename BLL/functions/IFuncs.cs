@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BLL.functions
+namespace BLL.Functions
 {
     public interface IFuncs
     {
@@ -53,8 +53,6 @@ namespace BLL.functions
         #region PdfSharp
 
         public void Shabets(string pathPdf);
-
-        public void Inlay(string first, string regular, string words, List<OrderDetail> placeCoverFileAds, List<OrderDetail> placeBackFileAds, List<OrderDetail> placeNormalFileAds);
 
         #endregion
 

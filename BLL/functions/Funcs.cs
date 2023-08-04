@@ -41,7 +41,7 @@ using Microsoft.Extensions.Configuration;
 using static iText.StyledXmlParser.Jsoup.Select.Evaluator;
 using Org.BouncyCastle.Asn1.Pkcs;
 
-namespace BLL.functions
+namespace BLL.Functions
 {
     public class Funcs : IFuncs
     {
@@ -222,7 +222,7 @@ namespace BLL.functions
         // מיון מהקטן לגדול
         private List<OrderDetail> SortBySize(List<OrderDetail> orderDetails)
         {
-            return orderDetails.OrderByDescending(x => x.Size?.SizeHeight)
+            return orderDetails.OrderBy(x => x.Size?.SizeHeight)
                 .ThenBy(x => x.Size?.SizeWidth)
                 .ToList();
         }
@@ -306,7 +306,7 @@ namespace BLL.functions
             FillMat(matPage, i, j, widthImage, heightImage, detail.AdFile!);
         }
 
-        public void Inlay(string first, string regular, string words, List<OrderDetail> placeCoverFileAds, List<OrderDetail> placeBackFileAds, List<OrderDetail> placeNormalFileAds)
+        private void Inlay(string first, string regular, string words, List<OrderDetail> placeCoverFileAds, List<OrderDetail> placeBackFileAds, List<OrderDetail> placeNormalFileAds)
         {
             int rows = 8;
             int cols = 4;
@@ -330,6 +330,7 @@ namespace BLL.functions
             string[,] matPage;
             for (int index = 0; index < placeBackFileAds.Count; index++)
             {
+                isInserted = false;
                 currentDetail = placeBackFileAds[index];
                 int widthImage = (int)currentDetail.Size!.SizeWidth;
                 int heightImage = (int)currentDetail.Size!.SizeHeight;
@@ -347,10 +348,10 @@ namespace BLL.functions
                             FillMat(backMat, i, j, widthImage, heightImage, currentDetail.AdFile!);
                             isInserted = true;
                         }
-                        else
-                            placeNormalFileAds.Add(currentDetail);
                     }
                 }
+                if(!isInserted)
+                    placeNormalFileAds.Add(currentDetail);
             }
             for (int index = 0; index < tempListToInsert.Count; index++)
             {
@@ -477,7 +478,7 @@ namespace BLL.functions
             ConvertFromWordToPdf(firstWord, first);
             ConvertFromWordToPdf(wordsWord, words);
 
-            Inlay(first, regular, words, SortBySize(placeCoverFileAds), placeBackFileAds, SortBySizeDesc(placeNormalFileAds));
+            Inlay(first, regular, words, SortBySize(placeCoverFileAds), SortBySizeDesc(placeBackFileAds), SortBySizeDesc(placeNormalFileAds));
 
         }
 
@@ -762,7 +763,7 @@ namespace BLL.functions
 
         private void WriteToWordAd(string tempFileFullName)
         {
-            DateTime dateOfPrint = new DateTime(2023, 07, 25);
+            DateTime dateOfPrint = new DateTime(2023, 08, 08);
 
             List<DatesForOrderDetail> allDates = _datesForOrderDetailActions.GetAllDatesForOrderDetails();
             List<OrderDetail> relevanteAds = new List<OrderDetail>();
@@ -776,15 +777,14 @@ namespace BLL.functions
                 if (detail.AdContent != null)
                     allRelevantWordAds.Add(detail);
 
-            //רשימה של כל תתי הקטגוריות
             List<WordAdSubCategoryDTO> categories = GetAllWordAdSubCategories();
-            //רשימה של כל פרטי ההזמנה ממוינים לפי קטגוריות
+
             List<OrderDetail> allDetailsWordAds = new List<OrderDetail>();
-            //רשימה שתכיל תת קטגוריה ומיד אח"כ את כל המודעות שלה
+
             List<string> wordAdToPrint = new List<string>();
+
             foreach (WordAdSubCategoryDTO category in categories)
             {
-                //wordAdToPrint.Add(category.WordCategoryName);
                 using (WordprocessingDocument myDestDoc = WordprocessingDocument.Open(tempFileFullName, true))
                 {
                     MainDocumentPart mainPart = myDestDoc.MainDocumentPart;
@@ -839,6 +839,9 @@ namespace BLL.functions
                             Run run = new Run(new Text("• " + detail.AdContent));
                             newParagraph.Append(paragraphProperties);
                             newParagraph.Append(run);
+
+                            //BookmarkStart bookmarkStart = myDestDoc.MainDocumentPart.RootElement.Descendants<BookmarkStart>()
+                            //                .FirstOrDefault(b => b.Name == bookmarkName);
 
                             body.Append(newParagraph);
 

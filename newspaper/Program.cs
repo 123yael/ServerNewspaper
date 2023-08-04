@@ -1,4 +1,4 @@
-using BLL.functions;
+using BLL.Functions;
 using DAL.Actions.Classes;
 using DAL.Actions.Interfaces;
 using DAL.Models;
