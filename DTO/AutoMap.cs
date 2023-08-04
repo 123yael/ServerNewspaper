@@ -29,7 +29,7 @@ namespace DTO
             CreateMap<DatesForOrderDetailDTO, DatesForOrderDetail>();
             CreateMap<DatesForOrderDetail, DatesForOrderDetailDTO>().ForMember(dest =>
             dest.DetailsId, opt =>
-            opt.MapFrom(src => src.Details.DetailsId)); ;
+            opt.MapFrom(src => src.Details.DetailsId));
 
             CreateMap<NewspapersPublishedDTO, NewspapersPublished>();
             CreateMap<NewspapersPublished, NewspapersPublishedDTO>()

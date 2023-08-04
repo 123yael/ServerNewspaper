@@ -1,5 +1,6 @@
 ﻿using DAL.Actions.Interfaces;
 using DAL.Models;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -30,7 +31,7 @@ namespace DAL.Actions.Classes
 
         public List<Order> GetAllOrders()
         {
-            return _dbNewspapers.Orders.ToList();
+            return _dbNewspapers.Orders.Include(x => x.Cust).ToList();
         }
 
         public void UpdateOrder(int id, Order order)

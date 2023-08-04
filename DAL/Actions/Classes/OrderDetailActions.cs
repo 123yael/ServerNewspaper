@@ -32,7 +32,7 @@ namespace DAL.Actions.Classes
 
         public List<OrderDetail> GetAllOrderDetails()
         {
-            return _dbNewspapers.OrderDetails.Include(x => x.Size).ToList();
+            return _dbNewspapers.OrderDetails.Include(x => x.Size).Include(x => x.Order).ToList();
         }
 
 

@@ -31,7 +31,7 @@ namespace DAL.Actions.Classes
 
         public List<DatesForOrderDetail> GetAllDatesForOrderDetails()
         {
-            return _dbNewspapers.DatesForOrderDetails.Include(x => x.Details).Include(x => x.Details.Size).ToList();
+            return _dbNewspapers.DatesForOrderDetails.Include(x => x.Details.Order.Cust).Include(x => x.Details.Size).ToList();
         }
 
         public void UpdateDateForOrderDetail(int id, DatesForOrderDetail dateForOrderDetail)

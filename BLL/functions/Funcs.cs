@@ -36,13 +36,17 @@ using BLL.Exceptions;
 //using iText.Kernel.Pdf.Canvas;
 // Aspose.Pdf
 //using Aspose.Pdf;
-
+using System.Configuration;
+using Microsoft.Extensions.Configuration;
+using static iText.StyledXmlParser.Jsoup.Select.Evaluator;
+using Org.BouncyCastle.Asn1.Pkcs;
 
 namespace BLL.functions
 {
     public class Funcs : IFuncs
     {
         static IMapper _Mapper;
+        private IConfiguration _config;
 
         private string myPath = "C:\\yael\\final_project\\newspaperProject\\server\\newspaper\\newspaper\\wwwroot\\TempWord";
 
@@ -72,7 +76,8 @@ namespace BLL.functions
             IWordAdSubCategoryActions wpAdSubCategoryActions,
             ICustomerActions customerActions,
             IOrderActions order,
-            INewspapersPublishedActions newspapersPublished)
+            INewspapersPublishedActions newspapersPublished,
+            IConfiguration config)
         {
             _adSize = adSize;
             _ordersDetailActions = ordersDetailActions;
@@ -82,7 +87,7 @@ namespace BLL.functions
             _customerActions = customerActions;
             _order = order;
             _newspapersPublished = newspapersPublished;
-
+            _config = config;
         }
 
         #region WpAdSubCategory
@@ -239,6 +244,52 @@ namespace BLL.functions
 
         #region PdfSharp
 
+        private bool IsMatFull(string[,] mat)
+        {
+            for (int i = 0; i < mat.GetLength(0); i++)
+                for (int j = 0; j < mat.GetLength(1); j++)
+                    if (mat[i, j] == null)
+                        return false;
+            return true;
+        }
+
+        private bool IsListOfMatsFull(string[][,] mat)
+        {
+            for (int i = 0; i < mat.GetLength(0); i++)
+                if (!IsMatFull(mat[i]))
+                    return false;
+            return true;
+        }
+
+        private bool IsInsertedFileOnPage(string[,] mat, bool isInserted, OrderDetail currentDetail, int widthImage, int heightImage, PdfPage page, XGraphics gfx)
+        {
+            bool isEmpty;
+            for (int i = 0; i < mat.GetLength(0) && !isInserted; i = i + widthImage)
+            {
+                for (int j = 0; j < mat.GetLength(1) && !isInserted; j = j + heightImage)
+                {
+                    isEmpty = true;
+                    for (int q = i; q < i + widthImage && isEmpty; q++)
+                        for (int l = j; l < j + heightImage && isEmpty; l++)
+                            isEmpty = mat[q, l] == null;
+
+                    if (isEmpty)
+                    {
+                        DrawImageOnPage(page, gfx, mat, currentDetail, i, j);
+                        isInserted = true;
+                    }
+                }
+            }
+            return isInserted;
+        }
+        
+        private void FillMat(string[,] mat, int sc, int sr, int col, int row, string nameOfImage)
+        {
+            for (int i = sc; i < sc + col; i++)
+                for (int j = sr; j < sr + row; j++)
+                    mat[i, j] = nameOfImage;
+        }
+
         private void DrawImage(XGraphics gfx, string jpegSamplePath, int x, int y, int width, int height)
         {
             XImage image = XImage.FromFile("C:\\yael\\final_project\\newspaperProject\\server\\newspaper\\newspaper\\wwwroot\\Upload\\" + jpegSamplePath);
@@ -252,111 +303,124 @@ namespace BLL.functions
             int w = ((int)page.Width - 15) / 4;
             int h = ((int)page.Height - 32) / 8;
             DrawImage(gfx, detail.AdFile!, 16 + w * i, 16 + h * j, w * widthImage - 16, h * heightImage - 16);
-            for (int q = i; q < i + widthImage; q++)
-                for (int l = j; l < j + heightImage; l++)
-                    matPage[q, l] = detail.AdFile!;
+            FillMat(matPage, i, j, widthImage, heightImage, detail.AdFile!);
         }
 
         public void Inlay(string first, string regular, string words, List<OrderDetail> placeCoverFileAds, List<OrderDetail> placeBackFileAds, List<OrderDetail> placeNormalFileAds)
         {
-            List<string[,]> pagesMats = new List<string[,]>();
+            int rows = 8;
+            int cols = 4;
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+            List<string[,]> pagesMats = new List<string[,]>();
             PdfDocument document = PdfReader.Open(first, PdfDocumentOpenMode.Modify);
-            pagesMats.Add(new string[4, 8]);
-            for (int q = 0; q < 4; q++)
-                for (int l = 0; l < 2; l++)
-                    pagesMats[0][q, l] = "titleImage";
             PdfDocument newDocument = PdfReader.Open(regular, PdfDocumentOpenMode.Import);
             PdfPage page = document.Pages[0];
             PdfPage tempPage = newDocument.Pages[0];
-            PdfPage backPage = new PdfPage();
+            pagesMats.Add(new string[cols, rows]);
             XGraphics gfx = XGraphics.FromPdfPage(page);
-            List<XGraphics> xGraphics = new List<XGraphics> { gfx };
-            List<OrderDetail> temp = placeCoverFileAds;
-            OrderDetail detail;
-            for (int index = 0; index < temp.Count; index++)
+            List<XGraphics> xGraphicss = new List<XGraphics> { gfx };
+            FillMat(pagesMats[0], 0, 0, cols, (int)(rows * 0.25), "titleImage");
+            List<OrderDetail> tempListToInsert = placeCoverFileAds;
+            string[,] backMat = new string[cols, rows];
+            OrderDetail currentDetail;
+            List<OrderDetail> anyFilesToInsertToBack = new List<OrderDetail>();
+            bool isInserted = false;
+            bool isEmpty;
+            string[,] newPage;
+            string[,] matPage;
+            for (int index = 0; index < placeBackFileAds.Count; index++)
             {
-                detail = temp[index];
-                bool isInserted = false;
-                int widthImage = (int)detail.Size!.SizeWidth;
-                int heightImage = (int)detail.Size!.SizeHeight;
-                for (int k = 0; k < pagesMats.Count; k++)
+                currentDetail = placeBackFileAds[index];
+                int widthImage = (int)currentDetail.Size!.SizeWidth;
+                int heightImage = (int)currentDetail.Size!.SizeHeight;
+                for (int i = 0; i < backMat.GetLength(0) && !isInserted; i = i + widthImage)
                 {
-                    string[,] matPage = pagesMats[k];
-                    gfx = xGraphics[k];
-                    page = document.Pages[k];
-                    bool isEmpty;
-                    for (int i = 0; i < matPage.GetLength(0) && !isInserted; i = i + widthImage)
+                    for (int j = 0; j < backMat.GetLength(1) && !isInserted; j = j + heightImage)
                     {
-                        for (int j = 0; j < matPage.GetLength(1) && !isInserted; j = j + heightImage)
+                        isEmpty = true;
+                        for (int q = i; q < i + widthImage && isEmpty; q++)
+                            for (int l = j; l < j + heightImage && isEmpty; l++)
+                                isEmpty = backMat[q, l] == null;
+                        if (isEmpty)
                         {
-                            isEmpty = true;
-                            if (matPage[i, j] == null)
-                            {
-                                for (int q = i; q < i + widthImage && isEmpty; q++)
-                                    for (int l = j; l < j + heightImage && isEmpty; l++)
-                                        if (matPage[q, l] != null)
-                                            isEmpty = false;
-                            }
-                            else
-                                isEmpty = false;
-                            if (isEmpty)
-                            {
-                                DrawImageOnPage(page, gfx, matPage, detail, i, j);
-                                isInserted = true;
-                            }
+                            anyFilesToInsertToBack.Add(currentDetail);
+                            FillMat(backMat, i, j, widthImage, heightImage, currentDetail.AdFile!);
+                            isInserted = true;
                         }
+                        else
+                            placeNormalFileAds.Add(currentDetail);
                     }
+                }
+            }
+            for (int index = 0; index < tempListToInsert.Count; index++)
+            {
+                isInserted = false;
+                currentDetail = tempListToInsert[index];
+                int widthImage = (int)currentDetail.Size!.SizeWidth;
+                int heightImage = (int)currentDetail.Size!.SizeHeight;
+                for (int k = 0; k < pagesMats.Count && !isInserted; k++)
+                {
+                    matPage = pagesMats[k];
+                    gfx = xGraphicss[k];
+                    page = document.Pages[k];
+                    isInserted = IsInsertedFileOnPage(matPage, isInserted, currentDetail, widthImage, heightImage, page, gfx);
                 }
 
                 if (!isInserted)
                 {
-                    if (page == document.Pages[0] && temp == placeCoverFileAds)
+                    if (page == document.Pages[0] && tempListToInsert == placeCoverFileAds)
                     {
                         for (int i = index; i < placeCoverFileAds.Count; i++)
                             placeNormalFileAds.Add(placeCoverFileAds[i]);
-                        temp = SortBySizeDesc(placeNormalFileAds);
+                        tempListToInsert = SortBySizeDesc(placeNormalFileAds);
                         index = -1;
                         continue;
                     }
-                    string[,] newPage = new string[4, 8];
+                    newPage = new string[4, 8];
                     document.AddPage(tempPage);
                     page = document.Pages[document.Pages.Count - 1];
                     gfx = XGraphics.FromPdfPage(page);
-                    xGraphics.Add(gfx);
-                    DrawImageOnPage(page, gfx, newPage, detail, 0, 0);
+                    xGraphicss.Add(gfx);
+                    DrawImageOnPage(page, gfx, newPage, currentDetail, 0, 0);
                     pagesMats.Add(newPage);
                 }
-                else if (index == temp.Count - 1)
+                else if (index == tempListToInsert.Count - 1)
                 {
-                    if (temp == placeCoverFileAds)
+                    if (tempListToInsert == placeCoverFileAds)
                     {
                         for (int i = index + 1; i < placeCoverFileAds.Count; i++)
                             placeNormalFileAds.Add(placeCoverFileAds[i]);
                         index = -1;
-                        temp = SortBySizeDesc(placeNormalFileAds);
+                        tempListToInsert = SortBySizeDesc(placeNormalFileAds);
                     }
-                    else if (temp != placeBackFileAds)
+                    else if (tempListToInsert == placeNormalFileAds)
                     {
-                        temp = placeBackFileAds;
+                        tempListToInsert = anyFilesToInsertToBack;
                         index = -1;
+                        newPage = new string[4, 8];
+                        document.AddPage(tempPage);
+                        page = document.Pages[document.Pages.Count - 1];
+                        gfx = XGraphics.FromPdfPage(page);
+                        xGraphicss.Add(gfx);
+                        pagesMats.Add(newPage);
                     }
                 }
-                else if (index == temp.Count - 1)
-                {
-                    if (temp == placeCoverFileAds)
-                    {
-                        for (int i = index + 1; i < placeCoverFileAds.Count; i++)
-                            placeNormalFileAds.Add(placeCoverFileAds[i]);
-                        index = -1;
-                        temp = SortBySizeDesc(placeNormalFileAds);
-                    }
-                    else if (temp != placeBackFileAds)
-                    {
-                        temp = placeBackFileAds;
-                        index = -1;
-                    }
-                }
+            }
+
+            // הוספת העמוד האחורי
+            newPage = new string[4, 8];
+            document.AddPage(tempPage);
+            page = document.Pages[document.Pages.Count - 1];
+            gfx = XGraphics.FromPdfPage(page);
+            xGraphicss.Add(gfx);
+            pagesMats.Add(newPage);
+            for (int index = 0; index < anyFilesToInsertToBack.Count; index++)
+            {
+                isInserted = false;
+                currentDetail = anyFilesToInsertToBack[index];
+                int widthImage = (int)currentDetail.Size!.SizeWidth;
+                int heightImage = (int)currentDetail.Size!.SizeHeight;
+                isInserted = IsInsertedFileOnPage(newPage, isInserted, currentDetail, widthImage, heightImage, page, gfx);
             }
             document.Save(first);
         }
@@ -382,12 +446,11 @@ namespace BLL.functions
             List<OrderDetail> placeCoverFileAds = new List<OrderDetail>();
             List<OrderDetail> placeBackFileAds = new List<OrderDetail>();
             List<OrderDetail> placeNormalFileAds = new List<OrderDetail>();
-            List<OrderDetail> manegerFiles = new List<OrderDetail>();
+            List<OrderDetail> managerFiles = new List<OrderDetail>();
             foreach (OrderDetail detail in allRelevantFileAds)
-                //if (detail.Order!.Cust.CustEmail == "malkin.yaeli@gmail.com")
-                //    manegerFiles.Add(detail);
-                //else 
-                if (detail.PlaceId == 1)
+                if (detail.Order!.Cust.CustEmail == _config["ManagerEmail"])
+                    managerFiles.Add(detail);
+                else if (detail.PlaceId == 1)
                     placeCoverFileAds.Add(detail);
                 else if (detail.PlaceId == 2)
                     placeBackFileAds.Add(detail);
