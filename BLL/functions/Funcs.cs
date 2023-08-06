@@ -40,6 +40,12 @@ using System.Configuration;
 using Microsoft.Extensions.Configuration;
 using static iText.StyledXmlParser.Jsoup.Select.Evaluator;
 using Org.BouncyCastle.Asn1.Pkcs;
+using Aspose.Pdf.Operators;
+using Microsoft.EntityFrameworkCore.Query.Internal;
+using Spire.Pdf.Graphics;
+using iText.Kernel.Pdf.Xobject;
+using PdfSharp.Pdf.Advanced;
+using System.Drawing;
 
 namespace BLL.Functions
 {
@@ -282,7 +288,7 @@ namespace BLL.Functions
             }
             return isInserted;
         }
-        
+
         private void FillMat(string[,] mat, int sc, int sr, int col, int row, string nameOfImage)
         {
             for (int i = sc; i < sc + col; i++)
@@ -350,7 +356,7 @@ namespace BLL.Functions
                         }
                     }
                 }
-                if(!isInserted)
+                if (!isInserted)
                     placeNormalFileAds.Add(currentDetail);
             }
             for (int index = 0; index < tempListToInsert.Count; index++)
@@ -480,11 +486,13 @@ namespace BLL.Functions
 
             Inlay(first, regular, words, SortBySize(placeCoverFileAds), SortBySizeDesc(placeBackFileAds), SortBySizeDesc(placeNormalFileAds));
 
+            ConvertPdfToImages(first, "C:\\yael\\final_project\\newspaperProject\\server\\newspaper\\newspaper\\wwwroot\\Newspapers\\08.08.2023");
         }
 
         #endregion
 
         #region Converts
+
 
         public void ConvertFromWordToPdf(string Input, string Output)
         {
@@ -509,6 +517,30 @@ namespace BLL.Functions
                 pdfFocus.ToWord(wordFilePath);
             }
         }
+
+        public void ConvertPdfToImages(string pdfFilePath, string pathImages)
+        {
+            //Create a PdfDocument instance
+            Spire.Pdf.PdfDocument pdf = new Spire.Pdf.PdfDocument();
+
+            //Load a sample PDF document
+            pdf.LoadFromFile(pdfFilePath);
+
+            //Loop through each page in the PDF
+            for (int i = 0; i < pdf.Pages.Count; i++)
+            {
+                //Convert all pages to images and set the image Dpi
+                System.Drawing.Image image = pdf.SaveAsImage(i, Spire.Pdf.Graphics.PdfImageType.Bitmap, 500, 500);
+
+                //Save images as PNG format to a specified folder
+                string file = String.Format(pathImages + "\\{0}.png", i);
+                image.Save(file, System.Drawing.Imaging.ImageFormat.Png);
+
+            }
+
+        }
+
+
 
         #endregion
 
@@ -839,9 +871,6 @@ namespace BLL.Functions
                             Run run = new Run(new Text("• " + detail.AdContent));
                             newParagraph.Append(paragraphProperties);
                             newParagraph.Append(run);
-
-                            //BookmarkStart bookmarkStart = myDestDoc.MainDocumentPart.RootElement.Descendants<BookmarkStart>()
-                            //                .FirstOrDefault(b => b.Name == bookmarkName);
 
                             body.Append(newParagraph);
 
