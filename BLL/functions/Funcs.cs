@@ -46,6 +46,9 @@ using Spire.Pdf.Graphics;
 using iText.Kernel.Pdf.Xobject;
 using PdfSharp.Pdf.Advanced;
 using System.Drawing;
+using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
+//using Microsoft.Office.Interop.Word;
+//using Microsoft.Office.Interop.Word;
 
 namespace BLL.Functions
 {
@@ -267,8 +270,9 @@ namespace BLL.Functions
             return true;
         }
 
-        private bool IsInsertedFileOnPage(string[,] mat, bool isInserted, OrderDetail currentDetail, int widthImage, int heightImage, PdfPage page, XGraphics gfx)
+        private bool IsInsertedFileOnPage(string[,] mat, OrderDetail currentDetail, int widthImage, int heightImage, PdfPage page, XGraphics gfx)
         {
+            bool isInserted = false;
             bool isEmpty;
             for (int i = 0; i < mat.GetLength(0) && !isInserted; i = i + widthImage)
             {
@@ -312,28 +316,44 @@ namespace BLL.Functions
             FillMat(matPage, i, j, widthImage, heightImage, detail.AdFile!);
         }
 
-        private void Inlay(string first, string regular, string words, List<OrderDetail> placeCoverFileAds, List<OrderDetail> placeBackFileAds, List<OrderDetail> placeNormalFileAds)
+        private void Inlay(string final, string regular, string words, List<OrderDetail> placeCoverFileAds, List<OrderDetail> placeBackFileAds, List<OrderDetail> placeNormalFileAds)
         {
             int rows = 8;
             int cols = 4;
+
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+
             List<string[,]> pagesMats = new List<string[,]>();
-            PdfDocument document = PdfReader.Open(first, PdfDocumentOpenMode.Modify);
-            PdfDocument newDocument = PdfReader.Open(regular, PdfDocumentOpenMode.Import);
-            PdfPage page = document.Pages[0];
-            PdfPage tempPage = newDocument.Pages[0];
+
+            PdfDocument finalDocument = PdfReader.Open(final, PdfDocumentOpenMode.Modify);
+            PdfDocument regularDocument = PdfReader.Open(regular, PdfDocumentOpenMode.Import);
+            PdfDocument wordsDocument = PdfReader.Open(words, PdfDocumentOpenMode.Import);
+            PdfPage page = finalDocument.Pages[0];
+            PdfPage regularPage = regularDocument.Pages[0];
+            PdfPage wordsPage = wordsDocument.Pages[0];
+
             pagesMats.Add(new string[cols, rows]);
             XGraphics gfx = XGraphics.FromPdfPage(page);
             List<XGraphics> xGraphicss = new List<XGraphics> { gfx };
             FillMat(pagesMats[0], 0, 0, cols, (int)(rows * 0.25), "titleImage");
+
             List<OrderDetail> tempListToInsert = placeCoverFileAds;
+            List<OrderDetail> tempListToInsertToWords;
+
             string[,] backMat = new string[cols, rows];
-            OrderDetail currentDetail;
+            string[,] wordsMat = new string[cols, rows];
+            FillMat(wordsMat, 0, 0, 2, 4, "words");
+            FillMat(wordsMat, 0, 4, 1, 4, "words");
             List<OrderDetail> anyFilesToInsertToBack = new List<OrderDetail>();
-            bool isInserted = false;
+            List<OrderDetail> anyFilesToInsertToWords = new List<OrderDetail>();
+
+            OrderDetail currentDetail;
+            bool isInserted;
             bool isEmpty;
             string[,] newPage;
             string[,] matPage;
+
+            // רישום המודעות לעמוד האחורי, מודעה שאין לה מקום נכנסת למודעות שאין להן עדיפות
             for (int index = 0; index < placeBackFileAds.Count; index++)
             {
                 isInserted = false;
@@ -359,6 +379,7 @@ namespace BLL.Functions
                 if (!isInserted)
                     placeNormalFileAds.Add(currentDetail);
             }
+
             for (int index = 0; index < tempListToInsert.Count; index++)
             {
                 isInserted = false;
@@ -369,13 +390,13 @@ namespace BLL.Functions
                 {
                     matPage = pagesMats[k];
                     gfx = xGraphicss[k];
-                    page = document.Pages[k];
-                    isInserted = IsInsertedFileOnPage(matPage, isInserted, currentDetail, widthImage, heightImage, page, gfx);
+                    page = finalDocument.Pages[k];
+                    isInserted = IsInsertedFileOnPage(matPage, currentDetail, widthImage, heightImage, page, gfx);
                 }
 
                 if (!isInserted)
                 {
-                    if (page == document.Pages[0] && tempListToInsert == placeCoverFileAds)
+                    if (page == finalDocument.Pages[0] && tempListToInsert == placeCoverFileAds)
                     {
                         for (int i = index; i < placeCoverFileAds.Count; i++)
                             placeNormalFileAds.Add(placeCoverFileAds[i]);
@@ -384,8 +405,8 @@ namespace BLL.Functions
                         continue;
                     }
                     newPage = new string[4, 8];
-                    document.AddPage(tempPage);
-                    page = document.Pages[document.Pages.Count - 1];
+                    finalDocument.AddPage(regularPage);
+                    page = finalDocument.Pages[finalDocument.Pages.Count - 1];
                     gfx = XGraphics.FromPdfPage(page);
                     xGraphicss.Add(gfx);
                     DrawImageOnPage(page, gfx, newPage, currentDetail, 0, 0);
@@ -405,8 +426,8 @@ namespace BLL.Functions
                         tempListToInsert = anyFilesToInsertToBack;
                         index = -1;
                         newPage = new string[4, 8];
-                        document.AddPage(tempPage);
-                        page = document.Pages[document.Pages.Count - 1];
+                        finalDocument.AddPage(regularPage);
+                        page = finalDocument.Pages[finalDocument.Pages.Count - 1];
                         gfx = XGraphics.FromPdfPage(page);
                         xGraphicss.Add(gfx);
                         pagesMats.Add(newPage);
@@ -414,32 +435,38 @@ namespace BLL.Functions
                 }
             }
 
+
+            // הוספת עמוד מילים
+            finalDocument.AddPage(wordsPage);
+
             // הוספת העמוד האחורי
-            newPage = new string[4, 8];
-            document.AddPage(tempPage);
-            page = document.Pages[document.Pages.Count - 1];
+            newPage = new string[cols, rows];
+            finalDocument.AddPage(regularPage);
+            page = finalDocument.Pages[finalDocument.Pages.Count - 1];
             gfx = XGraphics.FromPdfPage(page);
             xGraphicss.Add(gfx);
             pagesMats.Add(newPage);
             for (int index = 0; index < anyFilesToInsertToBack.Count; index++)
             {
-                isInserted = false;
                 currentDetail = anyFilesToInsertToBack[index];
                 int widthImage = (int)currentDetail.Size!.SizeWidth;
                 int heightImage = (int)currentDetail.Size!.SizeHeight;
-                isInserted = IsInsertedFileOnPage(newPage, isInserted, currentDetail, widthImage, heightImage, page, gfx);
+                isInserted = IsInsertedFileOnPage(newPage, currentDetail, widthImage, heightImage, page, gfx);
             }
-            document.Save(first);
+            finalDocument.Save(final);
         }
 
         public void Shabets(string pathPdf)
         {
+            // תאריך יציאת העיתון
+            DateTime dateForPrint = new DateTime(2023, 08, 08);
+
             // זה בקיצור שליפת כל פרטי ההזמנות הרלונטיות
             List<DatesForOrderDetail> allDates = _datesForOrderDetailActions.GetAllDatesForOrderDetails();
             List<OrderDetail> relevanteAds = new List<OrderDetail>();
             foreach (var date in allDates)
-                if (date.Date == new DateTime(2023, 08, 08) ||
-                    date.Date.AddDays(((double)date.Details.AdDuration - 1) * 7) >= new DateTime(2023, 08, 08))
+                if (date.Date == dateForPrint ||
+                    date.Date.AddDays(((double)date.Details.AdDuration - 1) * 7) >= dateForPrint)
                     relevanteAds.Add(date.Details);
 
             // הגדרת רשימות של פרסומת
@@ -476,17 +503,31 @@ namespace BLL.Functions
             string firstWord = myPath + "\\firstTemplate" + ".dotx";
             string words = myPath + "\\wordsTemplate" + ".pdf";
             string wordsWord = myPath + "\\wordsTemplate" + ".dotx";
+            string final = myPath + "\\finalNewspaper" + ".pdf";
+            string finalNewspaper = myPath + "\\finalNewspaper" + ".dotx";
+
+            // הוספת עמוד מילים
+            CreateWordAd(wordsWord, myPath);
+
+            // עדכון הבוקמרקים בגליון ותאריך
+            Dictionary<string, string> keyValues = new Dictionary<string, string>();
+            keyValues.Add("num", newspaperId.ToString());
+            keyValues.Add("date", dateForPrint.ToString("d"));
+            File.Copy(firstWord, finalNewspaper, true);
+            using (WordprocessingDocument myDoc = WordprocessingDocument.Open(finalNewspaper, true))
+            {
+                SearchAndReplaceLike(myDoc.MainDocumentPart!.Document, keyValues);
+            }
 
             // מיון המודעות בקצרה
             allRelevantFileAds = SortBySizeDesc(allRelevantFileAds);
 
             ConvertFromWordToPdf(regularWord, regular);
-            ConvertFromWordToPdf(firstWord, first);
-            ConvertFromWordToPdf(wordsWord, words);
+            ConvertFromWordToPdf(finalNewspaper, final);
 
-            Inlay(first, regular, words, SortBySize(placeCoverFileAds), SortBySizeDesc(placeBackFileAds), SortBySizeDesc(placeNormalFileAds));
+            Inlay(final, regular, words, SortBySize(placeCoverFileAds), SortBySizeDesc(placeBackFileAds), SortBySizeDesc(placeNormalFileAds));
 
-            ConvertPdfToImages(first, "C:\\yael\\final_project\\newspaperProject\\server\\newspaper\\newspaper\\wwwroot\\Newspapers\\08.08.2023");
+            ConvertPdfToImages(final, "C:\\yael\\final_project\\newspaperProject\\server\\newspaper\\newspaper\\wwwroot\\Newspapers\\08.08.2023");
         }
 
         #endregion
@@ -494,11 +535,11 @@ namespace BLL.Functions
         #region Converts
 
 
-        public void ConvertFromWordToPdf(string Input, string Output)
+        public void ConvertFromWordToPdf(string dotxFilePath, string pdfFilePath)
         {
             ComponentInfo.SetLicense("FREE-LIMITED-KEY");
-            var doc = DocumentModel.Load(Input);
-            doc.Save(Output);
+            DocumentModel document = DocumentModel.Load(dotxFilePath, LoadOptions.DocxDefault);
+            document.Save(pdfFilePath);
         }
 
         public void ConvertPdfToWord(string pdfFilePath, string wordFilePath)
@@ -539,7 +580,6 @@ namespace BLL.Functions
             }
 
         }
-
 
 
         #endregion
@@ -643,7 +683,7 @@ namespace BLL.Functions
             File.Copy(fullname, tempFileFullName, true);
             using (WordprocessingDocument myDoc = WordprocessingDocument.Open(tempFileFullName, true))
             {
-                //ReplaceUserWordTemplates(myDoc);
+                ReplaceUserWordTemplates(myDoc);
                 myDoc.MainDocumentPart.Document.Save();
                 myDoc.Close();
             }
@@ -743,13 +783,6 @@ namespace BLL.Functions
         {
             var allParas = doc.Descendants<DocumentFormat.OpenXml.Wordprocessing.Text>();
 
-            RunProperties runProperties = new RunProperties();
-            Color color = new Color() { Val = "FF0000" }; // Replace "FF0000" with your desired color code
-            runProperties.Append(color);
-
-            // Create a new Break element to represent the line break
-            Break lineBreak = new Break();
-
             // Add the line break after the replaced text
             foreach (Text item in allParas)
             {
@@ -759,18 +792,14 @@ namespace BLL.Functions
                     {
                         string rText = item.Text.Replace(itm.Key.Trim(), itm.Value.Trim());
                         Run run = new Run();
-                        run.Append(runProperties);
                         run.Append(new Text(rText));
+                        run.Append(new Color());
 
-                        run.Append(lineBreak);
                         item.Parent.ReplaceChild(run, item);
-                        //item.Space = SpaceProcessingModeValues.Preserve;
-                        item.Text = rText + "\r\n";// item.Text.Replace(itm.Key.Trim(), itm.Value.Trim());
-
+                        item.Text = rText;
                     }
                 }
             }
-
         }
 
         #endregion
@@ -786,16 +815,17 @@ namespace BLL.Functions
 
         public void CreateWordAd(string fullname, string path)
         {
-            string tempPath = path + @"\temp";
-            if (!Directory.Exists(tempPath)) Directory.CreateDirectory(tempPath);
-            string tempFileFullName = path + @"\temp\temp.dotx";
+            string tempFileFullName = path + @"\wordsTemplateFull.dotx";
+            string tempFileFullNamepdf = path + @"\wordsTemplate.pdf";
             File.Copy(fullname, tempFileFullName, true);
-            WriteToWordAd(tempFileFullName);
+            WriteToWordAd(tempFileFullName, tempFileFullNamepdf);
         }
 
-        private void WriteToWordAd(string tempFileFullName)
+        private void WriteToWordAd(string tempFileFullName, string tempFileFullNamepdf)
         {
             DateTime dateOfPrint = new DateTime(2023, 08, 08);
+
+            int countLetter = 100;
 
             List<DatesForOrderDetail> allDates = _datesForOrderDetailActions.GetAllDatesForOrderDetails();
             List<OrderDetail> relevanteAds = new List<OrderDetail>();
@@ -839,7 +869,7 @@ namespace BLL.Functions
 
                     Color color = new Color() { Val = "FFFFFF" }; // For example, red color
                     runProperties.Append(color);
-
+                    countLetter += 24;
                     Text t = new Text(category.WordCategoryName);
 
                     Run run = new Run();
@@ -868,7 +898,8 @@ namespace BLL.Functions
                             Justification justification = new Justification() { Val = JustificationValues.Both };
                             paragraphProperties.Append(justification);
 
-                            Run run = new Run(new Text("• " + detail.AdContent));
+                            countLetter += detail.AdContent.Trim().Length + 26;
+                            Run run = new Run(new Text("• " + detail.AdContent.Trim()));
                             newParagraph.Append(paragraphProperties);
                             newParagraph.Append(run);
 
@@ -877,6 +908,7 @@ namespace BLL.Functions
                             mainPart.Document.Save();
                         }
                     }
+                ConvertFromWordToPdf(tempFileFullName, tempFileFullNamepdf);
             }
         }
 
