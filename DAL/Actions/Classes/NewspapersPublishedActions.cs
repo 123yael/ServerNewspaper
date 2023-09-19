@@ -39,6 +39,7 @@ namespace DAL.Actions.Classes
             if (NewspaperPublishedToEdit != null)
             {
                 NewspaperPublishedToEdit.PublicationDate = newspaperPublished.PublicationDate;
+                NewspaperPublishedToEdit.CountPages = newspaperPublished.CountPages;
                 _dbNewspapers.SaveChanges();
             }
         }

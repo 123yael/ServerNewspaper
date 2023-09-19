@@ -20,9 +20,6 @@ namespace DTO
             CreateMap<AdSizeDTO, AdSize>();
             CreateMap<AdSize, AdSizeDTO>();
 
-            CreateMap<AdvertisementCategoryDTO, AdvertisementCategory>();
-            CreateMap<AdvertisementCategory, AdvertisementCategoryDTO>();
-
             CreateMap<CustomerDTO, Customer>();
             CreateMap<Customer, CustomerDTO>();
 
@@ -44,12 +41,6 @@ namespace DTO
             CreateMap<OrderDetail, OrderDetailDTO>().ForMember(dest =>
             dest.SizeId, opt =>
             opt.MapFrom(src => src.Size.SizeId));
-
-            CreateMap<PagesInNewspaperDTO, PagesInNewspaper>();
-            CreateMap<PagesInNewspaper, PagesInNewspaperDTO>();
-
-            CreateMap<PlacingAdsInPageDTO, PlacingAdsInPage>();
-            CreateMap<PlacingAdsInPage, PlacingAdsInPageDTO>();
 
             CreateMap<WordAdSubCategoryDTO, WordAdSubCategory>();
             CreateMap<WordAdSubCategory, WordAdSubCategoryDTO>();

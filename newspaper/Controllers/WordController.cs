@@ -62,14 +62,5 @@ namespace newspaper.Controllers
             return Ok("i finish to replace");
         }
 
-
-        [HttpGet("CreateWordAd")]
-        public IActionResult CreateWordAd()
-        {
-            string wordFilePath = _environment.WebRootPath + @"\TempWord\wordsTemplate.dotx";
-            _funcs.CreateWordAd(wordFilePath, _environment.WebRootPath + @"\TempWord");
-            return Ok("i finish to replace CreateWordAd");
-        }
-
     }
 }

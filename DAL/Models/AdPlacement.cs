@@ -11,5 +11,7 @@ public partial class AdPlacement
 
     public decimal PlacePrice { get; set; }
 
+    public string Img { get; set; } = null!;
+
     public virtual ICollection<OrderDetail> OrderDetails { get; } = new List<OrderDetail>();
 }

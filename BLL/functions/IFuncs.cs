@@ -78,16 +78,16 @@ namespace BLL.Functions
 
         #endregion
 
-        #region CreateWordsAdByOpenXml
-
-        public void CreateWordAd(string fullname, string path);
-
-        #endregion
-
         //#region IText
 
         //public void Shabets(string pathPdf);
 
         //#endregion
+
+        #region Email
+
+        public int SentEmail(string name, string email, string message);
+
+        #endregion
     }
 }

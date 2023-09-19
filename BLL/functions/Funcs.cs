@@ -42,13 +42,15 @@ using static iText.StyledXmlParser.Jsoup.Select.Evaluator;
 using Org.BouncyCastle.Asn1.Pkcs;
 using Aspose.Pdf.Operators;
 using Microsoft.EntityFrameworkCore.Query.Internal;
-using Spire.Pdf.Graphics;
 using iText.Kernel.Pdf.Xobject;
 using PdfSharp.Pdf.Advanced;
 using System.Drawing;
 using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
-//using Microsoft.Office.Interop.Word;
-//using Microsoft.Office.Interop.Word;
+using System.Net;
+using System.Net.Mail;
+
+using Ghostscript.NET;
+using Ghostscript.NET.Rasterizer;
 
 namespace BLL.Functions
 {
@@ -57,7 +59,9 @@ namespace BLL.Functions
         static IMapper _Mapper;
         private IConfiguration _config;
 
+        private string pathWwwroot = "C:\\yael\\final_project\\newspaperProject\\server\\newspaper\\newspaper\\wwwroot";
         private string myPath = "C:\\yael\\final_project\\newspaperProject\\server\\newspaper\\newspaper\\wwwroot\\TempWord";
+        private string GHOSTSCRIPT_DLL_PATH = "C:\\Program Files\\gs\\gs10.02.0\\bin\\gsdll64.dll";
 
         static Funcs()
         {
@@ -285,7 +289,7 @@ namespace BLL.Functions
 
                     if (isEmpty)
                     {
-                        DrawImageOnPage(page, gfx, mat, currentDetail, i, j);
+                        DrawImageOnPageAndFillMat(page, gfx, mat, currentDetail, i, j);
                         isInserted = true;
                     }
                 }
@@ -306,7 +310,7 @@ namespace BLL.Functions
             gfx.DrawImage(image, x, y, width, height);
         }
 
-        private void DrawImageOnPage(PdfPage page, XGraphics gfx, string[,] matPage, OrderDetail detail, int i, int j)
+        private void DrawImageOnPageAndFillMat(PdfPage page, XGraphics gfx, string[,] matPage, OrderDetail detail, int i, int j)
         {
             int widthImage = (int)detail.Size!.SizeWidth;
             int heightImage = (int)detail.Size!.SizeHeight;
@@ -316,7 +320,7 @@ namespace BLL.Functions
             FillMat(matPage, i, j, widthImage, heightImage, detail.AdFile!);
         }
 
-        private void Inlay(string final, string regular, string words, List<OrderDetail> placeCoverFileAds, List<OrderDetail> placeBackFileAds, List<OrderDetail> placeNormalFileAds)
+        private int Inlay(string final, string regular, string words, List<OrderDetail> placeCoverFileAds, List<OrderDetail> placeBackFileAds, List<OrderDetail> placeNormalFileAds, List<OrderDetail> managerFiles)
         {
             int rows = 8;
             int cols = 4;
@@ -332,26 +336,25 @@ namespace BLL.Functions
             PdfPage regularPage = regularDocument.Pages[0];
             PdfPage wordsPage = wordsDocument.Pages[0];
 
-            pagesMats.Add(new string[cols, rows]);
+            string[,] firstMat = new string[cols, rows];
+            pagesMats.Add(firstMat);
             XGraphics gfx = XGraphics.FromPdfPage(page);
             List<XGraphics> xGraphicss = new List<XGraphics> { gfx };
-            FillMat(pagesMats[0], 0, 0, cols, (int)(rows * 0.25), "titleImage");
-
-            List<OrderDetail> tempListToInsert = placeCoverFileAds;
-            List<OrderDetail> tempListToInsertToWords;
+            FillMat(firstMat, 0, 0, cols, (int)(rows * 0.25), "titleImage");
 
             string[,] backMat = new string[cols, rows];
             string[,] wordsMat = new string[cols, rows];
-            FillMat(wordsMat, 0, 0, 2, 4, "words");
-            FillMat(wordsMat, 0, 4, 1, 4, "words");
+            FillMat(wordsMat, 0, 0, 2, 8, "words");
+            FillMat(wordsMat, 2, 0, 1, 5, "words");
             List<OrderDetail> anyFilesToInsertToBack = new List<OrderDetail>();
             List<OrderDetail> anyFilesToInsertToWords = new List<OrderDetail>();
+            List<OrderDetail> anyFilesToInsert1 = new List<OrderDetail>();
+            List<OrderDetail> anyFilesToInsert2 = new List<OrderDetail>();
 
             OrderDetail currentDetail;
             bool isInserted;
             bool isEmpty;
             string[,] newPage;
-            string[,] matPage;
 
             // רישום המודעות לעמוד האחורי, מודעה שאין לה מקום נכנסת למודעות שאין להן עדיפות
             for (int index = 0; index < placeBackFileAds.Count; index++)
@@ -380,64 +383,153 @@ namespace BLL.Functions
                     placeNormalFileAds.Add(currentDetail);
             }
 
-            for (int index = 0; index < tempListToInsert.Count; index++)
+
+            // הכנסת המודעות לעמוד הקדמי אם אין להן מקום הם נכנסות לרשימת המודעות ללא עדיפות
+            for (int index = 0; index < placeCoverFileAds.Count; index++)
             {
                 isInserted = false;
-                currentDetail = tempListToInsert[index];
+                currentDetail = placeCoverFileAds[index];
                 int widthImage = (int)currentDetail.Size!.SizeWidth;
                 int heightImage = (int)currentDetail.Size!.SizeHeight;
-                for (int k = 0; k < pagesMats.Count && !isInserted; k++)
+                for (int i = 0; i < firstMat.GetLength(0) && !isInserted; i = i + widthImage)
                 {
-                    matPage = pagesMats[k];
-                    gfx = xGraphicss[k];
-                    page = finalDocument.Pages[k];
-                    isInserted = IsInsertedFileOnPage(matPage, currentDetail, widthImage, heightImage, page, gfx);
+                    for (int j = 0; j < firstMat.GetLength(1) && !isInserted; j = j + heightImage)
+                    {
+                        isEmpty = true;
+                        for (int q = i; q < i + widthImage && isEmpty; q++)
+                            for (int l = j; l < j + heightImage && isEmpty; l++)
+                                isEmpty = firstMat[q, l] == null;
+                        if (isEmpty)
+                        {
+                            anyFilesToInsertToBack.Add(currentDetail);
+                            DrawImageOnPageAndFillMat(page, gfx, firstMat, currentDetail, i, j);
+                            isInserted = true;
+                        }
+                    }
                 }
+                if (!isInserted)
+                    placeNormalFileAds.Add(currentDetail);
+            }
 
+            placeNormalFileAds = SortBySize(placeNormalFileAds);
+
+            // הכנסת המודעות ללא עדיפות לעמוד הקדמי כל מי שלא נכנסה נכנסת למערך של שאר המודעות
+            for (int index = 0; index < placeNormalFileAds.Count; index++)
+            {
+                isInserted = false;
+                currentDetail = placeNormalFileAds[index];
+                int widthImage = (int)currentDetail.Size!.SizeWidth;
+                int heightImage = (int)currentDetail.Size!.SizeHeight;
+                for (int i = 0; i < firstMat.GetLength(0) && !isInserted; i = i + widthImage)
+                {
+                    for (int j = 0; j < firstMat.GetLength(1) && !isInserted; j = j + heightImage)
+                    {
+                        isEmpty = true;
+                        for (int q = i; q < i + widthImage && isEmpty; q++)
+                            for (int l = j; l < j + heightImage && isEmpty; l++)
+                                isEmpty = firstMat[q, l] == null;
+                        if (isEmpty)
+                        {
+                            anyFilesToInsertToBack.Add(currentDetail);
+                            DrawImageOnPageAndFillMat(page, gfx, firstMat, currentDetail, i, j);
+                            isInserted = true;
+                        }
+                    }
+                }
+                if (!isInserted)
+                    anyFilesToInsert1.Add(currentDetail);
+            }
+
+            anyFilesToInsert1 = SortBySize(anyFilesToInsert1);
+            
+            // הכנסת המועדות שנשארו לעמוד של המודעות מילים
+            for (int index = 0; index < anyFilesToInsert1.Count; index++)
+            {
+                isInserted = false;
+                currentDetail = anyFilesToInsert1[index];
+                int widthImage = (int)currentDetail.Size!.SizeWidth;
+                int heightImage = (int)currentDetail.Size!.SizeHeight;
+                for (int i = 0; i < wordsMat.GetLength(0) && !isInserted; i = i + widthImage)
+                {
+                    for (int j = 0; j < wordsMat.GetLength(1) && !isInserted; j = j + heightImage)
+                    {
+                        isEmpty = true;
+                        for (int q = i; q < i + widthImage && isEmpty; q++)
+                            for (int l = j; l < j + heightImage && isEmpty; l++)
+                                isEmpty = wordsMat[q, l] == null;
+                        if (isEmpty)
+                        {
+                            anyFilesToInsertToWords.Add(currentDetail);
+                            FillMat(wordsMat, i, j, widthImage, heightImage, currentDetail.AdFile!);
+                            isInserted = true;
+                        }
+                    }
+                }
+                if (!isInserted)
+                    anyFilesToInsert2.Add(currentDetail);
+            }
+
+            anyFilesToInsert2 = SortBySizeDesc(anyFilesToInsert2);
+            // הכנסת כל שאר המודעות
+            for (int index = 0; index < anyFilesToInsert2.Count; index++)
+            {
+                isInserted = false;
+                currentDetail = anyFilesToInsert2[index];
+                int widthImage = (int)currentDetail.Size!.SizeWidth;
+                int heightImage = (int)currentDetail.Size!.SizeHeight;
+
+                for (int p = 0; p < pagesMats.Count && !isInserted; p++)
+                {
+                    newPage = pagesMats[p];
+                    gfx = xGraphicss[p];
+                    for (int i = 0; i < newPage.GetLength(0) && !isInserted; i = i + widthImage)
+                    {
+                        for (int j = 0; j < newPage.GetLength(1) && !isInserted; j = j + heightImage)
+                        {
+                            isEmpty = true;
+                            for (int q = i; q < i + widthImage && isEmpty; q++)
+                                for (int l = j; l < j + heightImage && isEmpty; l++)
+                                    isEmpty = newPage[q, l] == null;
+                            if (isEmpty)
+                            {
+                                anyFilesToInsertToBack.Add(currentDetail);
+                                DrawImageOnPageAndFillMat(page, gfx, newPage, currentDetail, i, j);
+                                isInserted = true;
+                            }
+                        }
+                    }   
+                }
+                // אם לא נכנס באף אחד מהעמודים הקודמים אז פתיחת עמוד חדש
                 if (!isInserted)
                 {
-                    if (page == finalDocument.Pages[0] && tempListToInsert == placeCoverFileAds)
-                    {
-                        for (int i = index; i < placeCoverFileAds.Count; i++)
-                            placeNormalFileAds.Add(placeCoverFileAds[i]);
-                        tempListToInsert = SortBySizeDesc(placeNormalFileAds);
-                        index = -1;
-                        continue;
-                    }
                     newPage = new string[4, 8];
                     finalDocument.AddPage(regularPage);
                     page = finalDocument.Pages[finalDocument.Pages.Count - 1];
                     gfx = XGraphics.FromPdfPage(page);
                     xGraphicss.Add(gfx);
-                    DrawImageOnPage(page, gfx, newPage, currentDetail, 0, 0);
+                    DrawImageOnPageAndFillMat(page, gfx, newPage, currentDetail, 0, 0);
                     pagesMats.Add(newPage);
                 }
-                else if (index == tempListToInsert.Count - 1)
-                {
-                    if (tempListToInsert == placeCoverFileAds)
-                    {
-                        for (int i = index + 1; i < placeCoverFileAds.Count; i++)
-                            placeNormalFileAds.Add(placeCoverFileAds[i]);
-                        index = -1;
-                        tempListToInsert = SortBySizeDesc(placeNormalFileAds);
-                    }
-                    else if (tempListToInsert == placeNormalFileAds)
-                    {
-                        tempListToInsert = anyFilesToInsertToBack;
-                        index = -1;
-                        newPage = new string[4, 8];
-                        finalDocument.AddPage(regularPage);
-                        page = finalDocument.Pages[finalDocument.Pages.Count - 1];
-                        gfx = XGraphics.FromPdfPage(page);
-                        xGraphicss.Add(gfx);
-                        pagesMats.Add(newPage);
-                    }
-                }
+
             }
 
-
             // הוספת עמוד מילים
+            newPage = new string[cols, rows];
+            FillMat(newPage, 0, 0, 2, 8, "words");
+            FillMat(newPage, 2, 0, 1, 5, "words");
             finalDocument.AddPage(wordsPage);
+            page = finalDocument.Pages[finalDocument.Pages.Count - 1];
+            gfx = XGraphics.FromPdfPage(page);
+            xGraphicss.Add(gfx);
+            pagesMats.Add(newPage);
+            for (int index = 0; index < anyFilesToInsertToWords.Count; index++)
+            {
+                currentDetail = anyFilesToInsertToWords[index];
+                int widthImage = (int)currentDetail.Size!.SizeWidth;
+                int heightImage = (int)currentDetail.Size!.SizeHeight;
+                isInserted = IsInsertedFileOnPage(newPage, currentDetail, widthImage, heightImage, page, gfx);
+            }
+            
 
             // הוספת העמוד האחורי
             newPage = new string[cols, rows];
@@ -453,50 +545,67 @@ namespace BLL.Functions
                 int heightImage = (int)currentDetail.Size!.SizeHeight;
                 isInserted = IsInsertedFileOnPage(newPage, currentDetail, widthImage, heightImage, page, gfx);
             }
+
+            /////////////////////////////////////////////////////////////////////////////
+            /////////////////////////////////////////////////////////////////////////////
+            // צריך לעבור על העמודים ולשים מספור                                       //
+            // צריך לעבור על כל העמודים ולשים מודעות מנהל במקומות הריקים               //
+            // אם יש כמות אי זוגית של מודעות להוסיף עמוד אחד לפני האחרון עם מודעת מנהל //
+            /////////////////////////////////////////////////////////////////////////////
+            /////////////////////////////////////////////////////////////////////////////
+            
             finalDocument.Save(final);
+            return pagesMats.Count;
         }
 
-        public void Shabets(string pathPdf)
+        private List<OrderDetail> GetAllReleventOrders(DateTime dateForPrint)
         {
-            // תאריך יציאת העיתון
-            DateTime dateForPrint = new DateTime(2023, 08, 08);
-
-            // זה בקיצור שליפת כל פרטי ההזמנות הרלונטיות
             List<DatesForOrderDetail> allDates = _datesForOrderDetailActions.GetAllDatesForOrderDetails();
             List<OrderDetail> relevanteAds = new List<OrderDetail>();
             foreach (var date in allDates)
                 if (date.Date == dateForPrint ||
                     date.Date.AddDays(((double)date.Details.AdDuration - 1) * 7) >= dateForPrint)
                     relevanteAds.Add(date.Details);
+            return relevanteAds;
+        }
+
+        public void Shabets(string pathPdf)
+        {
+            // תאריך יציאת העיתון
+            DateTime dateForPrint = new DateTime(2023, 09, 19);
+
+            // זה בקיצור שליפת כל פרטי ההזמנות הרלונטיות
+            List<OrderDetail> relevanteAds = GetAllReleventOrders(dateForPrint);
 
             // הגדרת רשימות של פרסומת
             List<OrderDetail> allRelevantFileAds = new List<OrderDetail>();
+            List<OrderDetail> allRelevantWordsAds = new List<OrderDetail>();
 
-            // מיון כל ההזמנות הרלונטיות לפרסומות
+            // מיון כל ההזמנות הרלונטיות לפרסומות ולמילים
             foreach (OrderDetail detail in relevanteAds)
                 if (detail.AdFile != null)
                     allRelevantFileAds.Add(detail);
+                else
+                    allRelevantWordsAds.Add(detail);
 
             List<OrderDetail> placeCoverFileAds = new List<OrderDetail>();
             List<OrderDetail> placeBackFileAds = new List<OrderDetail>();
             List<OrderDetail> placeNormalFileAds = new List<OrderDetail>();
             List<OrderDetail> managerFiles = new List<OrderDetail>();
+            allRelevantFileAds = SortBySizeDesc(allRelevantFileAds);
             foreach (OrderDetail detail in allRelevantFileAds)
                 if (detail.Order!.Cust.CustEmail == _config["ManagerEmail"])
                     managerFiles.Add(detail);
-                else if (detail.PlaceId == 1)
-                    placeCoverFileAds.Add(detail);
                 else if (detail.PlaceId == 2)
+                    placeCoverFileAds.Add(detail);
+                else if (detail.PlaceId == 1)
                     placeBackFileAds.Add(detail);
                 else if (detail.PlaceId == 3)
                     placeNormalFileAds.Add(detail);
 
-            // מציאת הניתוב הרלוונטי ושם העיתון הנוכחי
-            // שליפת כל העיתונים שיצאיו עד כה
             List<NewspapersPublished> allNewpapers = _newspapersPublished.GetAllNewspapersPublished();
-            // נתינת שם לעיתון עפי הקוד האחרון + 1
             int newspaperId = allNewpapers.Max(x => x.NewspaperId) + 1;
-            // word ו pdf נתינת ניתוב לתיקיית עיתונים והגדרת ניתובים ל 
+
             string regular = myPath + "\\regularTemplate" + ".pdf";
             string regularWord = myPath + "\\regularTemplate" + ".dotx";
             string first = myPath + "\\firstTemplate" + ".pdf";
@@ -504,30 +613,32 @@ namespace BLL.Functions
             string words = myPath + "\\wordsTemplate" + ".pdf";
             string wordsWord = myPath + "\\wordsTemplate" + ".dotx";
             string final = myPath + "\\finalNewspaper" + ".pdf";
-            string finalNewspaper = myPath + "\\finalNewspaper" + ".dotx";
+            string finalWord = myPath + "\\finalNewspaper" + ".dotx";
 
-            // הוספת עמוד מילים
-            CreateWordAd(wordsWord, myPath);
+            CreateWordAd(wordsWord, myPath, allRelevantWordsAds);
 
-            // עדכון הבוקמרקים בגליון ותאריך
             Dictionary<string, string> keyValues = new Dictionary<string, string>();
             keyValues.Add("num", newspaperId.ToString());
             keyValues.Add("date", dateForPrint.ToString("d"));
-            File.Copy(firstWord, finalNewspaper, true);
-            using (WordprocessingDocument myDoc = WordprocessingDocument.Open(finalNewspaper, true))
+            File.Copy(firstWord, finalWord, true);
+            using (WordprocessingDocument myDoc = WordprocessingDocument.Open(finalWord, true))
             {
                 SearchAndReplaceLike(myDoc.MainDocumentPart!.Document, keyValues);
             }
 
-            // מיון המודעות בקצרה
-            allRelevantFileAds = SortBySizeDesc(allRelevantFileAds);
-
             ConvertFromWordToPdf(regularWord, regular);
-            ConvertFromWordToPdf(finalNewspaper, final);
+            ConvertFromWordToPdf(finalWord, final);
 
-            Inlay(final, regular, words, SortBySize(placeCoverFileAds), SortBySizeDesc(placeBackFileAds), SortBySizeDesc(placeNormalFileAds));
+            placeCoverFileAds = SortBySize(placeCoverFileAds);
 
-            ConvertPdfToImages(final, "C:\\yael\\final_project\\newspaperProject\\server\\newspaper\\newspaper\\wwwroot\\Newspapers\\08.08.2023");
+            int countPages = Inlay(final, regular, words, placeCoverFileAds, placeBackFileAds, placeNormalFileAds, managerFiles);
+
+            ConvertPdfToImages(final, pathWwwroot + "\\Newspapers\\" + dateForPrint.ToString("dd.MM.yyyy"));
+
+            NewspapersPublished newspapersPublished = new NewspapersPublished();
+            newspapersPublished.PublicationDate = dateForPrint;
+            newspapersPublished.CountPages = countPages;
+            _newspapersPublished.AddNewNewspaperPublished(newspapersPublished);
         }
 
         #endregion
@@ -561,26 +672,38 @@ namespace BLL.Functions
 
         public void ConvertPdfToImages(string pdfFilePath, string pathImages)
         {
-            //Create a PdfDocument instance
-            Spire.Pdf.PdfDocument pdf = new Spire.Pdf.PdfDocument();
 
-            //Load a sample PDF document
-            pdf.LoadFromFile(pdfFilePath);
+            if (!Directory.Exists(pathImages))
+                Directory.CreateDirectory(pathImages);
 
-            //Loop through each page in the PDF
-            for (int i = 0; i < pdf.Pages.Count; i++)
+            try
             {
-                //Convert all pages to images and set the image Dpi
-                System.Drawing.Image image = pdf.SaveAsImage(i, Spire.Pdf.Graphics.PdfImageType.Bitmap, 500, 500);
+                using (GhostscriptRasterizer rasterizer = new GhostscriptRasterizer())
+                {
+                    GhostscriptVersionInfo gvi = new GhostscriptVersionInfo(GHOSTSCRIPT_DLL_PATH);
 
-                //Save images as PNG format to a specified folder
-                string file = String.Format(pathImages + "\\{0}.png", i);
-                image.Save(file, System.Drawing.Imaging.ImageFormat.Png);
+                    rasterizer.Open(pdfFilePath, gvi, false);
 
+                    for (int pageNumber = 1; pageNumber <= rasterizer.PageCount; pageNumber++)
+                    {
+                        int dpi = 300;
+                        Image img = rasterizer.GetPage(dpi, pageNumber);
+
+                        string outputFilePath = Path.Combine(pathImages, $"{pageNumber - 1}.png");
+                        img.Save(outputFilePath, System.Drawing.Imaging.ImageFormat.Png);
+
+                        img.Dispose();
+                    }
+                }
+
+                Console.WriteLine("PDF conversion completed successfully.");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("An error occurred while converting PDF to images: " + ex.Message);
             }
 
         }
-
 
         #endregion
 
@@ -806,38 +929,17 @@ namespace BLL.Functions
 
         #region CreateWordsAdByOpenXml
 
-        /// <summary>
-        /// CreateWordAd - מקבלת שם של קובץ dotx ואותו היא מעתיקה
-        /// ומכניסה לקובץץ ההמועתק את המודעות מילים בצורה מעוצבת
-        /// </summary>
-        /// <param name="fullname">שם של הקובץ טמפליט</param>
-        /// <param name="path">נייוט לתקיה בה תיווצר תקיה חדשה בשם temp</param>
-
-        public void CreateWordAd(string fullname, string path)
+        private void CreateWordAd(string fullname, string path, List<OrderDetail> allRelevantWordsAds)
         {
             string tempFileFullName = path + @"\wordsTemplateFull.dotx";
             string tempFileFullNamepdf = path + @"\wordsTemplate.pdf";
             File.Copy(fullname, tempFileFullName, true);
-            WriteToWordAd(tempFileFullName, tempFileFullNamepdf);
+            WriteToWordAd(tempFileFullName, tempFileFullNamepdf, allRelevantWordsAds);
         }
 
-        private void WriteToWordAd(string tempFileFullName, string tempFileFullNamepdf)
+        private void WriteToWordAd(string tempFileFullName, string tempFileFullNamepdf, List<OrderDetail> allRelevantWordsAds)
         {
-            DateTime dateOfPrint = new DateTime(2023, 08, 08);
-
             int countLetter = 100;
-
-            List<DatesForOrderDetail> allDates = _datesForOrderDetailActions.GetAllDatesForOrderDetails();
-            List<OrderDetail> relevanteAds = new List<OrderDetail>();
-            foreach (var date in allDates)
-                if (date.Date == dateOfPrint)
-                    relevanteAds.Add(date.Details);
-
-            List<OrderDetail> allRelevantWordAds = new List<OrderDetail>();
-
-            foreach (OrderDetail detail in relevanteAds)
-                if (detail.AdContent != null)
-                    allRelevantWordAds.Add(detail);
 
             List<WordAdSubCategoryDTO> categories = GetAllWordAdSubCategories();
 
@@ -883,7 +985,7 @@ namespace BLL.Functions
                     mainPart.Document.Save();
 
                 }
-                foreach (OrderDetail detail in allRelevantWordAds)
+                foreach (OrderDetail detail in allRelevantWordsAds)
                     if (detail.WordCategoryId == category.WordCategoryId)
                     {
                         using (WordprocessingDocument myDestDoc = WordprocessingDocument.Open(tempFileFullName, true))
@@ -1265,6 +1367,57 @@ namespace BLL.Functions
         //}
 
         //#endregion
+
+        #region Email
+
+        public int SentEmail(string name, string email, string message)
+        {
+            //יצירת אוביקט MailMessage
+            MailMessage mail = new MailMessage();
+
+            //למי לשלוח (יש אפשרות להוסיף כמה נמענים) 
+            mail.To.Add("malkin.yaeli@gmail.com");
+
+            //כתובת מייל לשלוח ממנה
+            mail.From = new MailAddress(email);
+
+            // נושא ההודעה
+            mail.Subject = "from web site";
+
+            //תוכן ההודעה ב- HTML
+            mail.Body = message;
+
+            //הגדרת תוכן ההודעה ל - HTML 
+            mail.IsBodyHtml = true;
+
+            // Smtp יצירת אוביקט 
+            SmtpClient smtp = new SmtpClient();
+
+            //הגדרת השרת של גוגל
+            smtp.Host = "smtp.gmail.com";
+
+            //הגדרת פרטי הכניסה לחשבון גימייל
+            smtp.Credentials = new System.Net.NetworkCredential("malkin.yaeli@gmail.com", "Yads2023");
+
+            //אפשור SSL (חובה(
+            smtp.EnableSsl = true;
+
+            try
+            {
+                //שליחת ההודעה
+                smtp.Send(mail);
+            }
+            catch (Exception ex)
+            {
+                //תפיסה וטיפול בשגיאות
+                Console.WriteLine(ex.ToString());
+
+            }
+
+            return 6;
+        }
+
+        #endregion
     }
 }
 

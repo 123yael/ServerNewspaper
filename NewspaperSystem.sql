@@ -1,22 +1,14 @@
 
---CREATE DATABASE NewspapersSystem
+--CREATE DATABASE NewspaperSystem
 
---USE NewspapersSystem
+--USE NewspaperSystem
 
 -- עיתונים שיצאו לאור
 CREATE TABLE NewspapersPublished
 (
 	newspaper_id INT PRIMARY KEY IDENTITY(1, 1),
 	publication_date DATE NOT NULL,
-	pdfFile VARCHAR(50) NOT NULL,
-	img VARCHAR(50) NOT NULL
-)
-
--- קטגורית פרסומות
-CREATE TABLE AdvertisementCategories
-(
-	category_id INT PRIMARY KEY IDENTITY(1, 1),
-	category_name VARCHAR(50) NOT NULL
+	countPages INT NOT NULL,
 )
 
 -- לקוחות
@@ -55,7 +47,8 @@ CREATE TABLE AdPlacements
 (
 	place_id INT PRIMARY KEY IDENTITY(1, 1),
 	place_name VARCHAR(50) NOT NULL,
-	place_price DECIMAL NOT NULL
+	place_price DECIMAL NOT NULL,
+	img VARCHAR(50) NOT NULL,
 )
 
 -- תתי קטגוריות מודעות מילים
@@ -70,7 +63,6 @@ CREATE TABLE OrderDetails
 (
 	details_id INT PRIMARY KEY IDENTITY(1, 1),
 	order_id INT REFERENCES Orders,
-	category_id INT REFERENCES AdvertisementCategories,
 	wordCategory_id INT REFERENCES WordAdSubCategories,
 	ad_content VARCHAR(255),
 	ad_file VARCHAR(255),
@@ -88,70 +80,40 @@ CREATE TABLE DatesForOrderDetails
 	date_status BIT DEFAULT(1),
 )
 
--- עמודים בעיתון
-CREATE TABLE PagesInNewspaper
-(
-	page_id INT PRIMARY KEY IDENTITY(1, 1),
-	page_number INT NOT NULL,
-	newspaper_id INT REFERENCES NewspapersPublished
-)
-
--- שיבוץ מודעות בעמוד
-CREATE TABLE PlacingAdsInPage
-(
-	placeInPage_id INT PRIMARY KEY IDENTITY(1, 1),
-	page_id INT REFERENCES PagesInNewspaper,
-	details_id INT REFERENCES OrderDetails
-)
-
 ------------------------------------------------------
 
 INSERT INTO NewspapersPublished
-VALUES('2023-02-07', 'finalNewspaper2.pdf', 'newspaperimg.png')
+VALUES('2023-02-07', 5)
 GO
 
 INSERT INTO NewspapersPublished
-VALUES('2023-03-07', 'finalNewspaper2.pdf', 'newspaperimg.png')
+VALUES('2023-03-07', 5)
 GO
 
 INSERT INTO NewspapersPublished
-VALUES('2023-02-15', 'finalNewspaper2.pdf', 'newspaperimg.png')
+VALUES('2023-02-15', 5)
 GO
 
-------------------------------------------------------
-
-INSERT INTO AdvertisementCategories
-VALUES('מזון ומשקאות')
+INSERT INTO NewspapersPublished
+VALUES('2023-08-08', 5)
 GO
 
-INSERT INTO AdvertisementCategories
-VALUES('תיקונים ואינסטלציה')
-GO
-
-INSERT INTO AdvertisementCategories
-VALUES('אולמות')
-GO
-
-INSERT INTO AdvertisementCategories
-VALUES('ביגוד והנעלה')
-GO
-
-INSERT INTO AdvertisementCategories
-VALUES('מוסדות צייבוריים')
+INSERT INTO NewspapersPublished
+VALUES('2023-09-19', 13)
 GO
 
 ------------------------------------------------------
 
 INSERT INTO Customers
-VALUES('Yael', 'Burya', 'yaelshli762@gmail.com', '0533133762', '1111')
+VALUES('Yael', 'Burya', 'yaelshli762@gmail.com', '0533133762', '123456789')
 GO
 
 INSERT INTO Customers
-VALUES('Yael', 'Malkin', 'malkin.yaeli@gmail.com', '0583220353', '2222')
+VALUES('Yael', 'Malkin', 'malkin.yaeli@gmail.com', '0583220353', '123456789')
 GO
 
 INSERT INTO Customers
-VALUES('Chani', 'Malkin', 'malkin.chany@gmail.com', '0543488561', '3333')
+VALUES('Chani', 'Malkin', 'malkin.chany@gmail.com', '0543488561', '123456789')
 GO
 
 ------------------------------------------------------
@@ -183,15 +145,15 @@ GO
 ------------------------------------------------------
 
 INSERT INTO AdPlacements
-VALUES('Cover Page', 100)
+VALUES('Back Page', 200, 'placingPictures/1.png')
 GO
 
 INSERT INTO AdPlacements
-VALUES('Back page', 200)
+VALUES('Cover Page', 100, 'placingPictures/2.png')
 GO
 
 INSERT INTO AdPlacements
-VALUES('Normal location', 0)
+VALUES('Normal Page', 0, 'placingPictures/3.png')
 GO
 
 ------------------------------------------------------

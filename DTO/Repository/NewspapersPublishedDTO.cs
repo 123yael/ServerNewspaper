@@ -12,8 +12,7 @@ namespace DTO.Repository
 
         public string PublicationDate { get; set; }
 
-        public string PdfFile { get; set; } = null!;
+        public int CountPages { get; set; }
 
-        public string Img { get; set; } = null!;
     }
 }

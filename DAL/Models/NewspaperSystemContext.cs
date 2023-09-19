@@ -1,6 +1,4 @@
-﻿
-using System;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 
@@ -21,8 +19,6 @@ public partial class NewspaperSystemContext : DbContext
 
     public virtual DbSet<AdSize> AdSizes { get; set; }
 
-    public virtual DbSet<AdvertisementCategory> AdvertisementCategories { get; set; }
-
     public virtual DbSet<Customer> Customers { get; set; }
 
     public virtual DbSet<DatesForOrderDetail> DatesForOrderDetails { get; set; }
@@ -33,19 +29,23 @@ public partial class NewspaperSystemContext : DbContext
 
     public virtual DbSet<OrderDetail> OrderDetails { get; set; }
 
-    public virtual DbSet<PagesInNewspaper> PagesInNewspapers { get; set; }
-
-    public virtual DbSet<PlacingAdsInPage> PlacingAdsInPages { get; set; }
-
     public virtual DbSet<WordAdSubCategory> WordAdSubCategories { get; set; }
+
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see http://go.microsoft.com/fwlink/?LinkId=723263.
+        => optionsBuilder.UseSqlServer("Server=ELIAHU-ASUS-PC\\SQLEXPRESS;Database=NewspaperSystem;Trusted_Connection=True;TrustServerCertificate=True;");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<AdPlacement>(entity =>
         {
-            entity.HasKey(e => e.PlaceId).HasName("PK__AdPlacem__BF2B684AED6A5E4E");
+            entity.HasKey(e => e.PlaceId).HasName("PK__AdPlacem__BF2B684A2193A9EB");
 
             entity.Property(e => e.PlaceId).HasColumnName("place_id");
+            entity.Property(e => e.Img)
+                .HasMaxLength(50)
+                .IsUnicode(false)
+                .HasColumnName("img");
             entity.Property(e => e.PlaceName)
                 .HasMaxLength(50)
                 .IsUnicode(false)
@@ -57,7 +57,7 @@ public partial class NewspaperSystemContext : DbContext
 
         modelBuilder.Entity<AdSize>(entity =>
         {
-            entity.HasKey(e => e.SizeId).HasName("PK__AdSizes__0DCACE318B2C01FD");
+            entity.HasKey(e => e.SizeId).HasName("PK__AdSizes__0DCACE3197741A3D");
 
             entity.Property(e => e.SizeId).HasColumnName("size_id");
             entity.Property(e => e.SizeHeight)
@@ -79,20 +79,9 @@ public partial class NewspaperSystemContext : DbContext
                 .HasColumnName("size_width");
         });
 
-        modelBuilder.Entity<AdvertisementCategory>(entity =>
-        {
-            entity.HasKey(e => e.CategoryId).HasName("PK__Advertis__D54EE9B4E5CD5B86");
-
-            entity.Property(e => e.CategoryId).HasColumnName("category_id");
-            entity.Property(e => e.CategoryName)
-                .HasMaxLength(50)
-                .IsUnicode(false)
-                .HasColumnName("category_name");
-        });
-
         modelBuilder.Entity<Customer>(entity =>
         {
-            entity.HasKey(e => e.CustId).HasName("PK__Customer__A1B71F9077FFA155");
+            entity.HasKey(e => e.CustId).HasName("PK__Customer__A1B71F90FF7A3BCC");
 
             entity.Property(e => e.CustId).HasColumnName("cust_id");
             entity.Property(e => e.CustEmail)
@@ -119,7 +108,7 @@ public partial class NewspaperSystemContext : DbContext
 
         modelBuilder.Entity<DatesForOrderDetail>(entity =>
         {
-            entity.HasKey(e => e.DateId).HasName("PK__DatesFor__51FC48654D4BBA00");
+            entity.HasKey(e => e.DateId).HasName("PK__DatesFor__51FC4865EF123EB5");
 
             entity.Property(e => e.DateId).HasColumnName("date_id");
             entity.Property(e => e.Date)
@@ -132,24 +121,17 @@ public partial class NewspaperSystemContext : DbContext
 
             entity.HasOne(d => d.Details).WithMany(p => p.DatesForOrderDetails)
                 .HasForeignKey(d => d.DetailsId)
-                .HasConstraintName("FK__DatesForO__detai__267ABA7A");
+                .HasConstraintName("FK__DatesForO__detai__49C3F6B7");
         });
 
         modelBuilder.Entity<NewspapersPublished>(entity =>
         {
-            entity.HasKey(e => e.NewspaperId).HasName("PK__Newspape__710B3F0C9E20072D");
+            entity.HasKey(e => e.NewspaperId).HasName("PK__Newspape__710B3F0CC860F47E");
 
             entity.ToTable("NewspapersPublished");
 
             entity.Property(e => e.NewspaperId).HasColumnName("newspaper_id");
-            entity.Property(e => e.Img)
-                .HasMaxLength(50)
-                .IsUnicode(false)
-                .HasColumnName("img");
-            entity.Property(e => e.PdfFile)
-                .HasMaxLength(50)
-                .IsUnicode(false)
-                .HasColumnName("pdfFile");
+            entity.Property(e => e.CountPages).HasColumnName("countPages");
             entity.Property(e => e.PublicationDate)
                 .HasColumnType("date")
                 .HasColumnName("publication_date");
@@ -157,7 +139,7 @@ public partial class NewspaperSystemContext : DbContext
 
         modelBuilder.Entity<Order>(entity =>
         {
-            entity.HasKey(e => e.OrderId).HasName("PK__Orders__46596229DC30B4AF");
+            entity.HasKey(e => e.OrderId).HasName("PK__Orders__465962297EAEAF1E");
 
             entity.Property(e => e.OrderId).HasColumnName("order_id");
             entity.Property(e => e.CustId).HasColumnName("cust_id");
@@ -171,12 +153,12 @@ public partial class NewspaperSystemContext : DbContext
             entity.HasOne(d => d.Cust).WithMany(p => p.Orders)
                 .HasForeignKey(d => d.CustId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Orders__cust_id__164452B1");
+                .HasConstraintName("FK__Orders__cust_id__3A81B327");
         });
 
         modelBuilder.Entity<OrderDetail>(entity =>
         {
-            entity.HasKey(e => e.DetailsId).HasName("PK__OrderDet__C3E443F4863663EA");
+            entity.HasKey(e => e.DetailsId).HasName("PK__OrderDet__C3E443F477552AC7");
 
             entity.Property(e => e.DetailsId).HasColumnName("details_id");
             entity.Property(e => e.AdContent)
@@ -190,71 +172,32 @@ public partial class NewspaperSystemContext : DbContext
                 .HasMaxLength(255)
                 .IsUnicode(false)
                 .HasColumnName("ad_file");
-            entity.Property(e => e.CategoryId).HasColumnName("category_id");
             entity.Property(e => e.OrderId).HasColumnName("order_id");
             entity.Property(e => e.PlaceId).HasColumnName("place_id");
             entity.Property(e => e.SizeId).HasColumnName("size_id");
             entity.Property(e => e.WordCategoryId).HasColumnName("wordCategory_id");
 
-            entity.HasOne(d => d.Category).WithMany(p => p.OrderDetails)
-                .HasForeignKey(d => d.CategoryId)
-                .HasConstraintName("FK__OrderDeta__categ__1FCDBCEB");
-
             entity.HasOne(d => d.Order).WithMany(p => p.OrderDetails)
                 .HasForeignKey(d => d.OrderId)
-                .HasConstraintName("FK__OrderDeta__order__1ED998B2");
+                .HasConstraintName("FK__OrderDeta__order__4316F928");
 
             entity.HasOne(d => d.Place).WithMany(p => p.OrderDetails)
                 .HasForeignKey(d => d.PlaceId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__OrderDeta__place__22AA2996");
+                .HasConstraintName("FK__OrderDeta__place__45F365D3");
 
             entity.HasOne(d => d.Size).WithMany(p => p.OrderDetails)
                 .HasForeignKey(d => d.SizeId)
-                .HasConstraintName("FK__OrderDeta__size___21B6055D");
+                .HasConstraintName("FK__OrderDeta__size___44FF419A");
 
             entity.HasOne(d => d.WordCategory).WithMany(p => p.OrderDetails)
                 .HasForeignKey(d => d.WordCategoryId)
-                .HasConstraintName("FK__OrderDeta__wordC__20C1E124");
-        });
-
-        modelBuilder.Entity<PagesInNewspaper>(entity =>
-        {
-            entity.HasKey(e => e.PageId).HasName("PK__PagesInN__637F305A67D47659");
-
-            entity.ToTable("PagesInNewspaper");
-
-            entity.Property(e => e.PageId).HasColumnName("page_id");
-            entity.Property(e => e.NewspaperId).HasColumnName("newspaper_id");
-            entity.Property(e => e.PageNumber).HasColumnName("page_number");
-
-            entity.HasOne(d => d.Newspaper).WithMany(p => p.PagesInNewspapers)
-                .HasForeignKey(d => d.NewspaperId)
-                .HasConstraintName("FK__PagesInNe__newsp__2A4B4B5E");
-        });
-
-        modelBuilder.Entity<PlacingAdsInPage>(entity =>
-        {
-            entity.HasKey(e => e.PlaceInPageId).HasName("PK__PlacingA__384AF263A64956F5");
-
-            entity.ToTable("PlacingAdsInPage");
-
-            entity.Property(e => e.PlaceInPageId).HasColumnName("placeInPage_id");
-            entity.Property(e => e.DetailsId).HasColumnName("details_id");
-            entity.Property(e => e.PageId).HasColumnName("page_id");
-
-            entity.HasOne(d => d.Details).WithMany(p => p.PlacingAdsInPages)
-                .HasForeignKey(d => d.DetailsId)
-                .HasConstraintName("FK__PlacingAd__detai__2E1BDC42");
-
-            entity.HasOne(d => d.Page).WithMany(p => p.PlacingAdsInPages)
-                .HasForeignKey(d => d.PageId)
-                .HasConstraintName("FK__PlacingAd__page___2D27B809");
+                .HasConstraintName("FK__OrderDeta__wordC__440B1D61");
         });
 
         modelBuilder.Entity<WordAdSubCategory>(entity =>
         {
-            entity.HasKey(e => e.WordCategoryId).HasName("PK__WordAdSu__2CA95CCD0B6EDA6B");
+            entity.HasKey(e => e.WordCategoryId).HasName("PK__WordAdSu__2CA95CCDE39BE8D8");
 
             entity.Property(e => e.WordCategoryId).HasColumnName("wordCategory_id");
             entity.Property(e => e.WordCategoryName)

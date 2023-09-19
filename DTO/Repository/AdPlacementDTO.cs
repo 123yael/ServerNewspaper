@@ -8,10 +8,13 @@ namespace DTO.Repository
 {
     public class AdPlacementDTO
     {
+
         public int PlaceId { get; set; }
 
         public string PlaceName { get; set; } = null!;
 
         public decimal PlacePrice { get; set; }
+
+        public string Img { get; set; } = null!;
     }
 }
