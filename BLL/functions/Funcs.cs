@@ -5,53 +5,21 @@ using DTO.Repository;
 using System.Text;
 using System;
 using GemBox.Document;
-using SautinSoft;
-// OpenXml
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 using Text = DocumentFormat.OpenXml.Wordprocessing.Text;
 using Paragraph = DocumentFormat.OpenXml.Wordprocessing.Paragraph;
 using Run = DocumentFormat.OpenXml.Wordprocessing.Run;
-using DocumentFormat.OpenXml;
 using Color = DocumentFormat.OpenXml.Wordprocessing.Color;
-using System.IO.Packaging;
-using Microsoft.Win32.SafeHandles;
-using DocumentFormat.OpenXml.Drawing.Charts;
-// PdfSharp
 using PdfSharp.Pdf.IO;
-using PdfSharp;
-using PdfSharp.Drawing.Layout;
 using PdfSharp.Pdf;
 using PdfSharp.Drawing;
-using PageSize = PdfSharp.PageSize;
-using System.Collections.Generic;
 using BLL.Exceptions;
-// iText
-//using iText.Kernel.Pdf;
-//using iText.Layout;
-//using iText.Layout.Element;
-//using iText.Layout.Properties;
-//using iText.IO.Image;
-//using iText.Kernel.Geom;
-//using iText.Kernel.Pdf.Canvas;
-// Aspose.Pdf
-//using Aspose.Pdf;
-using System.Configuration;
 using Microsoft.Extensions.Configuration;
-using static iText.StyledXmlParser.Jsoup.Select.Evaluator;
-using Org.BouncyCastle.Asn1.Pkcs;
-using Aspose.Pdf.Operators;
-using Microsoft.EntityFrameworkCore.Query.Internal;
-using iText.Kernel.Pdf.Xobject;
-using PdfSharp.Pdf.Advanced;
 using System.Drawing;
-using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
-using System.Net;
 using System.Net.Mail;
-
 using Ghostscript.NET;
 using Ghostscript.NET.Rasterizer;
-using Microsoft.Identity.Client.Platforms.Features.DesktopOs.Kerberos;
 
 namespace BLL.Functions
 {
@@ -63,6 +31,7 @@ namespace BLL.Functions
         private string pathWwwroot = "C:\\yael\\final_project\\newspaperProject\\server\\newspaper\\newspaper\\wwwroot";
         private string myPath = "C:\\yael\\final_project\\newspaperProject\\server\\newspaper\\newspaper\\wwwroot\\TempWord";
         private string GHOSTSCRIPT_DLL_PATH = "C:\\Program Files\\gs\\gs10.02.0\\bin\\gsdll64.dll";
+        private string upload = "C:\\yael\\final_project\\newspaperProject\\server\\newspaper\\newspaper\\wwwroot\\Upload\\";
 
         static Funcs()
         {
@@ -201,7 +170,7 @@ namespace BLL.Functions
             List<NewspapersPublishedDTO> NewspapersPublishedDTO = new List<NewspapersPublishedDTO>();
             foreach (NewspapersPublished np in NewspapersPublished)
                 NewspapersPublishedDTO.Add(_Mapper.Map<NewspapersPublished, NewspapersPublishedDTO>(np));
-            return NewspapersPublishedDTO;
+            return NewspapersPublishedDTO.OrderByDescending(x => x.NewspaperId).ToList(); ;
         }
 
         #endregion
@@ -241,6 +210,16 @@ namespace BLL.Functions
                 .ToList();
         }
 
+        private List<OrderDetail> GetAllReleventOrders(DateTime dateForPrint)
+        {
+            List<DatesForOrderDetail> allDates = _datesForOrderDetailActions.GetAllDatesForOrderDetails();
+            List<OrderDetail> relevanteAds = new List<OrderDetail>();
+            foreach (var date in allDates)
+                if (date.Date == dateForPrint ||
+                    date.Date.AddDays(((double)date.Details.AdDuration - 1) * 7) >= dateForPrint)
+                    relevanteAds.Add(date.Details);
+            return relevanteAds;
+        }
         #endregion
 
         #region DatesForOrderDetail
@@ -257,6 +236,46 @@ namespace BLL.Functions
         #endregion
 
         #region PdfSharp
+
+        private void PageNumbering(string oldPdfFile, string newPdfFile)
+        {
+            // הנתיב לקובץ PDF הקיים
+            string existingPdfPath = oldPdfFile;
+
+            // הנתיב לקובץ PDF שתרצי ליצור
+            string newPdfPath = newPdfFile;
+
+            // פתחי את הקובץ הקיים
+            PdfDocument existingPdf = PdfReader.Open(existingPdfPath, PdfDocumentOpenMode.Import);
+
+            // יצירת קובץ PDF חדש
+            PdfDocument newPdf = new PdfDocument();
+
+            XGraphics gfx;
+            // לולאה שעוברת על כל עמוד בקובץ הקיים
+            for (int pageIndex = 0; pageIndex < existingPdf.PageCount; pageIndex++)
+            {
+                // העמוד הנוכחי בקובץ הקיים
+                PdfPage existingPage = existingPdf.Pages[pageIndex];
+
+                // העמוד החדש שתיצרי
+                PdfPage newPage = newPdf.AddPage(existingPage);
+
+                gfx = XGraphics.FromPdfPage(newPage);
+
+                // הוספת טקסט עם מספר העמוד לעמוד החדש
+                if(pageIndex % 2 == 1)
+                    gfx.DrawString((pageIndex + 1) + "", new XFont("MV Boli", 16), XBrushes.White,
+                                   new XRect(23, -2, newPage.Width, newPage.Height), XStringFormats.BottomLeft);
+                else
+                    gfx.DrawString((pageIndex + 1) + "", new XFont("MV Boli", 16), XBrushes.White,
+                                   new XRect(-23, -2, newPage.Width, newPage.Height), XStringFormats.BottomRight);
+            }
+
+            // שמירת הקובץ החדש
+            newPdf.Save(newPdfPath);
+
+        }
 
         private bool IsMatFull(string[,] mat)
         {
@@ -307,7 +326,7 @@ namespace BLL.Functions
 
         private void DrawImage(XGraphics gfx, string jpegSamplePath, int x, int y, int width, int height)
         {
-            XImage image = XImage.FromFile("C:\\yael\\final_project\\newspaperProject\\server\\newspaper\\newspaper\\wwwroot\\Upload\\" + jpegSamplePath);
+            XImage image = XImage.FromFile(upload + jpegSamplePath);
             gfx.DrawImage(image, x, y, width, height);
         }
 
@@ -321,8 +340,10 @@ namespace BLL.Functions
             FillMat(matPage, i, j, widthImage, heightImage, detail.AdFile!);
         }
 
-        private int Inlay(string final, string regular, string words, List<OrderDetail> placeCoverFileAds, List<OrderDetail> placeBackFileAds, List<OrderDetail> placeNormalFileAds, List<OrderDetail> managerFiles)
+        private int Inlay(string final, string regular, string words, List<OrderDetail> placeCoverFileAds, List<OrderDetail> placeBackFileAds, List<OrderDetail> placeNormalFileAds, List<OrderDetail> managerFiles, int countLetter)
         {
+            int countBox = (countLetter / 100) + 1;
+            int num = 0;
             int rows = 8;
             int cols = 4;
 
@@ -345,8 +366,21 @@ namespace BLL.Functions
 
             string[,] backMat = new string[cols, rows];
             string[,] wordsMat = new string[cols, rows];
-            FillMat(wordsMat, 0, 0, 2, 8, "words");
-            FillMat(wordsMat, 2, 0, 1, 5, "words");
+            int temp = countBox;
+            for (int i = 0; temp > 0; i++)
+            {
+                if(temp > 8)
+                {
+                    temp -= 8;
+                    num = 8;
+                }
+                else
+                {
+                    num = temp;
+                    temp = 0;
+                }
+                FillMat(wordsMat, i, 0, 1, num, "words");
+            }
             List<OrderDetail> anyFilesToInsertToBack = new List<OrderDetail>();
             List<OrderDetail> anyFilesToInsertToWords = new List<OrderDetail>();
             List<OrderDetail> anyFilesToInsert1 = new List<OrderDetail>();
@@ -441,8 +475,8 @@ namespace BLL.Functions
                     anyFilesToInsert1.Add(currentDetail);
             }
 
-            anyFilesToInsert1 = SortBySize(anyFilesToInsert1);
-            
+            anyFilesToInsert1 = SortBySizeDesc(anyFilesToInsert1);
+
             // הכנסת המועדות שנשארו לעמוד של המודעות מילים
             for (int index = 0; index < anyFilesToInsert1.Count; index++)
             {
@@ -498,7 +532,7 @@ namespace BLL.Functions
                                 isInserted = true;
                             }
                         }
-                    }   
+                    }
                 }
                 // אם לא נכנס באף אחד מהעמודים הקודמים אז פתיחת עמוד חדש
                 if (!isInserted)
@@ -516,8 +550,21 @@ namespace BLL.Functions
 
             // הוספת עמוד מילים
             newPage = new string[cols, rows];
-            FillMat(newPage, 0, 0, 2, 8, "words");
-            FillMat(newPage, 2, 0, 1, 5, "words");
+            temp = countBox;
+            for (int i = 0; temp > 0; i++)
+            {
+                if (temp > 8)
+                {
+                    temp -= 8;
+                    num = 8;
+                }
+                else
+                {
+                    num = temp;
+                    temp = 0;
+                }
+                FillMat(newPage, i, 0, 1, num, "words");
+            }
             finalDocument.AddPage(wordsPage);
             page = finalDocument.Pages[finalDocument.Pages.Count - 1];
             gfx = XGraphics.FromPdfPage(page);
@@ -530,7 +577,17 @@ namespace BLL.Functions
                 int heightImage = (int)currentDetail.Size!.SizeHeight;
                 isInserted = IsInsertedFileOnPage(newPage, currentDetail, widthImage, heightImage, page, gfx);
             }
-            
+
+            // לפני הוספת העמוד האחורי צריך לבדוק כמה עמודים יש ואם יש זוגי צריך להוסיף עמוד
+            if (pagesMats.Count % 2 == 0)
+            {
+                newPage = new string[cols, rows];
+                finalDocument.AddPage(regularPage);
+                page = finalDocument.Pages[finalDocument.Pages.Count - 1];
+                gfx = XGraphics.FromPdfPage(page);
+                xGraphicss.Add(gfx);
+                pagesMats.Add(newPage);
+            }
 
             // הוספת העמוד האחורי
             newPage = new string[cols, rows];
@@ -547,33 +604,46 @@ namespace BLL.Functions
                 isInserted = IsInsertedFileOnPage(newPage, currentDetail, widthImage, heightImage, page, gfx);
             }
 
-            /////////////////////////////////////////////////////////////////////////////
-            /////////////////////////////////////////////////////////////////////////////
-            // צריך לעבור על העמודים ולשים מספור                                       //
-            // צריך לעבור על כל העמודים ולשים מודעות מנהל במקומות הריקים               //
-            // אם יש כמות אי זוגית של מודעות להוסיף עמוד אחד לפני האחרון עם מודעת מנהל //
-            /////////////////////////////////////////////////////////////////////////////
-            /////////////////////////////////////////////////////////////////////////////
-            
+            managerFiles = SortBySizeDesc(managerFiles);
+
+            for (int index = 0; index < managerFiles.Count; index++)
+            {
+                isInserted = false;
+                currentDetail = managerFiles[index];
+                int widthImage = (int)currentDetail.Size!.SizeWidth;
+                int heightImage = (int)currentDetail.Size!.SizeHeight;
+
+                for (int p = 0; p < pagesMats.Count && !isInserted; p++)
+                {
+                    newPage = pagesMats[p];
+                    gfx = xGraphicss[p];
+                    for (int i = 0; i < newPage.GetLength(0) && !isInserted; i = i + widthImage)
+                    {
+                        for (int j = 0; j < newPage.GetLength(1) && !isInserted; j = j + heightImage)
+                        {
+                            isEmpty = true;
+                            for (int q = i; q < i + widthImage && isEmpty; q++)
+                                for (int l = j; l < j + heightImage && isEmpty; l++)
+                                    isEmpty = newPage[q, l] == null;
+                            if (isEmpty)
+                            {
+                                anyFilesToInsertToBack.Add(currentDetail);
+                                DrawImageOnPageAndFillMat(page, gfx, newPage, currentDetail, i, j);
+                                isInserted = true;
+                            }
+                        }
+                    }
+                }
+            }
+
             finalDocument.Save(final);
             return pagesMats.Count;
-        }
-
-        private List<OrderDetail> GetAllReleventOrders(DateTime dateForPrint)
-        {
-            List<DatesForOrderDetail> allDates = _datesForOrderDetailActions.GetAllDatesForOrderDetails();
-            List<OrderDetail> relevanteAds = new List<OrderDetail>();
-            foreach (var date in allDates)
-                if (date.Date == dateForPrint ||
-                    date.Date.AddDays(((double)date.Details.AdDuration - 1) * 7) >= dateForPrint)
-                    relevanteAds.Add(date.Details);
-            return relevanteAds;
         }
 
         public void Shabets(string pathPdf)
         {
             // תאריך יציאת העיתון
-            DateTime dateForPrint = new DateTime(2023, 09, 19);
+            DateTime dateForPrint = new DateTime(2023, 09, 26);
 
             // זה בקיצור שליפת כל פרטי ההזמנות הרלונטיות
             List<OrderDetail> relevanteAds = GetAllReleventOrders(dateForPrint);
@@ -614,9 +684,11 @@ namespace BLL.Functions
             string words = myPath + "\\wordsTemplate" + ".pdf";
             string wordsWord = myPath + "\\wordsTemplate" + ".dotx";
             string final = myPath + "\\finalNewspaper" + ".pdf";
+            string final2 = myPath + "\\finalNewspaper2" + ".pdf";
             string finalWord = myPath + "\\finalNewspaper" + ".dotx";
+            string tempFileFullName = myPath + "\\wordsTemplateFull.dotx";
 
-            CreateWordAd(wordsWord, myPath, allRelevantWordsAds);
+            int countLetter = CreateWordAd(wordsWord, words, tempFileFullName, allRelevantWordsAds);
 
             Dictionary<string, string> keyValues = new Dictionary<string, string>();
             keyValues.Add("num", newspaperId.ToString());
@@ -632,9 +704,19 @@ namespace BLL.Functions
 
             placeCoverFileAds = SortBySize(placeCoverFileAds);
 
-            int countPages = Inlay(final, regular, words, placeCoverFileAds, placeBackFileAds, placeNormalFileAds, managerFiles);
+            int countPages = Inlay(final, regular, words, placeCoverFileAds, placeBackFileAds, placeNormalFileAds, managerFiles, countLetter);
 
-            ConvertPdfToImages(final, pathWwwroot + "\\Newspapers\\" + dateForPrint.ToString("dd.MM.yyyy"));
+            PageNumbering(final, final2);
+
+            ConvertPdfToImages(final2, pathWwwroot + "\\Newspapers\\" + dateForPrint.ToString("dd.MM.yyyy"));
+
+            File.Delete(regular);
+            File.Delete(first);
+            File.Delete(words);
+            File.Delete(final);
+            File.Delete(final2);
+            File.Delete(finalWord);
+            File.Delete(tempFileFullName);
 
             NewspapersPublished newspapersPublished = new NewspapersPublished();
             newspapersPublished.PublicationDate = dateForPrint;
@@ -652,23 +734,6 @@ namespace BLL.Functions
             ComponentInfo.SetLicense("FREE-LIMITED-KEY");
             DocumentModel document = DocumentModel.Load(dotxFilePath, LoadOptions.DocxDefault);
             document.Save(pdfFilePath);
-        }
-
-        public void ConvertPdfToWord(string pdfFilePath, string wordFilePath)
-        {
-
-            // Create a new instance of the PDF Focus .Net library
-            PdfFocus pdfFocus = new PdfFocus();
-
-            // Load the PDF file using PDF Focus .Net
-            pdfFocus.OpenPdf(pdfFilePath);
-
-            // Save the PDF file as a Word file using PDF Focus .Net
-            if (pdfFocus.PageCount > 0)
-            {
-                pdfFocus.WordOptions.Format = PdfFocus.CWordOptions.eWordDocument.Docx;
-                pdfFocus.ToWord(wordFilePath);
-            }
         }
 
         public void ConvertPdfToImages(string pdfFilePath, string pathImages)
@@ -930,15 +995,13 @@ namespace BLL.Functions
 
         #region CreateWordsAdByOpenXml
 
-        private void CreateWordAd(string fullname, string path, List<OrderDetail> allRelevantWordsAds)
+        private int CreateWordAd(string fullname, string words, string tempFileFullName, List<OrderDetail> allRelevantWordsAds)
         {
-            string tempFileFullName = path + @"\wordsTemplateFull.dotx";
-            string tempFileFullNamepdf = path + @"\wordsTemplate.pdf";
             File.Copy(fullname, tempFileFullName, true);
-            WriteToWordAd(tempFileFullName, tempFileFullNamepdf, allRelevantWordsAds);
+            return WriteToWordAd(tempFileFullName, words, allRelevantWordsAds);
         }
 
-        private void WriteToWordAd(string tempFileFullName, string tempFileFullNamepdf, List<OrderDetail> allRelevantWordsAds)
+        private int WriteToWordAd(string tempFileFullName, string tempFileFullNamepdf, List<OrderDetail> allRelevantWordsAds)
         {
             int countLetter = 100;
 
@@ -950,42 +1013,43 @@ namespace BLL.Functions
 
             foreach (WordAdSubCategoryDTO category in categories)
             {
-                using (WordprocessingDocument myDestDoc = WordprocessingDocument.Open(tempFileFullName, true))
-                {
-                    MainDocumentPart mainPart = myDestDoc.MainDocumentPart;
+                if (allRelevantWordsAds.FirstOrDefault(w => w.WordCategory.WordCategoryName.Equals(category.WordCategoryName)) != null)
+                    using (WordprocessingDocument myDestDoc = WordprocessingDocument.Open(tempFileFullName, true))
+                    {
+                        MainDocumentPart mainPart = myDestDoc.MainDocumentPart;
 
-                    Body body = mainPart.Document.Body;
+                        Body body = mainPart.Document.Body;
 
-                    Paragraph newParagraph = new Paragraph();
-                    ParagraphProperties paragraphProperties = new ParagraphProperties();
+                        Paragraph newParagraph = new Paragraph();
+                        ParagraphProperties paragraphProperties = new ParagraphProperties();
 
-                    Justification justification = new Justification() { Val = JustificationValues.Center };
-                    paragraphProperties.Append(justification);
+                        Justification justification = new Justification() { Val = JustificationValues.Center };
+                        paragraphProperties.Append(justification);
 
-                    Shading shading = new Shading() { Val = ShadingPatternValues.Solid, Color = "C435FF" };
-                    paragraphProperties.Append(shading);
+                        Shading shading = new Shading() { Val = ShadingPatternValues.Solid, Color = "C435FF" };
+                        paragraphProperties.Append(shading);
 
-                    RunProperties runProperties = new RunProperties();
+                        RunProperties runProperties = new RunProperties();
 
-                    Bold bold = new Bold();
-                    runProperties.Append(bold);
+                        Bold bold = new Bold();
+                        runProperties.Append(bold);
 
-                    Color color = new Color() { Val = "FFFFFF" }; // For example, red color
-                    runProperties.Append(color);
-                    countLetter += 24;
-                    Text t = new Text(category.WordCategoryName);
+                        Color color = new Color() { Val = "FFFFFF" }; // For example, red color
+                        runProperties.Append(color);
+                        countLetter += 24;
+                        Text t = new Text(category.WordCategoryName);
 
-                    Run run = new Run();
-                    run.Append(runProperties);
-                    run.Append(t);
+                        Run run = new Run();
+                        run.Append(runProperties);
+                        run.Append(t);
 
-                    newParagraph.Append(paragraphProperties);
-                    newParagraph.Append(run);
-                    body.Append(newParagraph);
+                        newParagraph.Append(paragraphProperties);
+                        newParagraph.Append(run);
+                        body.Append(newParagraph);
 
-                    mainPart.Document.Save();
+                        mainPart.Document.Save();
 
-                }
+                    }
                 foreach (OrderDetail detail in allRelevantWordsAds)
                     if (detail.WordCategoryId == category.WordCategoryId)
                     {
@@ -1013,361 +1077,10 @@ namespace BLL.Functions
                     }
                 ConvertFromWordToPdf(tempFileFullName, tempFileFullNamepdf);
             }
+            return countLetter;
         }
 
         #endregion
-
-        //#region IText
-
-        //private void DrawImageOnPage(iText.Layout.Document doc, float widthPage, float heightPage, int widthImage, int heightImage, string[,] matPage, string ImagePath, int i, int j)
-        //{
-
-        //    float w = (widthPage - 16) / 4;
-        //    float h = (heightPage - 48) / 8;
-
-        //    Image image = new Image(ImageDataFactory.Create("C:\\yael\\final_project\\newspaperProject\\server\\newspaper\\newspaper\\wwwroot\\Upload\\" + ImagePath));
-
-        //    // הגדרת המיקום והגודל בפיקסלים (x, y, רוחב, גובה)
-        //    float x = 16 + w * i;
-        //    float y = 16 + h * j;
-        //    float width = w * widthImage - 16;
-        //    float height = h * heightImage - 16;
-
-        //    // הגדרת המיקום והגודל בעליון-ימין של העמוד
-        //    image.SetFixedPosition(x, y, width);
-
-        //    doc.Add(image);
-
-        //    for (int q = i; q < i + widthImage; q++)
-        //        for (int l = j; l < j + heightImage; l++)
-        //            matPage[q, l] = ImagePath;
-
-        //}
-
-        //private void Create(string filename, List<OrderDetail> relevantOrders)
-        //{
-
-        //    // הגדרה של עיתון חדש
-        //    List<string[,]> pagesMats = new List<string[,]>();
-        //    PdfDocument pdfDoc = new PdfDocument(new PdfWriter(new FileStream(filename, FileMode.Create, FileAccess.Write)));
-        //    iText.Layout.Document doc = new iText.Layout.Document(pdfDoc);
-
-        //    // הוספת עמוד אחד למטריצת העיתון
-        //    pagesMats.Add(new string[4, 8]);
-        //    int ggg = pdfDoc.GetNumberOfPages();
-        //    PdfPage tempPage = pdfDoc.GetFirstPage();
-        //    pdfDoc.AddPage(tempPage);
-        //    pdfDoc.SetPage(1, new PdfPage());
-
-        //    float heightPage = pdfDoc.GetDefaultPageSize().GetHeight();
-        //    float widthPage = pdfDoc.GetDefaultPageSize().GetWidth();
-
-
-        //    // עוברים על על המודעות הרלונטיות ומכניסים לרשימת העיתון
-        //    foreach (OrderDetail detail in relevantOrders)
-        //    {
-        //        // משתנה שאומר האם היה מקום למודעה
-        //        bool Shubatz = false;
-        //        // רוחב התמונה הנוכחית
-        //        if (detail.Size != null)
-        //        {
-        //            int Width = (int)(detail.Size.SizeWidth);
-        //            int Height = (int)(detail.Size.SizeHeight);
-        //            for (int k = 0; k < pagesMats.Count; k++)
-        //            {
-        //                // הכנסת העמוד הנוכחי למטריצת עזר חדשה
-        //                string[,] matPage = pagesMats[k];
-
-        //                bool isEmpty;
-
-        //                for (int i = 0; i < matPage.GetLength(0) && !Shubatz; i = i + Width)
-        //                {
-        //                    for (int j = 0; j < matPage.GetLength(1) && !Shubatz; j = j + Height)
-        //                    {
-        //                        isEmpty = true;
-        //                        // אם המשבצת הראשונה ריקה צריך לודא שכל המשבצות ריקות
-        //                        if (matPage[i, j] == null)
-        //                        {
-        //                            for (int q = i; q < i + Width && isEmpty; q++)
-        //                                for (int l = j; l < j + Height && isEmpty; l++)
-        //                                    // אם המקום תופוס
-        //                                    if (matPage[q, l] != null)
-        //                                        isEmpty = false;
-        //                        }
-        //                        // אם המשבצת הראשונה מלאה בטוח שאין מקום במיקום זה
-        //                        else
-        //                            isEmpty = false;
-        //                        // בדיקה אם אכן יש מקום למודעה - אז להוסיף את המודעה
-        //                        if (isEmpty)
-        //                        {
-        //                            DrawImageOnPage(doc, widthPage, heightPage, Width, Height, matPage, detail.AdFile, i, j);
-        //                            Shubatz = true;
-        //                        }
-        //                    }
-        //                }
-        //            }
-
-        //            // במקרה שהשיבוץ באחד מהדפים הקודמים לא הצליח
-        //            if (!Shubatz)
-        //            {
-        //                // יצירת דף חדש במטריצת העיתון
-        //                string[,] newPage = new string[4, 8];
-        //                pdfDoc.AddPage(tempPage);
-        //                // הוספת התמונה לעמוד החדש שבטוח שיש בו מקום
-        //                DrawImageOnPage(doc, widthPage, heightPage, Width, Height, newPage, detail.AdFile, 0, 0);
-        //                // הוספת העמוד לעיתון ה pdf
-        //                pagesMats.Add(newPage);
-        //            }
-        //        }
-        //    }
-        //    pdfDoc.Close();
-        //    doc.Close();
-
-
-
-        //    //List<string[,]> pagesMats = new List<string[,]>();
-        //    //pagesMats.Add(new string[4, 8]);
-        //    //using (FileStream fs = new FileStream(filename, FileMode.Create))
-        //    //{
-
-        //    //    PdfWriter writer = new PdfWriter(fs);
-        //    //    PdfDocument pdfDocument = new PdfDocument(writer);
-        //    //    PdfPage pdfPage = pdfDocument.AddNewPage();
-        //    //    iText.Layout.Document doc = new iText.Layout.Document(pdfDocument);
-        //    //    pdfDocument.SetDefaultPageSize(iText.Kernel.Geom.PageSize.A5);
-        //    //    float heightPage = pdfDocument.GetDefaultPageSize().GetHeight();
-        //    //    float widthPage = pdfDocument.GetDefaultPageSize().GetWidth();
-
-        //    //    doc.SetMargins(0, 0, 0, 0);
-
-        //    //    foreach (OrderDetail detail in relevantOrders)
-        //    //    {
-        //    //        bool Shubatz = false;
-        //    //        if (detail.Size != null)
-        //    //        {
-        //    //            int widthImage = (int)(detail.Size.SizeWidth);
-        //    //            int heightImage = (int)(detail.Size.SizeHeight);
-        //    //            for (int k = 0; k < pagesMats.Count; k++)
-        //    //            {
-        //    //                string[,] matPage = pagesMats[k];
-
-        //    //                bool isEmpty;
-
-        //    //                for (int i = 0; i < matPage.GetLength(0) && !Shubatz; i = i + widthImage)
-        //    //                {
-        //    //                    for (int j = 0; j < matPage.GetLength(1) && !Shubatz; j = j + heightImage)
-        //    //                    {
-        //    //                        isEmpty = true;
-        //    //                        if (matPage[i, j] == null)
-        //    //                        {
-        //    //                            for (int q = i; q < i + widthImage && isEmpty; q++)
-        //    //                                for (int l = j; l < j + heightImage && isEmpty; l++)
-        //    //                                    if (matPage[q, l] != null)
-        //    //                                        isEmpty = false;
-        //    //                        }
-        //    //                        else
-        //    //                            isEmpty = false;
-        //    //                        if (isEmpty)
-        //    //                        {
-        //    //                            DrawImageOnPage(pagesMats.Count, doc, widthPage, heightPage, widthImage, heightImage, matPage, detail.AdFile, i, j);
-        //    //                            Shubatz = true;
-        //    //                        }
-        //    //                    }
-        //    //                }
-        //    //            }
-
-        //    //            if (!Shubatz)
-        //    //            {
-        //    //                string[,] newPage = new string[4, 8];
-        //    //                pdfPage = pdfDocument.AddNewPage();
-        //    //                DrawImageOnPage(pagesMats.Count, doc, widthPage, heightPage, widthImage, heightImage, newPage, detail.AdFile, 0, 0);
-        //    //                pagesMats.Add(newPage);
-
-        //    //            }
-        //    //        }
-        //    //    }
-        //    //    //// הוספת תמונה מהקובץ המקומי
-        //    //    //ImageData imageData = ImageDataFactory.Create(imagePath);
-        //    //    //Image image = new Image(imageData);
-
-        //    //    //// גודל התמונה בדף
-        //    //    //float imageWidth = 200;
-        //    //    //float imageHeight = 100;
-
-        //    //    //// מיקום התמונה בדף (פינה השמאלית התחתונה)
-        //    //    //float xPosition = 100;
-        //    //    //float yPosition = 100;
-
-        //    //    //// יציב את התמונה במיקום ובגודל שצוין
-        //    //    ////image.SetFixedPosition(xPosition, yPosition);
-        //    //    //image.SetRelativePosition(0, 0, 0, 0);
-
-        //    //    ////image.ScaleAbsolute(imageWidth, imageHeight);
-        //    //    //// הוסף את התמונה למסמך
-        //    //    //doc.Add(image);
-
-        //    //    //// סגירת המסמך
-        //    //    doc.Close();
-        //    //}
-        //}
-
-        //public void Shabets(string pathPdf)
-        //{
-        //    // זה בקיצור שליפת כל פרטי ההזמנות הרלונטיות
-        //    List<DatesForOrderDetail> allDates = _datesForOrderDetailActions.GetAllDatesForOrderDetails();
-        //    List<OrderDetail> relevanteAds = new List<OrderDetail>();
-        //    foreach (var date in allDates)
-        //        if (date.Date == new DateTime(2023, 07, 25))
-        //            relevanteAds.Add(date.Details);
-
-        //    // הגדרת רשימות של פרסומת
-        //    List<OrderDetail> allRelevantFileAds = new List<OrderDetail>();
-
-        //    // מיון כל ההזמנות הרלונטיות לפרסומות
-        //    foreach (OrderDetail detail in relevanteAds)
-        //        if (detail.AdFile != null)
-        //            allRelevantFileAds.Add(detail);
-
-        //    // מציאת הניתוב הרלוונטי ושם העיתון הנוכחי
-        //    // שליפת כל העיתונים שיצאיו עד כה
-        //    List<NewspapersPublished> allNewpapers = _newspapersPublished.GetAllNewspapersPublished();
-        //    // נתינת שם לעיתון עפי הקוד האחרון + 1
-        //    int newspaperId = allNewpapers.Max(x => x.NewspaperId) + 1;
-        //    // word ו pdf נתינת ניתוב לתיקיית עיתונים והגדרת ניתובים ל 
-        //    string PDFpath = myPath + "\\regularTemplate";
-        //    string WORDpath = myPath + "\\regularTemplate" + ".dotx";
-
-        //    // מיון המודעות בקצרה
-        //    allRelevantFileAds = SortBySize(allRelevantFileAds);
-
-        //    ConvertFromWordToPdf(WORDpath, PDFpath + ".pdf");
-
-        //    Create(PDFpath + ".pdf", allRelevantFileAds);
-
-        //}
-
-        //#endregion
-
-        //#region Aspose.Pdf
-
-        //private void DrawImageOnPage(Page page, int widthImage, int heightImage, string[,] matPage, string imagePath, int i, int j)
-        //{
-        //    int w = ((int)(page.GetPageRect(false).Width) - 16) / 4;
-        //    int h = ((int)(page.GetPageRect(false).Height) - 32) / 8;
-
-        //    string file = "C:\\yael\\final_project\\newspaperProject\\server\\newspaper\\newspaper\\wwwroot\\Upload\\" + imagePath;
-        //    using (FileStream imageStream = new FileStream(file, FileMode.Open))
-        //    {
-        //        // הגדר קואורדינטות
-        //        int lowerLeftX = 16 + w * i;
-        //        int lowerLeftY = 16 + h * j + (h * heightImage - 16);
-        //        int upperRightX = 16 + w * i + (w * widthImage - 16);
-        //        int upperRightY = 16 + h * j;
-
-        //        // הוסף תמונה לאוסף תמונות של משאבי דפים
-        //        page.Resources.Images.Add(imageStream);
-
-        //        // שימוש באופרטור GSave: אופרטור זה שומר את מצב הגרפיקה הנוכחי
-        //        page.Contents.Add(new Aspose.Pdf.Operators.GSave());
-
-        //        // צור אובייקטים של מלבן ומטריצה
-        //        Aspose.Pdf.Rectangle rectangle = new Aspose.Pdf.Rectangle(lowerLeftX, lowerLeftY, upperRightX, upperRightY);
-        //        Matrix matrix = new Matrix(new double[] { rectangle.URX - rectangle.LLX, 0, 0, rectangle.URY - rectangle.LLY, rectangle.LLX, rectangle.LLY });
-
-        //        // שימוש באופרטור ConcatenateMatrix (מחרוזת שרשור): מגדיר כיצד יש למקם תמונה
-        //        page.Contents.Add(new Aspose.Pdf.Operators.ConcatenateMatrix(matrix));
-        //        Aspose.Pdf.XImage ximage = page.Resources.Images[page.Resources.Images.Count];
-
-        //        // שימוש באופרטור Do: אופרטור זה מצייר תמונה
-        //        page.Contents.Add(new Aspose.Pdf.Operators.Do(ximage.Name));
-
-        //        // שימוש באופרטור GRestore: אופרטור זה משחזר את מצב הגרפיקה
-        //        page.Contents.Add(new Aspose.Pdf.Operators.GRestore());
-
-        //    }
-
-        //    //Aspose.Pdf.Image image1 = new Aspose.Pdf.Image();
-        //    //page.Paragraphs.Add(image1);
-        //    //image1.ImageStream = imageStream;
-
-        //    //    DrawImage(gfx, ImagePath, 16 + w * i, 16 + h * j, w * Width - 16, h * Height - 16);
-        //    for (int q = i; q < i + widthImage; q++)
-        //        for (int l = j; l < j + heightImage; l++)
-        //            matPage[q, l] = imagePath;
-        //}
-
-        //private void Create(string filename, List<OrderDetail> relevantOrders)
-        //{
-        //    // צור מסמך חדש
-        //    Aspose.Pdf.Document doc = new Aspose.Pdf.Document(filename + ".pdf");
-        //    // הגדרה של עיתון חדש
-        //    List<string[,]> pagesMats = new List<string[,]>();
-        //    // הוסף עמוד לאוסף דפים של מסמך
-        //    Page page = doc.Pages.Add(doc.Pages[1]);
-        //    // הוספת עמוד אחד למטריצת העיתון
-        //    pagesMats.Add(new string[4, 8]);
-        //    // עוברים על על המודעות הרלונטיות ומכניסים לרשימת העיתון
-        //    foreach (OrderDetail detail in relevantOrders)
-        //    {
-        //        bool Shubatz = false;
-        //        if (detail.Size != null)
-        //        {
-        //            int widthImage = (int)(detail.Size.SizeWidth);
-        //            int heightImage = (int)(detail.Size.SizeHeight);
-
-        //            for (int k = 0; k < pagesMats.Count; k++)
-        //            {
-        //                // הכנסת העמוד הנוכחי למטריצת עזר חדשה
-        //                string[,] matPage = pagesMats[k];
-
-        //                bool isEmpty;
-
-        //                for (int i = 0; i < matPage.GetLength(0) && !Shubatz; i = i + widthImage)
-        //                {
-        //                    for (int j = 0; j < matPage.GetLength(1) && !Shubatz; j = j + heightImage)
-        //                    {
-        //                        isEmpty = true;
-        //                        // אם המשבצת הראשונה ריקה צריך לודא שכל המשבצות ריקות
-        //                        if (matPage[i, j] == null)
-        //                        {
-        //                            for (int q = i; q < i + widthImage && isEmpty; q++)
-        //                                for (int l = j; l < j + heightImage && isEmpty; l++)
-        //                                    // אם המקום תופוס
-        //                                    if (matPage[q, l] != null)
-        //                                        isEmpty = false;
-        //                        }
-        //                        // אם המשבצת הראשונה מלאה בטוח שאין מקום במיקום זה
-        //                        else
-        //                            isEmpty = false;
-        //                        // בדיקה אם אכן יש מקום למודעה - אז להוסיף את המודעה
-        //                        if (isEmpty)
-        //                        {
-        //                            DrawImageOnPage(page, widthImage, heightImage, matPage, detail.AdFile, i, j);
-        //                            Shubatz = true;
-        //                        }
-        //                    }
-        //                }
-        //            }
-
-        //            // במקרה שהשיבוץ באחד מהדפים הקודמים לא הצליח
-        //            if (!Shubatz)
-        //            {
-        //                // יצירת דף חדש במטריצת העיתון
-        //                string[,] newPage = new string[4, 8];
-        //                // הוסף עמוד לאוסף דפים של מסמך
-        //                page = doc.Pages.Add(doc.Pages[1]);
-        //                // הוספת התמונה לעמוד החדש שבטוח שיש בו מקום
-        //                DrawImageOnPage(page, widthImage, heightImage, newPage, detail.AdFile, 0, 0);
-        //                // הוספת העמוד לעיתון ה pdf
-        //                pagesMats.Add(newPage);
-        //            }
-        //        }
-        //    }
-        //    doc.SetTitle("hello");
-        //    doc.Save(filename + "my.pdf", SaveFormat.Pdf);
-        //}
-
-        //#endregion
 
         #region Email
 

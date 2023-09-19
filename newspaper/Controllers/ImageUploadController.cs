@@ -1,8 +1,6 @@
-﻿using files;
-using Microsoft.AspNetCore.Http;
+﻿
 using Microsoft.AspNetCore.Mvc;
-using System.Net.Http.Json;
-using System.Text.Json.Serialization;
+
 namespace files.Controllers
 {
     [Route("api/[controller]")]

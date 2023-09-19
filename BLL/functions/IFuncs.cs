@@ -1,10 +1,4 @@
-﻿using DAL.Models;
-using DTO.Repository;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using DTO.Repository;
 
 namespace BLL.Functions
 {
@@ -58,8 +52,6 @@ namespace BLL.Functions
 
         #region Converts
 
-        public void ConvertPdfToWord(string pdfFilePath, string wordFilePath);
-
         public void ConvertFromWordToPdf(string Input, string Output);
 
         #endregion
@@ -77,12 +69,6 @@ namespace BLL.Functions
         public void CompleteWordTemplate(string fullname, string path);
 
         #endregion
-
-        //#region IText
-
-        //public void Shabets(string pathPdf);
-
-        //#endregion
 
         #region Email
 
