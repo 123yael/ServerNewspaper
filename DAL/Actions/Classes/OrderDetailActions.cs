@@ -42,7 +42,6 @@ namespace DAL.Actions.Classes
             if (OrderDetailToEdit != null)
             {
                 OrderDetailToEdit.OrderId = orderDetail.OrderId;
-                OrderDetailToEdit.CategoryId = orderDetail.CategoryId;
                 OrderDetailToEdit.WordCategoryId = orderDetail.WordCategoryId;
                 OrderDetailToEdit.AdContent = orderDetail.AdContent;
                 OrderDetailToEdit.AdFile = orderDetail.AdFile;

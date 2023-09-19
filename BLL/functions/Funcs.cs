@@ -51,6 +51,7 @@ using System.Net.Mail;
 
 using Ghostscript.NET;
 using Ghostscript.NET.Rasterizer;
+using Microsoft.Identity.Client.Platforms.Features.DesktopOs.Kerberos;
 
 namespace BLL.Functions
 {
@@ -1370,51 +1371,40 @@ namespace BLL.Functions
 
         #region Email
 
-        public int SentEmail(string name, string email, string message)
+        public string SentEmail(string name, string email, string message, string subject)
         {
-            //יצירת אוביקט MailMessage
             MailMessage mail = new MailMessage();
-
-            //למי לשלוח (יש אפשרות להוסיף כמה נמענים) 
             mail.To.Add("malkin.yaeli@gmail.com");
-
-            //כתובת מייל לשלוח ממנה
-            mail.From = new MailAddress(email);
-
-            // נושא ההודעה
-            mail.Subject = "from web site";
-
-            //תוכן ההודעה ב- HTML
-            mail.Body = message;
-
-            //הגדרת תוכן ההודעה ל - HTML 
+            mail.From = new MailAddress("yads10000@gmail.com", "Yads");
+            mail.Subject = subject;
+            mail.Body = "From: " + email + "<br /><br />" + "Message: " + message;
             mail.IsBodyHtml = true;
 
-            // Smtp יצירת אוביקט 
-            SmtpClient smtp = new SmtpClient();
-
-            //הגדרת השרת של גוגל
-            smtp.Host = "smtp.gmail.com";
-
-            //הגדרת פרטי הכניסה לחשבון גימייל
-            smtp.Credentials = new System.Net.NetworkCredential("malkin.yaeli@gmail.com", "Yads2023");
-
-            //אפשור SSL (חובה(
+            SmtpClient smtp = new SmtpClient("smtp.gmail.com");
+            smtp.Credentials = new System.Net.NetworkCredential("yads10000@gmail.com", "hzudmbsxcymmpsie");
             smtp.EnableSsl = true;
+
+            MailMessage mailToClient = new MailMessage();
+            mailToClient.To.Add(email);
+            mailToClient.From = new MailAddress("yads10000@gmail.com", "Yads");
+            mailToClient.Subject = "Thank you for your inquiry";
+            mailToClient.Body = $"<div><h4>Hi {name},</h4>" +
+                "<p>Thanks for contacting us</p>" +
+                "<p>We will be happy to be in touch with you regarding your application</p>" +
+                "<p>Thank you very much for your cooperation,</p>" +
+                "<p>Company managers</p></div>";
+            mailToClient.IsBodyHtml = true;
 
             try
             {
-                //שליחת ההודעה
                 smtp.Send(mail);
+                smtp.Send(mailToClient);
+                return "Mail Sent Successfully...";
             }
-            catch (Exception ex)
+            catch
             {
-                //תפיסה וטיפול בשגיאות
-                Console.WriteLine(ex.ToString());
-
+                return "Error while Sending Mail";
             }
-
-            return 6;
         }
 
         #endregion

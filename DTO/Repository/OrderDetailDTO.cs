@@ -12,8 +12,6 @@ namespace DTO.Repository
 
         public int? OrderId { get; set; }
 
-        public int? CategoryId { get; set; }
-
         public int? WordCategoryId { get; set; }
 
         public string? AdContent { get; set; }

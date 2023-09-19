@@ -27,14 +27,11 @@ builder.Services.AddDbContext<NewspaperSystemContext>(y => y.UseSqlServer(_confi
 
 builder.Services.AddScoped<IAdPlacementActions, AdPlacementActions>();
 builder.Services.AddScoped<IAdSizeActions, AdSizeActions>();
-builder.Services.AddScoped<IAdvertisementCategoryActions, AdvertisementCategoryActions>();
 builder.Services.AddScoped<ICustomerActions, CustomerActions>();
 builder.Services.AddScoped<IDatesForOrderDetailActions, DatesForOrderDetailActions>();
 builder.Services.AddScoped<INewspapersPublishedActions, NewspapersPublishedActions>();
 builder.Services.AddScoped<IOrderActions, OrderActions>();
 builder.Services.AddScoped<IOrderDetailActions, OrderDetailActions>();
-builder.Services.AddScoped<IPagesInNewspaperActions, PagesInNewspaperActions>();
-builder.Services.AddScoped<IPlacingAdsInPageActions, PlacingAdsInPageActions>();
 builder.Services.AddScoped<IWordAdSubCategoryActions, WordAdSubCategoryActions>();
 
 builder.Services.AddScoped<IFuncs, Funcs>();

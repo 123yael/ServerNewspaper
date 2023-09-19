@@ -86,7 +86,7 @@ namespace BLL.Functions
 
         #region Email
 
-        public int SentEmail(string name, string email, string message);
+        public string SentEmail(string name, string email, string message, string subject);
 
         #endregion
     }
