@@ -1,4 +1,6 @@
-﻿using BLL.Functions;
+﻿using BLL.Exceptions;
+using BLL.Functions;
+using DTO.Repository;
 using Microsoft.AspNetCore.Mvc;
 
 
@@ -17,15 +19,33 @@ namespace newspaper.Controllers
             _environment = environment;
         }
 
-        private string myPath = "C:\\Users\\YAEL\\OneDrive\\שולחן העבודה\\";
-
-
-        [HttpGet("Shabetz")]
-        public IActionResult Shabetz()
+        [HttpGet("Shabetz/{date}")]
+        public IActionResult Shabetz(DateTime date)
         {
-            string pdfFilePath = _environment.WebRootPath + "\\NewspapersPdf\\pdfTemplate.pdf";
-            _funcs.Shabets(pdfFilePath);
-            return Ok();
+            NewspapersPublishedDTO newspapersPublishedDTO = _funcs.Shabets(date);
+            return Ok(newspapersPublishedDTO);
+        }
+
+        [HttpGet("ClosingNewspaper/{date}/{countPages}")]
+        public IActionResult ClosingNewspaper(DateTime date, int countPages)
+        {
+            try
+            {
+                _funcs.ClosingNewspaper(date, countPages);
+                return Ok();
+            }
+            catch (DateAlreadyExistsException)
+            {
+                return StatusCode(409);
+            }
+            catch (NewspaperNotGeneratedException)
+            {
+                return StatusCode(408);
+            }
+            catch (Exception)
+            {
+                return StatusCode(500);
+            }
         }
 
     }

@@ -20,6 +20,7 @@ using System.Drawing;
 using System.Net.Mail;
 using Ghostscript.NET;
 using Ghostscript.NET.Rasterizer;
+using DocumentFormat.OpenXml.Bibliography;
 
 namespace BLL.Functions
 {
@@ -42,15 +43,14 @@ namespace BLL.Functions
             _Mapper = config.CreateMapper();
         }
 
-        IAdSizeActions _adSize;
-        IOrderDetailActions _ordersDetailActions;
-        IDatesForOrderDetailActions _datesForOrderDetailActions;
-        IAdPlacementActions _adPlacement;
-        IWordAdSubCategoryActions _wpAdSubCategoryActions;
-        ICustomerActions _customerActions;
-        IOrderActions _order;
-        INewspapersPublishedActions _newspapersPublished;
-        private object codeLines;
+        private readonly IAdSizeActions _adSize;
+        private readonly IOrderDetailActions _ordersDetailActions;
+        private readonly IDatesForOrderDetailActions _datesForOrderDetailActions;
+        private readonly IAdPlacementActions _adPlacement;
+        private readonly IWordAdSubCategoryActions _wpAdSubCategoryActions;
+        private readonly ICustomerActions _customerActions;
+        private readonly IOrderActions _order;
+        private readonly INewspapersPublishedActions _newspapersPublished;
 
         public Funcs(IAdSizeActions adSize,
             IOrderDetailActions ordersDetailActions,
@@ -75,13 +75,10 @@ namespace BLL.Functions
 
         #region WpAdSubCategory
 
-        // פונקציה שמחזירה את כל תתי הקטגוריות של מודעות מילים בפורמט DTO
         public List<WordAdSubCategoryDTO> GetAllWordAdSubCategories()
         {
-            var wordAdSubCategoryDTO = new List<WordAdSubCategoryDTO>();
             List<WordAdSubCategory> listwordAdSubCategories = _wpAdSubCategoryActions.GetAllWordAdSubCategories();
-            foreach (var wordAdSubCategory in listwordAdSubCategories)
-                wordAdSubCategoryDTO.Add(_Mapper.Map<WordAdSubCategory, WordAdSubCategoryDTO>(wordAdSubCategory));
+            List<WordAdSubCategoryDTO> wordAdSubCategoryDTO = _Mapper.Map<List<WordAdSubCategoryDTO>>(listwordAdSubCategories);
             return wordAdSubCategoryDTO;
         }
 
@@ -89,13 +86,10 @@ namespace BLL.Functions
 
         #region AdSize
 
-        // פונקציה שמחזירה מערך של כל גדלי הפרסומות בפורמט של DTO
         public List<AdSizeDTO> GetAllAdSize()
         {
-            var adSizeDTO = new List<AdSizeDTO>();
             List<AdSize> listAdSize = _adSize.GetAllAdSizes();
-            foreach (var adSize in listAdSize)
-                adSizeDTO.Add(_Mapper.Map<AdSize, AdSizeDTO>(adSize));
+            List<AdSizeDTO> adSizeDTO = _Mapper.Map<List<AdSizeDTO>>(listAdSize);
             return adSizeDTO;
         }
 
@@ -103,13 +97,10 @@ namespace BLL.Functions
 
         #region AdPlacement
 
-        // פונקציה שמחזירה את כל מיקומי הפרסומות בפורמט של DTO
         public List<AdPlacementDTO> GetAllAdPlacement()
         {
-            var adPlacementDTO = new List<AdPlacementDTO>();
             List<AdPlacement> listAdPlacement = _adPlacement.GetAllAdPlacements();
-            foreach (var adPlacement in listAdPlacement)
-                adPlacementDTO.Add(_Mapper.Map<AdPlacement, AdPlacementDTO>(adPlacement));
+            List<AdPlacementDTO> adPlacementDTO = _Mapper.Map<List<AdPlacementDTO>>(listAdPlacement);
             return adPlacementDTO;
         }
 
@@ -140,24 +131,19 @@ namespace BLL.Functions
             return newCust;
         }
 
-        // פונקציה שמחזירה את כל הלקוחות
         private List<CustomerDTO> GetAllCustomers()
         {
-            List<CustomerDTO> customers = new List<CustomerDTO>();
-            List<Customer> customers2 = _customerActions.GetAllCustomers();
-            foreach (Customer cust in customers2)
-                customers.Add(_Mapper.Map<Customer, CustomerDTO>(cust));
-            return customers;
+            List<Customer> customers = _customerActions.GetAllCustomers();
+            List<CustomerDTO> customersDTO = _Mapper.Map<List<CustomerDTO>>(customers);
+            return customersDTO;
         }
 
-        // פונקציה שמקבלת מייל וסיסמה של לקוח
-        // ומזירה אותו אם הוא קיים וכלום אם לא קיים
-        public CustomerDTO GetCustomerByEmailAndPass(string email, string pass)
+        public CustomerDTO LogIn(string email, string pass)
         {
-            var newCust = GetAllCustomers().FirstOrDefault(x => x.CustEmail.Equals(email) && x.CustPassword.Equals(pass));
-            if (newCust != null)
-                return newCust;
-            return null!;
+            var cust = GetAllCustomers().FirstOrDefault(x => x.CustEmail.Equals(email) && x.CustPassword.Equals(pass));
+            if (cust == null)
+                throw new UserNotFoundException();
+            return cust!;
         }
 
         #endregion
@@ -166,11 +152,9 @@ namespace BLL.Functions
 
         public List<NewspapersPublishedDTO> GetAllNewspapersPublished()
         {
-            List<NewspapersPublished> NewspapersPublished = _newspapersPublished.GetAllNewspapersPublished();
-            List<NewspapersPublishedDTO> NewspapersPublishedDTO = new List<NewspapersPublishedDTO>();
-            foreach (NewspapersPublished np in NewspapersPublished)
-                NewspapersPublishedDTO.Add(_Mapper.Map<NewspapersPublished, NewspapersPublishedDTO>(np));
-            return NewspapersPublishedDTO.OrderByDescending(x => x.NewspaperId).ToList(); ;
+            List<NewspapersPublished> newspapersPublished = _newspapersPublished.GetAllNewspapersPublished();
+            List<NewspapersPublishedDTO> NewspapersPublishedDTO = _Mapper.Map<List<NewspapersPublishedDTO>>(newspapersPublished);
+            return NewspapersPublishedDTO.OrderByDescending(x => x.NewspaperId).ToList();
         }
 
         #endregion
@@ -179,22 +163,17 @@ namespace BLL.Functions
 
         private List<OrderDetail> FromListOrderDetailDTOToListOrderDetail(List<OrderDetailDTO> listOrderDetails)
         {
-            List<OrderDetail> orderDetails = new List<OrderDetail>();
-            foreach (OrderDetailDTO orderD in listOrderDetails)
-                orderDetails.Add(_Mapper.Map<OrderDetailDTO, OrderDetail>(orderD));
+            List<OrderDetail> orderDetails = _Mapper.Map<List<OrderDetail>>(listOrderDetails);
             return orderDetails;
         }
 
         public List<OrderDetailDTO> GetAllOrderDetails()
         {
-            List<OrderDetailDTO> orderDetailsDTO = new List<OrderDetailDTO>();
             List<OrderDetail> details = _ordersDetailActions.GetAllOrderDetails();
-            foreach (var detail in details)
-                orderDetailsDTO.Add(_Mapper.Map<OrderDetail, OrderDetailDTO>(detail));
+            List<OrderDetailDTO> orderDetailsDTO = _Mapper.Map<List<OrderDetailDTO>>(details);
             return orderDetailsDTO;
         }
 
-        // מיון מהגדול לקטן
         private List<OrderDetail> SortBySizeDesc(List<OrderDetail> orderDetails)
         {
             return orderDetails.OrderByDescending(x => x.Size?.SizeHeight)
@@ -202,7 +181,6 @@ namespace BLL.Functions
                 .ToList();
         }
 
-        // מיון מהקטן לגדול
         private List<OrderDetail> SortBySize(List<OrderDetail> orderDetails)
         {
             return orderDetails.OrderBy(x => x.Size?.SizeHeight)
@@ -213,23 +191,20 @@ namespace BLL.Functions
         private List<OrderDetail> GetAllReleventOrders(DateTime dateForPrint)
         {
             List<DatesForOrderDetail> allDates = _datesForOrderDetailActions.GetAllDatesForOrderDetails();
-            List<OrderDetail> relevanteAds = new List<OrderDetail>();
-            foreach (var date in allDates)
-                if (date.Date == dateForPrint ||
-                    date.Date.AddDays(((double)date.Details.AdDuration - 1) * 7) >= dateForPrint)
-                    relevanteAds.Add(date.Details);
-            return relevanteAds;
+            var relevanteAds = allDates
+                .Where(d => d.Date == dateForPrint || d.Date.AddDays(((double)d.Details.AdDuration - 1) * 7) >= dateForPrint)
+                .Select(x => x.Details);
+            return relevanteAds.ToList();
         }
+        
         #endregion
 
         #region DatesForOrderDetail
 
         private List<DatesForOrderDetailDTO> GetAllDatesForDetails()
         {
-            var datesForDetailsDTO = new List<DatesForOrderDetailDTO>();
             List<DatesForOrderDetail> datesForOrderDetails = _datesForOrderDetailActions.GetAllDatesForOrderDetails();
-            foreach (var date in datesForOrderDetails)
-                datesForDetailsDTO.Add(_Mapper.Map<DatesForOrderDetail, DatesForOrderDetailDTO>(date));
+            List<DatesForOrderDetailDTO> datesForDetailsDTO = _Mapper.Map<List<DatesForOrderDetailDTO>>(datesForOrderDetails);
             return datesForDetailsDTO;
         }
 
@@ -237,44 +212,27 @@ namespace BLL.Functions
 
         #region PdfSharp
 
-        private void PageNumbering(string oldPdfFile, string newPdfFile)
+        private int PageNumbering(string oldPdfFile, string newPdfFile)
         {
-            // הנתיב לקובץ PDF הקיים
             string existingPdfPath = oldPdfFile;
-
-            // הנתיב לקובץ PDF שתרצי ליצור
             string newPdfPath = newPdfFile;
-
-            // פתחי את הקובץ הקיים
             PdfDocument existingPdf = PdfReader.Open(existingPdfPath, PdfDocumentOpenMode.Import);
-
-            // יצירת קובץ PDF חדש
             PdfDocument newPdf = new PdfDocument();
-
             XGraphics gfx;
-            // לולאה שעוברת על כל עמוד בקובץ הקיים
             for (int pageIndex = 0; pageIndex < existingPdf.PageCount; pageIndex++)
             {
-                // העמוד הנוכחי בקובץ הקיים
                 PdfPage existingPage = existingPdf.Pages[pageIndex];
-
-                // העמוד החדש שתיצרי
                 PdfPage newPage = newPdf.AddPage(existingPage);
-
                 gfx = XGraphics.FromPdfPage(newPage);
-
-                // הוספת טקסט עם מספר העמוד לעמוד החדש
-                if(pageIndex % 2 == 1)
+                if (pageIndex % 2 == 1)
                     gfx.DrawString((pageIndex + 1) + "", new XFont("MV Boli", 16), XBrushes.White,
                                    new XRect(23, -2, newPage.Width, newPage.Height), XStringFormats.BottomLeft);
                 else
                     gfx.DrawString((pageIndex + 1) + "", new XFont("MV Boli", 16), XBrushes.White,
                                    new XRect(-23, -2, newPage.Width, newPage.Height), XStringFormats.BottomRight);
             }
-
-            // שמירת הקובץ החדש
             newPdf.Save(newPdfPath);
-
+            return existingPdf.PageCount;
         }
 
         private bool IsMatFull(string[,] mat)
@@ -340,7 +298,7 @@ namespace BLL.Functions
             FillMat(matPage, i, j, widthImage, heightImage, detail.AdFile!);
         }
 
-        private int Inlay(string final, string regular, string words, List<OrderDetail> placeCoverFileAds, List<OrderDetail> placeBackFileAds, List<OrderDetail> placeNormalFileAds, List<OrderDetail> managerFiles, int countLetter)
+        private void Inlay(string final, string regular, string words, List<OrderDetail> placeCoverFileAds, List<OrderDetail> placeBackFileAds, List<OrderDetail> placeNormalFileAds, List<OrderDetail> managerFiles, int countLetter)
         {
             int countBox = (countLetter / 100) + 1;
             int num = 0;
@@ -369,7 +327,7 @@ namespace BLL.Functions
             int temp = countBox;
             for (int i = 0; temp > 0; i++)
             {
-                if(temp > 8)
+                if (temp > 8)
                 {
                     temp -= 8;
                     num = 8;
@@ -635,20 +593,13 @@ namespace BLL.Functions
                     }
                 }
             }
-
             finalDocument.Save(final);
-            return pagesMats.Count;
         }
 
-        public void Shabets(string pathPdf)
+        public NewspapersPublishedDTO Shabets(DateTime datePublished)
         {
-            // תאריך יציאת העיתון
-            DateTime dateForPrint = new DateTime(2023, 09, 26);
+            List<OrderDetail> relevanteAds = GetAllReleventOrders(datePublished);
 
-            // זה בקיצור שליפת כל פרטי ההזמנות הרלונטיות
-            List<OrderDetail> relevanteAds = GetAllReleventOrders(dateForPrint);
-
-            // הגדרת רשימות של פרסומת
             List<OrderDetail> allRelevantFileAds = new List<OrderDetail>();
             List<OrderDetail> allRelevantWordsAds = new List<OrderDetail>();
 
@@ -692,7 +643,7 @@ namespace BLL.Functions
 
             Dictionary<string, string> keyValues = new Dictionary<string, string>();
             keyValues.Add("num", newspaperId.ToString());
-            keyValues.Add("date", dateForPrint.ToString("d"));
+            keyValues.Add("date", datePublished.ToString("d"));
             File.Copy(firstWord, finalWord, true);
             using (WordprocessingDocument myDoc = WordprocessingDocument.Open(finalWord, true))
             {
@@ -704,11 +655,11 @@ namespace BLL.Functions
 
             placeCoverFileAds = SortBySize(placeCoverFileAds);
 
-            int countPages = Inlay(final, regular, words, placeCoverFileAds, placeBackFileAds, placeNormalFileAds, managerFiles, countLetter);
+            Inlay(final, regular, words, placeCoverFileAds, placeBackFileAds, placeNormalFileAds, managerFiles, countLetter);
 
-            PageNumbering(final, final2);
+            int countPages = PageNumbering(final, final2);
 
-            ConvertPdfToImages(final2, pathWwwroot + "\\Newspapers\\" + dateForPrint.ToString("dd.MM.yyyy"));
+            ConvertPdfToImages(final2, pathWwwroot + "\\Newspapers\\" + datePublished.ToString("dd.MM.yyyy"));
 
             File.Delete(regular);
             File.Delete(first);
@@ -718,8 +669,23 @@ namespace BLL.Functions
             File.Delete(finalWord);
             File.Delete(tempFileFullName);
 
+            NewspapersPublishedDTO newspapersPublishedDTO = new NewspapersPublishedDTO() { 
+                CountPages = countPages, 
+                PublicationDate = datePublished.ToString("dd.MM.yyyy")
+            };
+            return newspapersPublishedDTO;
+        }
+
+        public void ClosingNewspaper(DateTime date, int countPages)
+        {
+            string dateString = date.ToString("dd.MM.yyyy");
+            int index = GetAllNewspapersPublished().FindIndex(n => n.PublicationDate == dateString);
+            //if (index != -1)
+            //    throw new DateAlreadyExistsException("Date of newspaper already exists in the system!");
+            if (!Directory.Exists(pathWwwroot + "\\Newspapers\\" + dateString))
+                throw new NewspaperNotGeneratedException("Newspaper not generated in the files!");
             NewspapersPublished newspapersPublished = new NewspapersPublished();
-            newspapersPublished.PublicationDate = dateForPrint;
+            newspapersPublished.PublicationDate = date;
             newspapersPublished.CountPages = countPages;
             _newspapersPublished.AddNewNewspaperPublished(newspapersPublished);
         }
@@ -727,7 +693,6 @@ namespace BLL.Functions
         #endregion
 
         #region Converts
-
 
         public void ConvertFromWordToPdf(string dotxFilePath, string pdfFilePath)
         {
@@ -847,7 +812,7 @@ namespace BLL.Functions
         public void FinishOrderAdWords(CustomerDTO customer, List<DateTime> listDates, List<OrderDetailDTO> listOrderDetails)
         {
             List<OrderDetail> orderDetails = FromListOrderDetailDTOToListOrderDetail(listOrderDetails).ToList();
-            DAL.Models.Order newOrder = new DAL.Models.Order()
+            Order newOrder = new Order()
             {
                 CustId = GetIdByCustomer(customer),
                 OrderDate = DateTime.Now,

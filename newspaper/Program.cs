@@ -34,6 +34,9 @@ builder.Services.AddScoped<IOrderActions, OrderActions>();
 builder.Services.AddScoped<IOrderDetailActions, OrderDetailActions>();
 builder.Services.AddScoped<IWordAdSubCategoryActions, WordAdSubCategoryActions>();
 
+
+
+
 builder.Services.AddScoped<IFuncs, Funcs>();
 
 

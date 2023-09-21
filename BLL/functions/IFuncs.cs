@@ -26,7 +26,7 @@ namespace BLL.Functions
 
         public CustomerDTO SignUp(CustomerDTO customer);
 
-        public CustomerDTO GetCustomerByEmailAndPass(string email, string pass);
+        public CustomerDTO LogIn(string email, string pass);
 
         public int GetIdByCustomer(CustomerDTO customer);
 
@@ -46,7 +46,9 @@ namespace BLL.Functions
 
         #region PdfSharp
 
-        public void Shabets(string pathPdf);
+        public NewspapersPublishedDTO Shabets(DateTime date);
+
+        public void ClosingNewspaper(DateTime date, int countPages);
 
         #endregion
 

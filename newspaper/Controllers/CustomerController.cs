@@ -23,10 +23,22 @@ namespace newspaper.Controllers
             return Ok(_funcs.GetIdByCustomer(cust));
         }
 
-        [HttpGet("GetCustomerByEmailAndPass/{email}/{pass}")]
-        public IActionResult GetCustomerByEmailAndPass(string email, string pass)
+        [HttpGet("LogIn/{email}/{pass}")]
+        public IActionResult LogIn(string email, string pass)
         {
-            return Ok(_funcs.GetCustomerByEmailAndPass(email, pass));
+            try
+            {
+                CustomerDTO customerDTO = _funcs.LogIn(email, pass);
+                return Ok(customerDTO);
+            }
+            catch (UserNotFoundException)
+            {
+                return StatusCode(404);
+            }
+            catch (Exception)
+            {
+                return StatusCode(500);
+            }
         }
 
         [HttpPost("SignUp")]
