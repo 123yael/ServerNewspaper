@@ -196,7 +196,15 @@ namespace BLL.Functions
                 .Select(x => x.Details);
             return relevanteAds.ToList();
         }
-        
+
+        public List<OrderDetailsTable> GetAllReleventOrdersDTO(DateTime dateForPrint)
+        {
+            List<OrderDetail> relevanteAds = GetAllReleventOrders(dateForPrint).Where(d => d.AdContent == null).ToList();
+            List<OrderDetailsTable> orderDetailDTOs = _Mapper.Map<List<OrderDetailsTable>>(relevanteAds);
+            return orderDetailDTOs;
+        }
+
+
         #endregion
 
         #region DatesForOrderDetail

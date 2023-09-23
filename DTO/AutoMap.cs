@@ -44,6 +44,14 @@ namespace DTO
 
             CreateMap<WordAdSubCategoryDTO, WordAdSubCategory>();
             CreateMap<WordAdSubCategory, WordAdSubCategoryDTO>();
+
+            CreateMap<OrderDetail, OrderDetailsTable>()
+                .ForMember(dest => dest.SizeName, opt => opt.MapFrom(src => src.Size.SizeName))
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.OrderId))
+                .ForMember(dest => dest.CustFullName, opt => opt.MapFrom(src => src.Order.Cust.CustFirstName + " " + src.Order.Cust.CustLastName))
+                .ForMember(dest => dest.CustEmail, opt => opt.MapFrom(src => src.Order.Cust.CustEmail))
+                .ForMember(dest => dest.CustPhone, opt => opt.MapFrom(src => src.Order.Cust.CustPhone))
+                .ForMember(dest => dest.OrderFinalPrice, opt => opt.MapFrom(src => src.Order.OrderFinalPrice));
         }
 
     }

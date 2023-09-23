@@ -1,4 +1,5 @@
-﻿using DTO.Repository;
+﻿using DAL.Models;
+using DTO.Repository;
 
 namespace BLL.Functions
 {
@@ -41,6 +42,8 @@ namespace BLL.Functions
         #region OrderDetail
 
         public List<OrderDetailDTO> GetAllOrderDetails();
+
+        public List<OrderDetailsTable> GetAllReleventOrdersDTO(DateTime dateForPrint);
 
         #endregion
 

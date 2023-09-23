@@ -1,6 +1,7 @@
 # Ignore build output
 bin/
 obj/
+wwwroot\Upload/
 *.dll
 *.exe
 *.pdb
