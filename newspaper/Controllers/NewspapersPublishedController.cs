@@ -2,6 +2,7 @@
 using DTO.Repository;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System;
 using System.Text.Json;
 
 namespace newspaper.Controllers
@@ -17,12 +18,6 @@ namespace newspaper.Controllers
         {
             this._funcs = funcs;
         }
-
-        //[HttpGet("GetAllNewspapersPublished")]
-        //public IActionResult GetAllNewspapersPublished()
-        //{
-        //    return Ok(_funcs.GetAllNewspapersPublished());
-        //}
 
         [HttpGet("GetAllNewspapersPublished/{sheet}/{date}")]
         public async Task<IActionResult> GetAllNewspapersPublished([FromRoute] string sheet, [FromRoute] string date, [FromQuery] PaginationParams @params)
@@ -42,5 +37,6 @@ namespace newspaper.Controllers
 
             return Ok(new { list = items, paginationMetadata = paginationMetadata });
         }
+
     }
 }

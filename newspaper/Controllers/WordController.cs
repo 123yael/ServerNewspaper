@@ -2,7 +2,7 @@
 using BLL.Functions;
 using DTO.Repository;
 using Microsoft.AspNetCore.Mvc;
-
+using System.Globalization;
 
 namespace newspaper.Controllers
 {
@@ -20,18 +20,22 @@ namespace newspaper.Controllers
         }
 
         [HttpGet("Shabetz/{date}")]
-        public IActionResult Shabetz(DateTime date)
+        public IActionResult Shabetz(string date)
         {
-            NewspapersPublishedDTO newspapersPublishedDTO = _funcs.Shabets(date);
+            DateTime dateTime;
+            DateTime.TryParseExact(date, "dd.MM.yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out dateTime);
+            NewspapersPublishedDTO newspapersPublishedDTO = _funcs.Shabets(dateTime);
             return Ok(newspapersPublishedDTO);
         }
 
         [HttpGet("ClosingNewspaper/{date}/{countPages}")]
-        public IActionResult ClosingNewspaper(DateTime date, int countPages)
+        public IActionResult ClosingNewspaper(string date, int countPages)
         {
             try
             {
-                _funcs.ClosingNewspaper(date, countPages);
+                DateTime dateTime;
+                DateTime.TryParseExact(date, "dd.MM.yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out dateTime);
+                _funcs.ClosingNewspaper(dateTime, countPages);
                 return Ok();
             }
             catch (DateAlreadyExistsException)

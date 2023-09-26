@@ -63,9 +63,9 @@ namespace BLL.Functions
 
         #region FinishOrder
 
-        public void FinishOrder(CustomerDTO customer, List<DateTime> listDates, List<OrderDetailDTO> listOrderDetails);
+        public void FinishOrder(CustomerDTO customer, List<string> listDates, List<OrderDetailDTO> listOrderDetails);
 
-        public void FinishOrderAdWords(CustomerDTO customer, List<DateTime> listDates, List<OrderDetailDTO> listOrderDetails);
+        public void FinishOrderAdWords(CustomerDTO customer, List<string> listDates, List<OrderDetailDTO> listOrderDetails);
 
         #endregion
 

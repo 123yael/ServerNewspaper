@@ -21,6 +21,7 @@ using System.Net.Mail;
 using Ghostscript.NET;
 using Ghostscript.NET.Rasterizer;
 using DocumentFormat.OpenXml.Bibliography;
+using System.Globalization;
 
 namespace BLL.Functions
 {
@@ -192,7 +193,7 @@ namespace BLL.Functions
         {
             List<DatesForOrderDetail> allDates = _datesForOrderDetailActions.GetAllDatesForOrderDetails();
             var relevanteAds = allDates
-                .Where(d => d.Date == dateForPrint || d.Date.AddDays(((double)d.Details.AdDuration - 1) * 7) >= dateForPrint)
+                .Where(d => d.Date == dateForPrint || (d.Date < dateForPrint && d.Date.AddDays(((double)(d.Details.AdDuration) - 1) * 7) >= dateForPrint))
                 .Select(x => x.Details);
             return relevanteAds.ToList();
         }
@@ -761,13 +762,15 @@ namespace BLL.Functions
         }
 
         // פונקציה שמקבלת רשימה של תאריכים ורשימה של קודים של פרטי הזמנות ומכניסה למסד הנתונים
-        private void EnterDates(List<DateTime> listDates, List<int> orderDetailsIds)
+        private void EnterDates(List<string> listDates, List<int> orderDetailsIds)
         {
             DatesForOrderDetail datesForOrderDetail;
+            DateTime dateTime;
             for (int i = 0; i < orderDetailsIds.Count; i++)
             {
-                datesForOrderDetail = new DatesForOrderDetail();
-                datesForOrderDetail.Date = listDates[i];
+                datesForOrderDetail = new DatesForOrderDetail();               
+                DateTime.TryParseExact(listDates[i], "dd.MM.yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out dateTime);
+                datesForOrderDetail.Date = dateTime;
                 datesForOrderDetail.DetailsId = orderDetailsIds[i];
                 datesForOrderDetail.DateStatus = false;
                 _datesForOrderDetailActions.AddNewDateForOrderDetail(datesForOrderDetail);
@@ -790,7 +793,7 @@ namespace BLL.Functions
 
         // פונקציה שמקבלת לקוח, מערך של פרטי הזמנות ומערך של תאריכים
         // הפונקציה מכניסה למסד הנתונים הזמנה וכל מה שהיא קיבלה
-        public void FinishOrder(CustomerDTO customer, List<DateTime> listDates, List<OrderDetailDTO> listOrderDetails)
+        public void FinishOrder(CustomerDTO customer, List<string> listDates, List<OrderDetailDTO> listOrderDetails)
         {
             List<OrderDetail> orderDetails = FromListOrderDetailDTOToListOrderDetail(listOrderDetails).ToList();
             DAL.Models.Order newOrder = new DAL.Models.Order()
@@ -817,7 +820,7 @@ namespace BLL.Functions
             return words.Length;
         }
 
-        public void FinishOrderAdWords(CustomerDTO customer, List<DateTime> listDates, List<OrderDetailDTO> listOrderDetails)
+        public void FinishOrderAdWords(CustomerDTO customer, List<string> listDates, List<OrderDetailDTO> listOrderDetails)
         {
             List<OrderDetail> orderDetails = FromListOrderDetailDTOToListOrderDetail(listOrderDetails).ToList();
             Order newOrder = new Order()
