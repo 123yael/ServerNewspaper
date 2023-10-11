@@ -3,6 +3,8 @@ using DAL.Actions.Classes;
 using DAL.Actions.Interfaces;
 using DAL.Models;
 using Microsoft.EntityFrameworkCore;
+using newspaper;
+using newspaper.Hubs;
 using System;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -10,7 +12,6 @@ var builder = WebApplication.CreateBuilder(args);
 IConfiguration _configuration = builder.Configuration;
 
 // Add services to the container.
-
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -34,10 +35,10 @@ builder.Services.AddScoped<IOrderActions, OrderActions>();
 builder.Services.AddScoped<IOrderDetailActions, OrderDetailActions>();
 builder.Services.AddScoped<IWordAdSubCategoryActions, WordAdSubCategoryActions>();
 
-
-
-
 builder.Services.AddScoped<IFuncs, Funcs>();
+
+builder.Services.AddSignalR();
+builder.Services.AddSingleton<IDictionary<string, UserConnection>>(opts => new Dictionary<string, UserConnection>());
 
 
 var app = builder.Build();
@@ -58,4 +59,10 @@ app.UseAuthorization();
 
 app.MapControllers();
 
+app.UseRouting();
+
+app.MapHub<ChatHub>("/chat");
+
 app.Run();
+
+

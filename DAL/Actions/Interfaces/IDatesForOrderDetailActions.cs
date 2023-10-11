@@ -16,5 +16,7 @@ namespace DAL.Actions.Interfaces
         public void UpdateDateForOrderDetail(int id, DatesForOrderDetail dateForOrderDetail);
 
         public void DeleteDateForOrderDetail(int id);
+
+        public void UpdateStatus(int id, bool status);
     }
 }

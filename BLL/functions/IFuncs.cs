@@ -43,7 +43,20 @@ namespace BLL.Functions
 
         public List<OrderDetailDTO> GetAllOrderDetails();
 
-        public List<OrderDetailsTable> GetAllReleventOrdersDTO(DateTime dateForPrint);
+        #endregion
+
+        #region Tabel
+
+        public Object GetAllOrderDetailsTableByDate(DateTime dateForPrint, int page, int itemsPerPage);
+
+        public Object GetAllDetailsWordsTableByDate(DateTime dateForPrint, int page, int itemsPerPage);
+
+        #endregion
+
+        #region DatesForOrderDetail
+
+        public void UpdateStatus(int id, bool status);
+
 
         #endregion
 

@@ -11,7 +11,7 @@ public partial class DatesForOrderDetail
 
     public DateTime Date { get; set; }
 
-    public bool? DateStatus { get; set; }
+    public bool? ApprovalStatus { get; set; }
 
     public virtual OrderDetail? Details { get; set; }
 }

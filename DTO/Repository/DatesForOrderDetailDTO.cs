@@ -14,6 +14,6 @@ namespace DTO.Repository
 
         public DateTime Date { get; set; }
 
-        public bool? DateStatus { get; set; }
+        public bool? ApprovalStatus { get; set; }
     }
 }

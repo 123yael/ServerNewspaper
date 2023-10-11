@@ -27,24 +27,5 @@ namespace newspaper.Controllers
             return Ok(_funcs.GetAllOrderDetails());
         }
 
-        [HttpGet("GetOrderDetailsByDate/{date}")]
-        public async Task<IActionResult> GetOrderDetailsByDate([FromRoute] string date, [FromQuery] PaginationParams @params)
-        {
-
-            DateTime dateTime;
-            DateTime.TryParseExact(date, "dd.MM.yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out dateTime);
-
-            var orderDetails = _funcs.GetAllReleventOrdersDTO(dateTime);
-
-            var paginationMetadata = new PaginationMetadata(orderDetails.Count(), @params.Page, @params.ItemsPerPage);
-
-            var items = orderDetails.Skip((@params.Page - 1) * @params.ItemsPerPage)
-                .Take(@params.ItemsPerPage);
-
-            Response.Headers.Add("X-Pagination", JsonSerializer.Serialize(paginationMetadata));
-
-            return Ok(new { List = items, PaginationMetadata = paginationMetadata });
-
-        }
     }
 }

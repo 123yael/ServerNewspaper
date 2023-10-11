@@ -20,7 +20,11 @@ namespace DTO.Repository
 
         public string? CustPhone { get; set; }
 
-        public decimal? OrderFinalPrice { get; set; }
+        public int? WeekNumber { get; set; }
+
+        public DateTime Date { get; set; }
+
+        public bool? ApprovalStatus { get; set; }
 
     }
 }

@@ -77,30 +77,30 @@ CREATE TABLE DatesForOrderDetails
 	date_id INT PRIMARY KEY IDENTITY(1, 1),
 	details_id INT REFERENCES OrderDetails,
 	[date] DATE NOT NULL,
-	date_status BIT DEFAULT(1),
+	approval_status BIT DEFAULT(1),
 )
 
 ------------------------------------------------------
 
-INSERT INTO NewspapersPublished
-VALUES('2023-02-07', 5)
-GO
+--INSERT INTO NewspapersPublished
+--VALUES('2023-02-07', 5)
+--GO
 
-INSERT INTO NewspapersPublished
-VALUES('2023-03-07', 5)
-GO
+--INSERT INTO NewspapersPublished
+--VALUES('2023-03-07', 5)
+--GO
 
-INSERT INTO NewspapersPublished
-VALUES('2023-02-15', 5)
-GO
+--INSERT INTO NewspapersPublished
+--VALUES('2023-02-15', 5)
+--GO
 
-INSERT INTO NewspapersPublished
-VALUES('2023-08-08', 5)
-GO
+--INSERT INTO NewspapersPublished
+--VALUES('2023-08-08', 5)
+--GO
 
-INSERT INTO NewspapersPublished
-VALUES('2023-09-19', 13)
-GO
+--INSERT INTO NewspapersPublished
+--VALUES('2023-09-19', 13)
+--GO
 
 ------------------------------------------------------
 
@@ -112,9 +112,9 @@ INSERT INTO Customers
 VALUES('Yael', 'Malkin', 'malkin.yaeli@gmail.com', '0583220353', '123456789')
 GO
 
-INSERT INTO Customers
-VALUES('Chani', 'Malkin', 'malkin.chany@gmail.com', '0543488561', '123456789')
-GO
+--INSERT INTO Customers
+--VALUES('Chani', 'Malkin', 'malkin.chany@gmail.com', '0543488561', '123456789')
+--GO
 
 ------------------------------------------------------
 

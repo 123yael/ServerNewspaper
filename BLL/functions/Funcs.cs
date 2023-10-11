@@ -22,6 +22,8 @@ using Ghostscript.NET;
 using Ghostscript.NET.Rasterizer;
 using DocumentFormat.OpenXml.Bibliography;
 using System.Globalization;
+using Azure;
+using System.Text.Json;
 
 namespace BLL.Functions
 {
@@ -194,27 +196,60 @@ namespace BLL.Functions
             List<DatesForOrderDetail> allDates = _datesForOrderDetailActions.GetAllDatesForOrderDetails();
             var relevanteAds = allDates
                 .Where(d => d.Date == dateForPrint || (d.Date < dateForPrint && d.Date.AddDays(((double)(d.Details.AdDuration) - 1) * 7) >= dateForPrint))
+                .Where(d => d.ApprovalStatus == true)
                 .Select(x => x.Details);
             return relevanteAds.ToList();
         }
 
-        public List<OrderDetailsTable> GetAllReleventOrdersDTO(DateTime dateForPrint)
+        #endregion
+
+        #region Table
+
+        public Object GetAllOrderDetailsTableByDate(DateTime dateForPrint, int page, int itemsPerPage)
         {
-            List<OrderDetail> relevanteAds = GetAllReleventOrders(dateForPrint).Where(d => d.AdContent == null).ToList();
+            List<DatesForOrderDetail> relevanteAds = GetAllDatesForOrderDetailByDate(dateForPrint)
+                .Where(d => d.Details!.AdContent == null).ToList();
             List<OrderDetailsTable> orderDetailDTOs = _Mapper.Map<List<OrderDetailsTable>>(relevanteAds);
-            return orderDetailDTOs;
+            for (int i = 0; i < orderDetailDTOs.Count; i++)
+                orderDetailDTOs[i].WeekNumber = (dateForPrint.Subtract(orderDetailDTOs[i].Date).Days / 7) + 1;
+
+            var paginationMetadata = new PaginationMetadata(orderDetailDTOs.Count(), page, itemsPerPage);
+
+            var items = orderDetailDTOs.Skip((page - 1) * itemsPerPage).Take(itemsPerPage);
+
+            return new { List = items, PaginationMetadata = paginationMetadata };
         }
 
+        public Object GetAllDetailsWordsTableByDate(DateTime dateForPrint, int page, int itemsPerPage)
+        {
+            List<DatesForOrderDetail> relevanteAds = GetAllDatesForOrderDetailByDate(dateForPrint)
+                .Where(d => d.Details!.AdContent != null).ToList();
+            List<DetailsWordsTable> orderDetailDTOs = _Mapper.Map<List<DetailsWordsTable>>(relevanteAds);
+            for (int i = 0; i < orderDetailDTOs.Count; i++)
+                orderDetailDTOs[i].WeekNumber = (dateForPrint.Subtract(orderDetailDTOs[i].Date).Days / 7) + 1;
+
+            var paginationMetadata = new PaginationMetadata(orderDetailDTOs.Count(), page, itemsPerPage);
+
+            var items = orderDetailDTOs.Skip((page - 1) * itemsPerPage).Take(itemsPerPage);
+
+            return new { List = items, PaginationMetadata = paginationMetadata };
+        }
 
         #endregion
 
         #region DatesForOrderDetail
 
-        private List<DatesForOrderDetailDTO> GetAllDatesForDetails()
+        private List<DatesForOrderDetail> GetAllDatesForOrderDetailByDate(DateTime dateForPrint)
         {
-            List<DatesForOrderDetail> datesForOrderDetails = _datesForOrderDetailActions.GetAllDatesForOrderDetails();
-            List<DatesForOrderDetailDTO> datesForDetailsDTO = _Mapper.Map<List<DatesForOrderDetailDTO>>(datesForOrderDetails);
-            return datesForDetailsDTO;
+            List<DatesForOrderDetail> allDates = _datesForOrderDetailActions.GetAllDatesForOrderDetails();
+            var relevanteAds = allDates
+                .Where(d => d.Date == dateForPrint || (d.Date < dateForPrint && d.Date.AddDays(((double)(d.Details.AdDuration) - 1) * 7) >= dateForPrint));
+            return relevanteAds.ToList();
+        }
+
+        public void UpdateStatus(int id, bool status)
+        {
+            _datesForOrderDetailActions.UpdateStatus(id, status);
         }
 
         #endregion
@@ -358,6 +393,8 @@ namespace BLL.Functions
             bool isEmpty;
             string[,] newPage;
 
+            placeBackFileAds = SortBySizeDesc(placeBackFileAds);
+
             // רישום המודעות לעמוד האחורי, מודעה שאין לה מקום נכנסת למודעות שאין להן עדיפות
             for (int index = 0; index < placeBackFileAds.Count; index++)
             {
@@ -385,6 +422,7 @@ namespace BLL.Functions
                     placeNormalFileAds.Add(currentDetail);
             }
 
+            placeCoverFileAds = SortBySizeDesc(placeCoverFileAds);
 
             // הכנסת המודעות לעמוד הקדמי אם אין להן מקום הם נכנסות לרשימת המודעות ללא עדיפות
             for (int index = 0; index < placeCoverFileAds.Count; index++)
@@ -413,7 +451,7 @@ namespace BLL.Functions
                     placeNormalFileAds.Add(currentDetail);
             }
 
-            placeNormalFileAds = SortBySize(placeNormalFileAds);
+            placeNormalFileAds = SortBySizeDesc(placeNormalFileAds);
 
             // הכנסת המודעות ללא עדיפות לעמוד הקדמי כל מי שלא נכנסה נכנסת למערך של שאר המודעות
             for (int index = 0; index < placeNormalFileAds.Count; index++)
@@ -472,6 +510,7 @@ namespace BLL.Functions
             }
 
             anyFilesToInsert2 = SortBySizeDesc(anyFilesToInsert2);
+
             // הכנסת כל שאר המודעות
             for (int index = 0; index < anyFilesToInsert2.Count; index++)
             {
@@ -635,7 +674,7 @@ namespace BLL.Functions
                     placeNormalFileAds.Add(detail);
 
             List<NewspapersPublished> allNewpapers = _newspapersPublished.GetAllNewspapersPublished();
-            int newspaperId = allNewpapers.Max(x => x.NewspaperId) + 1;
+            int newspaperId = allNewpapers.Count() > 0 ? allNewpapers.Max(x => x.NewspaperId) + 1 : 1;
 
             string regular = myPath + "\\regularTemplate" + ".pdf";
             string regularWord = myPath + "\\regularTemplate" + ".dotx";
@@ -662,8 +701,6 @@ namespace BLL.Functions
             ConvertFromWordToPdf(regularWord, regular);
             ConvertFromWordToPdf(finalWord, final);
 
-            placeCoverFileAds = SortBySize(placeCoverFileAds);
-
             Inlay(final, regular, words, placeCoverFileAds, placeBackFileAds, placeNormalFileAds, managerFiles, countLetter);
 
             int countPages = PageNumbering(final, final2);
@@ -678,8 +715,9 @@ namespace BLL.Functions
             File.Delete(finalWord);
             File.Delete(tempFileFullName);
 
-            NewspapersPublishedDTO newspapersPublishedDTO = new NewspapersPublishedDTO() { 
-                CountPages = countPages, 
+            NewspapersPublishedDTO newspapersPublishedDTO = new NewspapersPublishedDTO()
+            {
+                CountPages = countPages,
                 PublicationDate = datePublished.ToString("dd.MM.yyyy")
             };
             return newspapersPublishedDTO;
@@ -689,8 +727,8 @@ namespace BLL.Functions
         {
             string dateString = date.ToString("dd.MM.yyyy");
             int index = GetAllNewspapersPublished().FindIndex(n => n.PublicationDate == dateString);
-            //if (index != -1)
-            //    throw new DateAlreadyExistsException("Date of newspaper already exists in the system!");
+            if (index != -1)
+                throw new DateAlreadyExistsException("Date of newspaper already exists in the system!");
             if (!Directory.Exists(pathWwwroot + "\\Newspapers\\" + dateString))
                 throw new NewspaperNotGeneratedException("Newspaper not generated in the files!");
             NewspapersPublished newspapersPublished = new NewspapersPublished();
@@ -749,6 +787,11 @@ namespace BLL.Functions
 
         #region FinishOrder
 
+        private DateTime getDateNow()
+        {
+            DateTime date = new DateTime(2023, 8, 14);//DateTime.Now
+            return date;
+        }
         // פונקציה שמכניסה פרטי הזמנות למסד הנתונים ומחזירה רשימה של קודים של פרטי הזמנות
         private List<int> EnterOrderDetails(List<OrderDetail> orderDetails, int orderId)
         {
@@ -768,11 +811,11 @@ namespace BLL.Functions
             DateTime dateTime;
             for (int i = 0; i < orderDetailsIds.Count; i++)
             {
-                datesForOrderDetail = new DatesForOrderDetail();               
+                datesForOrderDetail = new DatesForOrderDetail();
                 DateTime.TryParseExact(listDates[i], "dd.MM.yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out dateTime);
                 datesForOrderDetail.Date = dateTime;
                 datesForOrderDetail.DetailsId = orderDetailsIds[i];
-                datesForOrderDetail.DateStatus = false;
+                datesForOrderDetail.ApprovalStatus = true;
                 _datesForOrderDetailActions.AddNewDateForOrderDetail(datesForOrderDetail);
             }
         }
@@ -786,7 +829,7 @@ namespace BLL.Functions
             List<AdSize> listAdSize = _adSize.GetAllAdSizes();
             foreach (OrderDetail od in orderDetails)
             {
-                sum += listAdSize.FirstOrDefault(s => s.SizeId == od.SizeId).SizePrice;
+                sum += listAdSize.FirstOrDefault(s => s.SizeId == od.SizeId).SizePrice * (decimal)od.AdDuration;
             }
             return sum;
         }
@@ -796,10 +839,10 @@ namespace BLL.Functions
         public void FinishOrder(CustomerDTO customer, List<string> listDates, List<OrderDetailDTO> listOrderDetails)
         {
             List<OrderDetail> orderDetails = FromListOrderDetailDTOToListOrderDetail(listOrderDetails).ToList();
-            DAL.Models.Order newOrder = new DAL.Models.Order()
+            Order newOrder = new Order()
             {
                 CustId = GetIdByCustomer(customer),
-                OrderDate = DateTime.Now,
+                OrderDate = getDateNow(),
                 OrderFinalPrice = FinalPrice(orderDetails)
             };
             _order.AddNewOrder(newOrder);
@@ -826,8 +869,8 @@ namespace BLL.Functions
             Order newOrder = new Order()
             {
                 CustId = GetIdByCustomer(customer),
-                OrderDate = DateTime.Now,
-                OrderFinalPrice = CountWords(listOrderDetails[0].AdContent)
+                OrderDate = getDateNow(),
+                OrderFinalPrice = CountWords(listOrderDetails[0].AdContent) * (decimal)listOrderDetails[0].AdDuration
             };
             _order.AddNewOrder(newOrder);
             List<int> orderDetailsIds = EnterOrderDetails(orderDetails, newOrder.OrderId);

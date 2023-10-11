@@ -45,13 +45,27 @@ namespace DTO
             CreateMap<WordAdSubCategoryDTO, WordAdSubCategory>();
             CreateMap<WordAdSubCategory, WordAdSubCategoryDTO>();
 
-            CreateMap<OrderDetail, OrderDetailsTable>()
-                .ForMember(dest => dest.SizeName, opt => opt.MapFrom(src => src.Size.SizeName))
-                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.OrderId))
-                .ForMember(dest => dest.CustFullName, opt => opt.MapFrom(src => src.Order.Cust.CustFirstName + " " + src.Order.Cust.CustLastName))
-                .ForMember(dest => dest.CustEmail, opt => opt.MapFrom(src => src.Order.Cust.CustEmail))
-                .ForMember(dest => dest.CustPhone, opt => opt.MapFrom(src => src.Order.Cust.CustPhone))
-                .ForMember(dest => dest.OrderFinalPrice, opt => opt.MapFrom(src => src.Order.OrderFinalPrice));
+            CreateMap<DatesForOrderDetail, OrderDetailsTable>()
+                .ForMember(dest => dest.SizeName, opt => opt.MapFrom(src => src.Details.Size.SizeName))
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Details.OrderId))
+                .ForMember(dest => dest.AdFile, opt => opt.MapFrom(src => src.Details.AdFile))
+                .ForMember(dest => dest.CustFullName, opt => opt.MapFrom(src => src.Details.Order.Cust.CustFirstName + " " + src.Details.Order.Cust.CustLastName))
+                .ForMember(dest => dest.CustEmail, opt => opt.MapFrom(src => src.Details.Order.Cust.CustEmail))
+                .ForMember(dest => dest.CustPhone, opt => opt.MapFrom(src => src.Details.Order.Cust.CustPhone))
+                .ForMember(dest => dest.WeekNumber, opt => opt.MapFrom(src => src.Details.AdDuration))
+                .ForMember(dest => dest.Date, opt => opt.MapFrom(src => src.Details.Order.OrderDate))
+                .ForMember(dest => dest.ApprovalStatus, opt => opt.MapFrom(src => src.ApprovalStatus));
+
+            CreateMap<DatesForOrderDetail, DetailsWordsTable>()
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.DateId))
+                .ForMember(dest => dest.AdContent, opt => opt.MapFrom(src => src.Details.AdContent))
+                .ForMember(dest => dest.WordCategoryName, opt => opt.MapFrom(src => src.Details.WordCategory.WordCategoryName))
+                .ForMember(dest => dest.CustFullName, opt => opt.MapFrom(src => src.Details.Order.Cust.CustFirstName + " " + src.Details.Order.Cust.CustLastName))
+                .ForMember(dest => dest.CustEmail, opt => opt.MapFrom(src => src.Details.Order.Cust.CustEmail))
+                .ForMember(dest => dest.CustPhone, opt => opt.MapFrom(src => src.Details.Order.Cust.CustPhone))
+                .ForMember(dest => dest.WeekNumber, opt => opt.MapFrom(src => src.Details.AdDuration))
+                .ForMember(dest => dest.Date, opt => opt.MapFrom(src => src.Details.Order.OrderDate))
+                .ForMember(dest => dest.ApprovalStatus, opt => opt.MapFrom(src => src.ApprovalStatus));
         }
 
     }

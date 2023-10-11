@@ -39,7 +39,7 @@ public partial class NewspaperSystemContext : DbContext
     {
         modelBuilder.Entity<AdPlacement>(entity =>
         {
-            entity.HasKey(e => e.PlaceId).HasName("PK__AdPlacem__BF2B684A2193A9EB");
+            entity.HasKey(e => e.PlaceId).HasName("PK__AdPlacem__BF2B684A593D1AD1");
 
             entity.Property(e => e.PlaceId).HasColumnName("place_id");
             entity.Property(e => e.Img)
@@ -57,7 +57,7 @@ public partial class NewspaperSystemContext : DbContext
 
         modelBuilder.Entity<AdSize>(entity =>
         {
-            entity.HasKey(e => e.SizeId).HasName("PK__AdSizes__0DCACE3197741A3D");
+            entity.HasKey(e => e.SizeId).HasName("PK__AdSizes__0DCACE3189DAA17D");
 
             entity.Property(e => e.SizeId).HasColumnName("size_id");
             entity.Property(e => e.SizeHeight)
@@ -81,7 +81,7 @@ public partial class NewspaperSystemContext : DbContext
 
         modelBuilder.Entity<Customer>(entity =>
         {
-            entity.HasKey(e => e.CustId).HasName("PK__Customer__A1B71F90FF7A3BCC");
+            entity.HasKey(e => e.CustId).HasName("PK__Customer__A1B71F9054F3039F");
 
             entity.Property(e => e.CustId).HasColumnName("cust_id");
             entity.Property(e => e.CustEmail)
@@ -108,15 +108,15 @@ public partial class NewspaperSystemContext : DbContext
 
         modelBuilder.Entity<DatesForOrderDetail>(entity =>
         {
-            entity.HasKey(e => e.DateId).HasName("PK__DatesFor__51FC4865EF123EB5");
+            entity.HasKey(e => e.DateId).HasName("PK__DatesFor__51FC48659EC37726");
 
             entity.Property(e => e.DateId).HasColumnName("date_id");
+            entity.Property(e => e.ApprovalStatus)
+                .HasDefaultValueSql("((1))")
+                .HasColumnName("approval_status");
             entity.Property(e => e.Date)
                 .HasColumnType("date")
                 .HasColumnName("date");
-            entity.Property(e => e.DateStatus)
-                .HasDefaultValueSql("((1))")
-                .HasColumnName("date_status");
             entity.Property(e => e.DetailsId).HasColumnName("details_id");
 
             entity.HasOne(d => d.Details).WithMany(p => p.DatesForOrderDetails)
@@ -126,7 +126,7 @@ public partial class NewspaperSystemContext : DbContext
 
         modelBuilder.Entity<NewspapersPublished>(entity =>
         {
-            entity.HasKey(e => e.NewspaperId).HasName("PK__Newspape__710B3F0CC860F47E");
+            entity.HasKey(e => e.NewspaperId).HasName("PK__Newspape__710B3F0C99F4C07F");
 
             entity.ToTable("NewspapersPublished");
 
@@ -139,7 +139,7 @@ public partial class NewspaperSystemContext : DbContext
 
         modelBuilder.Entity<Order>(entity =>
         {
-            entity.HasKey(e => e.OrderId).HasName("PK__Orders__465962297EAEAF1E");
+            entity.HasKey(e => e.OrderId).HasName("PK__Orders__465962299F2E70DF");
 
             entity.Property(e => e.OrderId).HasColumnName("order_id");
             entity.Property(e => e.CustId).HasColumnName("cust_id");
@@ -158,7 +158,7 @@ public partial class NewspaperSystemContext : DbContext
 
         modelBuilder.Entity<OrderDetail>(entity =>
         {
-            entity.HasKey(e => e.DetailsId).HasName("PK__OrderDet__C3E443F477552AC7");
+            entity.HasKey(e => e.DetailsId).HasName("PK__OrderDet__C3E443F409D3D77B");
 
             entity.Property(e => e.DetailsId).HasColumnName("details_id");
             entity.Property(e => e.AdContent)
@@ -197,7 +197,7 @@ public partial class NewspaperSystemContext : DbContext
 
         modelBuilder.Entity<WordAdSubCategory>(entity =>
         {
-            entity.HasKey(e => e.WordCategoryId).HasName("PK__WordAdSu__2CA95CCDE39BE8D8");
+            entity.HasKey(e => e.WordCategoryId).HasName("PK__WordAdSu__2CA95CCDE1666045");
 
             entity.Property(e => e.WordCategoryId).HasColumnName("wordCategory_id");
             entity.Property(e => e.WordCategoryName)
