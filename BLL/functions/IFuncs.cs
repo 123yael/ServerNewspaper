@@ -90,7 +90,7 @@ namespace BLL.Functions
 
         #region Email
 
-        public string SentEmail(string name, string email, string message, string subject);
+        public string SentEmail(string name, string email, string message, string subject, string phone);
 
         #endregion
     }

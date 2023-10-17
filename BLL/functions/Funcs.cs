@@ -195,7 +195,8 @@ namespace BLL.Functions
         {
             List<DatesForOrderDetail> allDates = _datesForOrderDetailActions.GetAllDatesForOrderDetails();
             var relevanteAds = allDates
-                .Where(d => d.Date == dateForPrint || (d.Date < dateForPrint && d.Date.AddDays(((double)(d.Details.AdDuration) - 1) * 7) >= dateForPrint))
+                .Where(d => d.Date == dateForPrint || d.Details.Order.Cust.CustEmail == _config["ManagerEmail"]
+                || (d.Date < dateForPrint && d.Date.AddDays(((double)(d.Details.AdDuration) - 1) * 7) >= dateForPrint))
                 .Where(d => d.ApprovalStatus == true)
                 .Select(x => x.Details);
             return relevanteAds.ToList();
@@ -342,6 +343,40 @@ namespace BLL.Functions
             FillMat(matPage, i, j, widthImage, heightImage, detail.AdFile!);
         }
 
+        private void placement(List<OrderDetail> list, string[,] mat, List<OrderDetail> listToAdd1, List<OrderDetail> listToAdd2, PdfPage page, XGraphics gfx, bool isDrow)
+        {
+            bool isInserted, isEmpty;
+            OrderDetail currentDetail;
+            for (int index = 0; index < list.Count; index++)
+            {
+                isInserted = false;
+                currentDetail = list[index];
+                int widthImage = (int)currentDetail.Size!.SizeWidth;
+                int heightImage = (int)currentDetail.Size!.SizeHeight;
+                for (int i = 0; i < mat.GetLength(0) && !isInserted; i = i + widthImage)
+                {
+                    for (int j = 0; j < mat.GetLength(1) && !isInserted; j = j + heightImage)
+                    {
+                        isEmpty = true;
+                        for (int q = i; q < i + widthImage && isEmpty; q++)
+                            for (int l = j; l < j + heightImage && isEmpty; l++)
+                                isEmpty = mat[q, l] == null;
+                        if (isEmpty)
+                        {
+                            listToAdd1.Add(currentDetail);
+                            if (isDrow)
+                                DrawImageOnPageAndFillMat(page, gfx, mat, currentDetail, i, j);
+                            else
+                                FillMat(mat, i, j, widthImage, heightImage, currentDetail.AdFile!);
+                            isInserted = true;
+                        }
+                    }
+                }
+                if (!isInserted)
+                    listToAdd2.Add(currentDetail);
+            }
+        }
+
         private void Inlay(string final, string regular, string words, List<OrderDetail> placeCoverFileAds, List<OrderDetail> placeBackFileAds, List<OrderDetail> placeNormalFileAds, List<OrderDetail> managerFiles, int countLetter)
         {
             int countBox = (countLetter / 100) + 1;
@@ -396,118 +431,22 @@ namespace BLL.Functions
             placeBackFileAds = SortBySizeDesc(placeBackFileAds);
 
             // רישום המודעות לעמוד האחורי, מודעה שאין לה מקום נכנסת למודעות שאין להן עדיפות
-            for (int index = 0; index < placeBackFileAds.Count; index++)
-            {
-                isInserted = false;
-                currentDetail = placeBackFileAds[index];
-                int widthImage = (int)currentDetail.Size!.SizeWidth;
-                int heightImage = (int)currentDetail.Size!.SizeHeight;
-                for (int i = 0; i < backMat.GetLength(0) && !isInserted; i = i + widthImage)
-                {
-                    for (int j = 0; j < backMat.GetLength(1) && !isInserted; j = j + heightImage)
-                    {
-                        isEmpty = true;
-                        for (int q = i; q < i + widthImage && isEmpty; q++)
-                            for (int l = j; l < j + heightImage && isEmpty; l++)
-                                isEmpty = backMat[q, l] == null;
-                        if (isEmpty)
-                        {
-                            anyFilesToInsertToBack.Add(currentDetail);
-                            FillMat(backMat, i, j, widthImage, heightImage, currentDetail.AdFile!);
-                            isInserted = true;
-                        }
-                    }
-                }
-                if (!isInserted)
-                    placeNormalFileAds.Add(currentDetail);
-            }
+            placement(placeBackFileAds, backMat, anyFilesToInsertToBack, placeNormalFileAds, page, gfx, false);
 
             placeCoverFileAds = SortBySizeDesc(placeCoverFileAds);
 
             // הכנסת המודעות לעמוד הקדמי אם אין להן מקום הם נכנסות לרשימת המודעות ללא עדיפות
-            for (int index = 0; index < placeCoverFileAds.Count; index++)
-            {
-                isInserted = false;
-                currentDetail = placeCoverFileAds[index];
-                int widthImage = (int)currentDetail.Size!.SizeWidth;
-                int heightImage = (int)currentDetail.Size!.SizeHeight;
-                for (int i = 0; i < firstMat.GetLength(0) && !isInserted; i = i + widthImage)
-                {
-                    for (int j = 0; j < firstMat.GetLength(1) && !isInserted; j = j + heightImage)
-                    {
-                        isEmpty = true;
-                        for (int q = i; q < i + widthImage && isEmpty; q++)
-                            for (int l = j; l < j + heightImage && isEmpty; l++)
-                                isEmpty = firstMat[q, l] == null;
-                        if (isEmpty)
-                        {
-                            anyFilesToInsertToBack.Add(currentDetail);
-                            DrawImageOnPageAndFillMat(page, gfx, firstMat, currentDetail, i, j);
-                            isInserted = true;
-                        }
-                    }
-                }
-                if (!isInserted)
-                    placeNormalFileAds.Add(currentDetail);
-            }
+            placement(placeCoverFileAds, firstMat, anyFilesToInsertToBack, placeNormalFileAds, page, gfx, true);
 
             placeNormalFileAds = SortBySizeDesc(placeNormalFileAds);
 
             // הכנסת המודעות ללא עדיפות לעמוד הקדמי כל מי שלא נכנסה נכנסת למערך של שאר המודעות
-            for (int index = 0; index < placeNormalFileAds.Count; index++)
-            {
-                isInserted = false;
-                currentDetail = placeNormalFileAds[index];
-                int widthImage = (int)currentDetail.Size!.SizeWidth;
-                int heightImage = (int)currentDetail.Size!.SizeHeight;
-                for (int i = 0; i < firstMat.GetLength(0) && !isInserted; i = i + widthImage)
-                {
-                    for (int j = 0; j < firstMat.GetLength(1) && !isInserted; j = j + heightImage)
-                    {
-                        isEmpty = true;
-                        for (int q = i; q < i + widthImage && isEmpty; q++)
-                            for (int l = j; l < j + heightImage && isEmpty; l++)
-                                isEmpty = firstMat[q, l] == null;
-                        if (isEmpty)
-                        {
-                            anyFilesToInsertToBack.Add(currentDetail);
-                            DrawImageOnPageAndFillMat(page, gfx, firstMat, currentDetail, i, j);
-                            isInserted = true;
-                        }
-                    }
-                }
-                if (!isInserted)
-                    anyFilesToInsert1.Add(currentDetail);
-            }
+            placement(placeNormalFileAds, firstMat, anyFilesToInsertToBack, anyFilesToInsert1, page, gfx, true);
 
             anyFilesToInsert1 = SortBySizeDesc(anyFilesToInsert1);
 
             // הכנסת המועדות שנשארו לעמוד של המודעות מילים
-            for (int index = 0; index < anyFilesToInsert1.Count; index++)
-            {
-                isInserted = false;
-                currentDetail = anyFilesToInsert1[index];
-                int widthImage = (int)currentDetail.Size!.SizeWidth;
-                int heightImage = (int)currentDetail.Size!.SizeHeight;
-                for (int i = 0; i < wordsMat.GetLength(0) && !isInserted; i = i + widthImage)
-                {
-                    for (int j = 0; j < wordsMat.GetLength(1) && !isInserted; j = j + heightImage)
-                    {
-                        isEmpty = true;
-                        for (int q = i; q < i + widthImage && isEmpty; q++)
-                            for (int l = j; l < j + heightImage && isEmpty; l++)
-                                isEmpty = wordsMat[q, l] == null;
-                        if (isEmpty)
-                        {
-                            anyFilesToInsertToWords.Add(currentDetail);
-                            FillMat(wordsMat, i, j, widthImage, heightImage, currentDetail.AdFile!);
-                            isInserted = true;
-                        }
-                    }
-                }
-                if (!isInserted)
-                    anyFilesToInsert2.Add(currentDetail);
-            }
+            placement(anyFilesToInsert1, wordsMat, anyFilesToInsertToWords, anyFilesToInsert2, page, gfx, false);
 
             anyFilesToInsert2 = SortBySizeDesc(anyFilesToInsert2);
 
@@ -705,7 +644,11 @@ namespace BLL.Functions
 
             int countPages = PageNumbering(final, final2);
 
-            ConvertPdfToImages(final2, pathWwwroot + "\\Newspapers\\" + datePublished.ToString("dd.MM.yyyy"));
+            string dir = pathWwwroot + "\\Newspapers\\" + datePublished.ToString("dd.MM.yyyy");
+            if (Directory.Exists(dir))
+                Directory.Delete(dir, true);
+            ConvertPdfToImages(final2, dir);
+            File.Copy(final2, dir + "\\newspaper", true);
 
             File.Delete(regular);
             File.Delete(first);
@@ -789,7 +732,7 @@ namespace BLL.Functions
 
         private DateTime getDateNow()
         {
-            DateTime date = new DateTime(2023, 8, 14);//DateTime.Now
+            DateTime date = new DateTime(2023, 8, 17);//DateTime.Now
             return date;
         }
         // פונקציה שמכניסה פרטי הזמנות למסד הנתונים ומחזירה רשימה של קודים של פרטי הזמנות
@@ -1103,13 +1046,17 @@ namespace BLL.Functions
 
         #region Email
 
-        public string SentEmail(string name, string email, string message, string subject)
+        public string SentEmail(string name, string email, string message, string subject, string phone)
         {
             MailMessage mail = new MailMessage();
             mail.To.Add("malkin.yaeli@gmail.com");
             mail.From = new MailAddress("yads10000@gmail.com", "Yads");
             mail.Subject = subject;
-            mail.Body = "From: " + email + "<br /><br />" + "Message: " + message;
+            if (phone == "number")
+                phone = "";
+            else
+                phone = "Phone: " + phone + "<br /><br />";
+            mail.Body = "From: " + email + "<br /><br />" + phone + "Message: " + message;
             mail.IsBodyHtml = true;
 
             SmtpClient smtp = new SmtpClient("smtp.gmail.com");

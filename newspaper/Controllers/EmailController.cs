@@ -15,10 +15,10 @@ namespace newspaper.Controllers
             this._funcs = funcs;
         }
 
-        [HttpGet("SentEmail/{name}/{email}/{message}/{subject}")]
-        public IActionResult SentEmail(string name, string email, string message, string subject)
+        [HttpGet("SentEmail/{name}/{email}/{message}/{subject}/{phone}")]
+        public IActionResult SentEmail(string name, string email, string message, string subject, string phone)
         {
-            string t = _funcs.SentEmail(name, email, message, subject);
+            string t = _funcs.SentEmail(name, email, message, subject, phone);
             return Ok(t);
         }
     }
