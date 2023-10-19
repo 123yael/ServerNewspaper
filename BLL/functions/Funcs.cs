@@ -24,6 +24,7 @@ using DocumentFormat.OpenXml.Bibliography;
 using System.Globalization;
 using Azure;
 using System.Text.Json;
+using BLL.Redis;
 
 namespace BLL.Functions
 {
@@ -54,6 +55,8 @@ namespace BLL.Functions
         private readonly ICustomerActions _customerActions;
         private readonly IOrderActions _order;
         private readonly INewspapersPublishedActions _newspapersPublished;
+        private readonly ICacheRedis _cacheRedis;
+
 
         public Funcs(IAdSizeActions adSize,
             IOrderDetailActions ordersDetailActions,
@@ -63,6 +66,7 @@ namespace BLL.Functions
             ICustomerActions customerActions,
             IOrderActions order,
             INewspapersPublishedActions newspapersPublished,
+            ICacheRedis cacheRedis,
             IConfiguration config)
         {
             _adSize = adSize;
@@ -73,6 +77,7 @@ namespace BLL.Functions
             _customerActions = customerActions;
             _order = order;
             _newspapersPublished = newspapersPublished;
+            _cacheRedis = cacheRedis;
             _config = config;
         }
 
@@ -123,13 +128,18 @@ namespace BLL.Functions
             return custToAdd.CustId;
         }
 
-        public CustomerDTO SignUp(CustomerDTO customer)
+        public CustomerDTO SignUp(CustomerDTO customer, bool isRegistered)
         {
-            CustomerDTO custFind = GetAllCustomers().Where(x => x.CustEmail.Equals(customer.CustEmail)).FirstOrDefault();
+            CustomerDTO custFind = GetAllCustomers().Where(x => x.CustEmail.Equals(customer.CustEmail)).FirstOrDefault()!;
             if (custFind != null)
                 throw new UserAlreadyExistsException("Email of user already exists in the system!");
             Customer custToAdd = _Mapper.Map<CustomerDTO, Customer>(customer);
             _customerActions.AddNewCustomer(custToAdd);
+            _cacheRedis.SetItem(new Item()
+            {
+                Email = customer.CustEmail,
+                IsRegistered = isRegistered,
+            });
             CustomerDTO newCust = _Mapper.Map<Customer, CustomerDTO>(custToAdd);
             return newCust;
         }

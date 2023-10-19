@@ -1,0 +1,17 @@
+version: '3.8'
+services:
+    redis:
+        image: redis
+        container_name: redis_api
+        ports:
+            - "6379:6379"
+
+    redis-commander:
+        image: rediscommander/redis-commander:latest
+        ports:
+            - "8082:8081"
+        environment:
+            # Set the Redis Commander options
+            REDIS_HOSTS: "redis"  # Points to the 'redis' service defined above
+        depends_on:
+            - redis

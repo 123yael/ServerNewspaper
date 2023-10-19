@@ -25,7 +25,7 @@ namespace BLL.Functions
 
         #region Customer
 
-        public CustomerDTO SignUp(CustomerDTO customer);
+        public CustomerDTO SignUp(CustomerDTO customer, bool isRegistered);
 
         public CustomerDTO LogIn(string email, string pass);
 

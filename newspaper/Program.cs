@@ -1,15 +1,22 @@
 using BLL.Functions;
+using BLL.Redis;
 using DAL.Actions.Classes;
 using DAL.Actions.Interfaces;
 using DAL.Models;
 using Microsoft.EntityFrameworkCore;
 using newspaper;
 using newspaper.Hubs;
+using StackExchange.Redis;
 using System;
 
 var builder = WebApplication.CreateBuilder(args);
 
 IConfiguration _configuration = builder.Configuration;
+
+builder.Services.AddSingleton<IConnectionMultiplexer>(opt =>
+    ConnectionMultiplexer.Connect(_configuration.GetConnectionString("RedisConnection")));
+
+builder.Services.AddScoped<ICacheRedis, CacheRedis>();
 
 // Add services to the container.
 builder.Services.AddControllers();

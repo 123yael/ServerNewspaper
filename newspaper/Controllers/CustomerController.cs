@@ -41,12 +41,12 @@ namespace newspaper.Controllers
             }
         }
 
-        [HttpPost("SignUp")]
-        public IActionResult SignUp([FromBody] CustomerDTO cust)
+        [HttpPost("SignUp/{isRegistered}")]
+        public IActionResult SignUp([FromBody] CustomerDTO cust, bool isRegistered)
         {
             try
             {
-                CustomerDTO customerDTO = _funcs.SignUp(cust);
+                CustomerDTO customerDTO = _funcs.SignUp(cust, isRegistered);
                 return Ok(customerDTO);
             }
             catch (UserAlreadyExistsException)
