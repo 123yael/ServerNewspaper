@@ -30,7 +30,8 @@ namespace newspaper.Controllers
         public async Task<IActionResult> GetAllOrderDetailsTableByDate([FromRoute] string date, [FromQuery] PaginationParams @params)
         {
             DateTime dateTime = ConvertDateFromStringToDateTime(date);
-            return Ok(_funcs.GetAllOrderDetailsTableByDate(dateTime, @params.Page, @params.ItemsPerPage));
+            var res = _funcs.GetAllOrderDetailsTableByDate(dateTime, @params.Page, @params.ItemsPerPage);
+            return Ok(res);
         }
 
         [HttpGet("GetAllDetailsWordsTableByDate/{date}")]

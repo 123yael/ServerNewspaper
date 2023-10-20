@@ -10,10 +10,13 @@ namespace newspaper.Controllers
     public class OrderController : ControllerBase
     {
         private readonly IFuncs _funcs;
+        public static IWebHostEnvironment _environment;
 
-        public OrderController(IFuncs funcs)
+        public OrderController(IFuncs funcs, IWebHostEnvironment environment)
         {
-            this._funcs = funcs;
+            _funcs = funcs;
+            _environment = environment;
+
         }
 
         [HttpPost("FinishOrder")]

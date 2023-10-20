@@ -52,9 +52,9 @@ namespace DAL.Actions.Classes
             }
         }
 
-        public OrderDetail GetOrderDetailsById(int? id)
+        public OrderDetail? GetOrderDetailsById(int? id)
         {
-            OrderDetail orderDetail = GetAllOrderDetails().FirstOrDefault(x => x.DetailsId == id);
+            var orderDetail = GetAllOrderDetails().FirstOrDefault(x => x.DetailsId == id);
             if (orderDetail == null)
                 return null;
             else

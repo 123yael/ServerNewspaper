@@ -49,7 +49,7 @@ namespace DAL.Actions.Classes
 
         public AdSize getSizeById(int id)
         {
-            return _dbNewspapers.AdSizes.FirstOrDefault(x => x.SizeId == id);
+            return _dbNewspapers.AdSizes.FirstOrDefault(x => x.SizeId == id)!;
         }
     }
 }

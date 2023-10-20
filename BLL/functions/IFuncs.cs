@@ -1,5 +1,6 @@
 ﻿using DAL.Models;
 using DTO.Repository;
+using Microsoft.AspNetCore.Http;
 
 namespace BLL.Functions
 {
@@ -65,6 +66,8 @@ namespace BLL.Functions
         public NewspapersPublishedDTO Shabets(DateTime date);
 
         public void ClosingNewspaper(DateTime date, int countPages);
+
+        public void SentNewspaperForRecords(int num, string placeForNespaper);
 
         #endregion
 

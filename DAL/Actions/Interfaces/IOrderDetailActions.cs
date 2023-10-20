@@ -16,6 +16,6 @@ namespace DAL.Actions.Interfaces
         public void UpdateOrderDetail(int id, OrderDetail orderDetail);
 
         public void DeleteOrderDetail(int id);
-        public OrderDetail GetOrderDetailsById(int? id);
+        public OrderDetail? GetOrderDetailsById(int? id);
     }
 }

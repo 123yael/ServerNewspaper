@@ -25,6 +25,10 @@ using System.Globalization;
 using Azure;
 using System.Text.Json;
 using BLL.Redis;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Hosting;
+using Microsoft.AspNetCore.Hosting;
+using System.IO;
 
 namespace BLL.Functions
 {
@@ -56,6 +60,7 @@ namespace BLL.Functions
         private readonly IOrderActions _order;
         private readonly INewspapersPublishedActions _newspapersPublished;
         private readonly ICacheRedis _cacheRedis;
+
 
 
         public Funcs(IAdSizeActions adSize,
@@ -120,7 +125,7 @@ namespace BLL.Functions
         // ואם הוא לא קיים היא מוסיפה אותו ומחזירה את הקוד שלו
         public int GetIdByCustomer(CustomerDTO customer)
         {
-            CustomerDTO newCust = GetAllCustomers().Where(x => x.CustEmail.Equals(customer.CustEmail)).FirstOrDefault(c => c.CustPassword.Equals(customer.CustPassword));
+            var newCust = GetAllCustomers().Where(x => x.CustEmail.Equals(customer.CustEmail)).FirstOrDefault(c => c.CustPassword.Equals(customer.CustPassword));
             if (newCust != null)
                 return newCust.CustId;
             Customer custToAdd = _Mapper.Map<CustomerDTO, Customer>(customer);
@@ -205,11 +210,11 @@ namespace BLL.Functions
         {
             List<DatesForOrderDetail> allDates = _datesForOrderDetailActions.GetAllDatesForOrderDetails();
             var relevanteAds = allDates
-                .Where(d => d.Date == dateForPrint || d.Details.Order.Cust.CustEmail == _config["ManagerEmail"]
-                || (d.Date < dateForPrint && d.Date.AddDays(((double)(d.Details.AdDuration) - 1) * 7) >= dateForPrint))
+                .Where(d => d.Date == dateForPrint || d.Details!.Order!.Cust.CustEmail == _config["ManagerEmail"]
+                || (d.Date < dateForPrint && d.Date.AddDays(((double)(d.Details.AdDuration!) - 1) * 7) >= dateForPrint))
                 .Where(d => d.ApprovalStatus == true)
                 .Select(x => x.Details);
-            return relevanteAds.ToList();
+            return relevanteAds.ToList()!;
         }
 
         #endregion
@@ -254,7 +259,7 @@ namespace BLL.Functions
         {
             List<DatesForOrderDetail> allDates = _datesForOrderDetailActions.GetAllDatesForOrderDetails();
             var relevanteAds = allDates
-                .Where(d => d.Date == dateForPrint || (d.Date < dateForPrint && d.Date.AddDays(((double)(d.Details.AdDuration) - 1) * 7) >= dateForPrint));
+                .Where(d => d.Date == dateForPrint || (d.Date < dateForPrint && d.Date.AddDays(((double)(d.Details!.AdDuration!) - 1) * 7) >= dateForPrint));
             return relevanteAds.ToList();
         }
 
@@ -682,12 +687,14 @@ namespace BLL.Functions
             int index = GetAllNewspapersPublished().FindIndex(n => n.PublicationDate == dateString);
             if (index != -1)
                 throw new DateAlreadyExistsException("Date of newspaper already exists in the system!");
-            if (!Directory.Exists(pathWwwroot + "\\Newspapers\\" + dateString))
+            string placeForNespaper = pathWwwroot + "\\Newspapers\\" + dateString;
+            if (!Directory.Exists(placeForNespaper))
                 throw new NewspaperNotGeneratedException("Newspaper not generated in the files!");
             NewspapersPublished newspapersPublished = new NewspapersPublished();
             newspapersPublished.PublicationDate = date;
             newspapersPublished.CountPages = countPages;
             _newspapersPublished.AddNewNewspaperPublished(newspapersPublished);
+            SentNewspaperForRecords(newspapersPublished.NewspaperId, placeForNespaper);
         }
 
         #endregion
@@ -718,7 +725,7 @@ namespace BLL.Functions
                     for (int pageNumber = 1; pageNumber <= rasterizer.PageCount; pageNumber++)
                     {
                         int dpi = 300;
-                        Image img = rasterizer.GetPage(dpi, pageNumber);
+                        System.Drawing.Image img = rasterizer.GetPage(dpi, pageNumber);
 
                         string outputFilePath = Path.Combine(pathImages, $"{pageNumber - 1}.png");
                         img.Save(outputFilePath, System.Drawing.Imaging.ImageFormat.Png);
@@ -742,7 +749,7 @@ namespace BLL.Functions
 
         private DateTime getDateNow()
         {
-            DateTime date = new DateTime(2023, 8, 17);//DateTime.Now
+            DateTime date = new DateTime(2023, 8, 28);//DateTime.Now
             return date;
         }
         // פונקציה שמכניסה פרטי הזמנות למסד הנתונים ומחזירה רשימה של קודים של פרטי הזמנות
@@ -782,7 +789,7 @@ namespace BLL.Functions
             List<AdSize> listAdSize = _adSize.GetAllAdSizes();
             foreach (OrderDetail od in orderDetails)
             {
-                sum += listAdSize.FirstOrDefault(s => s.SizeId == od.SizeId).SizePrice * (decimal)od.AdDuration;
+                sum += listAdSize.FirstOrDefault(s => s.SizeId == od.SizeId)!.SizePrice * (decimal)od.AdDuration!;
             }
             return sum;
         }
@@ -845,7 +852,7 @@ namespace BLL.Functions
             using (WordprocessingDocument myDoc = WordprocessingDocument.Open(tempFileFullName, true))
             {
                 ReplaceUserWordTemplates(myDoc);
-                myDoc.MainDocumentPart.Document.Save();
+                myDoc.MainDocumentPart!.Document.Save();
                 myDoc.Close();
             }
             File.Copy(tempFileFullName, path + @"\temp\stam.docx", true);
@@ -858,12 +865,11 @@ namespace BLL.Functions
             Dictionary<string, string> keyValues = new Dictionary<string, string>();
             DateTime dateOfPrint = new DateTime(2023, 07, 25);
 
-            ////////////////////////////////////////////
             List<DatesForOrderDetail> allDates = _datesForOrderDetailActions.GetAllDatesForOrderDetails();//GetAllDatesForDetails();
             List<OrderDetail> relevanteAds = new List<OrderDetail>();
             foreach (var date in allDates)
                 if (date.Date == dateOfPrint)
-                    relevanteAds.Add(date.Details);
+                    relevanteAds.Add(date.Details!);
 
             List<OrderDetail> allRelevantWordAds = new List<OrderDetail>();
 
@@ -884,25 +890,21 @@ namespace BLL.Functions
                     if (detail.WordCategoryId == category.WordCategoryId)
                     {
                         allDetailsWordAds.Add(detail);
-                        wordAdToPrint.Add(detail.AdContent);
+                        wordAdToPrint.Add(detail.AdContent!);
                     }
             }
             string res = "";
             Break lineBreak = new Break();
-            //string[] WordAdToPrint = wordAdToPrint.ToArray();
             foreach (string item in wordAdToPrint)
             {
                 if (item.IndexOf(" ") == -1)
-                    res += item + (char)13 + (char)10;// "\r\n";
+                    res += item + (char)13 + (char)10;
                 else
                     res += item + "\n";
 
             }
 
-            /////////////////////////////////////////
-            string t = res;//AllAdWordsByOneString(new DateTime(2023, 07, 25));
-
-            //keyValues.Add("Title", t);
+            string t = res;
             keyValues.Add("myAdsWords", "");
             SearchAndReplaceLike(mainPart!.Document, keyValues);
         }
@@ -985,12 +987,12 @@ namespace BLL.Functions
 
             foreach (WordAdSubCategoryDTO category in categories)
             {
-                if (allRelevantWordsAds.FirstOrDefault(w => w.WordCategory.WordCategoryName.Equals(category.WordCategoryName)) != null)
+                if (allRelevantWordsAds.FirstOrDefault(w => w.WordCategory!.WordCategoryName.Equals(category.WordCategoryName)) != null)
                     using (WordprocessingDocument myDestDoc = WordprocessingDocument.Open(tempFileFullName, true))
                     {
-                        MainDocumentPart mainPart = myDestDoc.MainDocumentPart;
+                        MainDocumentPart mainPart = myDestDoc.MainDocumentPart!;
 
-                        Body body = mainPart.Document.Body;
+                        Body body = mainPart.Document.Body!;
 
                         Paragraph newParagraph = new Paragraph();
                         ParagraphProperties paragraphProperties = new ParagraphProperties();
@@ -1027,9 +1029,9 @@ namespace BLL.Functions
                     {
                         using (WordprocessingDocument myDestDoc = WordprocessingDocument.Open(tempFileFullName, true))
                         {
-                            MainDocumentPart mainPart = myDestDoc.MainDocumentPart;
+                            MainDocumentPart mainPart = myDestDoc.MainDocumentPart!;
 
-                            Body body = mainPart.Document.Body;
+                            Body body = mainPart.Document.Body!;
 
                             Paragraph newParagraph = new Paragraph();
                             ParagraphProperties paragraphProperties = new ParagraphProperties();
@@ -1037,7 +1039,7 @@ namespace BLL.Functions
                             Justification justification = new Justification() { Val = JustificationValues.Both };
                             paragraphProperties.Append(justification);
 
-                            countLetter += detail.AdContent.Trim().Length + 26;
+                            countLetter += detail.AdContent!.Trim().Length + 26;
                             Run run = new Run(new Text("• " + detail.AdContent.Trim()));
                             newParagraph.Append(paragraphProperties);
                             newParagraph.Append(run);
@@ -1056,6 +1058,14 @@ namespace BLL.Functions
 
         #region Email
 
+        private void Sending(MailMessage mail)
+        {
+            SmtpClient smtp = new SmtpClient("smtp.gmail.com");
+            smtp.Credentials = new System.Net.NetworkCredential("yads10000@gmail.com", "hzudmbsxcymmpsie");
+            smtp.EnableSsl = true;
+            smtp.Send(mail);
+        }
+
         public string SentEmail(string name, string email, string message, string subject, string phone)
         {
             MailMessage mail = new MailMessage();
@@ -1068,10 +1078,6 @@ namespace BLL.Functions
                 phone = "Phone: " + phone + "<br /><br />";
             mail.Body = "From: " + email + "<br /><br />" + phone + "Message: " + message;
             mail.IsBodyHtml = true;
-
-            SmtpClient smtp = new SmtpClient("smtp.gmail.com");
-            smtp.Credentials = new System.Net.NetworkCredential("yads10000@gmail.com", "hzudmbsxcymmpsie");
-            smtp.EnableSsl = true;
 
             MailMessage mailToClient = new MailMessage();
             mailToClient.To.Add(email);
@@ -1086,14 +1092,33 @@ namespace BLL.Functions
 
             try
             {
-                smtp.Send(mail);
-                smtp.Send(mailToClient);
+                Sending(mail);
+                Sending(mailToClient);
                 return "Mail Sent Successfully...";
             }
             catch
             {
                 return "Error while Sending Mail";
             }
+        }
+
+        public void SentNewspaperForRecords(int num, string placeForNespaper)
+        {
+            var mailMessage = new MailMessage();
+            mailMessage.From = new MailAddress("yads10000@gmail.com", "Yads");
+            mailMessage.Subject = "Issue number" + num;
+
+            string file = placeForNespaper + "\\newspaper";
+            mailMessage.Attachments.Add(new Attachment(new FileStream(file, FileMode.Truncate), num.ToString()));
+
+            var list = _cacheRedis.GetAllItems();
+            foreach (var item in list)
+            {
+                if (item.IsRegistered)
+                    mailMessage.To.Add(new MailAddress(item.Email));
+            }
+            Sending(mailMessage);
+
         }
 
         #endregion
