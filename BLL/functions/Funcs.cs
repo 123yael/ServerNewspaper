@@ -29,6 +29,9 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Hosting;
 using Microsoft.AspNetCore.Hosting;
 using System.IO;
+using MimeKit.Utils;
+using MimeKit;
+using System.Net.Mime;
 
 namespace BLL.Functions
 {
@@ -106,6 +109,11 @@ namespace BLL.Functions
             return adSizeDTO;
         }
 
+        private decimal GetPriceBySizeId(int id)
+        {
+            return _adSize.GetSizeById(id).SizePrice;
+        }
+      
         #endregion
 
         #region AdPlacement
@@ -115,6 +123,11 @@ namespace BLL.Functions
             List<AdPlacement> listAdPlacement = _adPlacement.GetAllAdPlacements();
             List<AdPlacementDTO> adPlacementDTO = _Mapper.Map<List<AdPlacementDTO>>(listAdPlacement);
             return adPlacementDTO;
+        }
+
+        private decimal GetPriceByPlaceId(int id)
+        {
+            return _adPlacement.GetPlacementById(id).PlacePrice;
         }
 
         #endregion
@@ -215,6 +228,12 @@ namespace BLL.Functions
                 .Where(d => d.ApprovalStatus == true)
                 .Select(x => x.Details);
             return relevanteAds.ToList()!;
+        }
+
+        public decimal CalculationOfOrderPrice(List<OrderDetailDTO> listOrderDetails)
+        {
+            decimal sum = listOrderDetails.Sum(x => GetPriceBySizeId(x.SizeId ?? 0) * (x.AdDuration ?? 0));
+            return sum;
         }
 
         #endregion
@@ -378,11 +397,13 @@ namespace BLL.Functions
                                 isEmpty = mat[q, l] == null;
                         if (isEmpty)
                         {
-                            listToAdd1.Add(currentDetail);
                             if (isDrow)
                                 DrawImageOnPageAndFillMat(page, gfx, mat, currentDetail, i, j);
                             else
+                            {
+                                listToAdd1.Add(currentDetail);
                                 FillMat(mat, i, j, widthImage, heightImage, currentDetail.AdFile!);
+                            }
                             isInserted = true;
                         }
                     }
@@ -460,7 +481,7 @@ namespace BLL.Functions
 
             anyFilesToInsert1 = SortBySizeDesc(anyFilesToInsert1);
 
-            // הכנסת המועדות שנשארו לעמוד של המודעות מילים
+            // רישום המועדות שנשארו לעמוד של המודעות מילים
             placement(anyFilesToInsert1, wordsMat, anyFilesToInsertToWords, anyFilesToInsert2, page, gfx, false);
 
             anyFilesToInsert2 = SortBySizeDesc(anyFilesToInsert2);
@@ -694,7 +715,7 @@ namespace BLL.Functions
             newspapersPublished.PublicationDate = date;
             newspapersPublished.CountPages = countPages;
             _newspapersPublished.AddNewNewspaperPublished(newspapersPublished);
-            SentNewspaperForRecords(newspapersPublished.NewspaperId, placeForNespaper);
+            SentNewspaperForRecords(newspapersPublished.NewspaperId, placeForNespaper, countPages);
         }
 
         #endregion
@@ -1102,22 +1123,43 @@ namespace BLL.Functions
             }
         }
 
-        public void SentNewspaperForRecords(int num, string placeForNespaper)
+        private void SentNewspaperForRecords(int num, string placeForNespaper, int numPages)
         {
-            var mailMessage = new MailMessage();
-            mailMessage.From = new MailAddress("yads10000@gmail.com", "Yads");
-            mailMessage.Subject = "Issue number" + num;
+            var message = new MailMessage();
+            message.From = new MailAddress("yads10000@gmail.com", "Yads");
+            message.Subject = "Issue " + num;
 
-            string file = placeForNespaper + "\\newspaper";
-            mailMessage.Attachments.Add(new Attachment(new FileStream(file, FileMode.Truncate), num.ToString()));
+            List<LinkedResource> linkedResources = new List<LinkedResource>();
+            LinkedResource linkedResource;
+
+            var html = "";
+
+            for (int i = 0; i < numPages; i++)
+            {
+                linkedResource = new LinkedResource(placeForNespaper + @$"\{i}.png");
+                linkedResource.ContentId = Guid.NewGuid().ToString();
+                html += $"<center><img width=\"600px\" src=\"cid:" + linkedResource.ContentId + "\"/></center>";
+                linkedResources.Add(linkedResource);
+
+            }
+            AlternateView alternateView = AlternateView.CreateAlternateViewFromString(html, null, MediaTypeNames.Text.Html);
+            foreach (LinkedResource item in linkedResources)
+            {
+                alternateView.LinkedResources.Add(item);
+            }
+
+            message.AlternateViews.Add(alternateView);
 
             var list = _cacheRedis.GetAllItems();
             foreach (var item in list)
             {
                 if (item.IsRegistered)
-                    mailMessage.To.Add(new MailAddress(item.Email));
+                {
+                    message.To.Add(new MailAddress(item.Email));
+                    Sending(message);
+                    message.To.Clear();
+                }
             }
-            Sending(mailMessage);
 
         }
 

@@ -21,12 +21,5 @@ namespace newspaper.Controllers
             string t = _funcs.SentEmail(name, email, message, subject, phone);
             return Ok(t);
         }
-
-        [HttpGet("SentNewspaperForRecords/{num}/{place}")]
-        public IActionResult SentNewspaperForRecords(int num, string place)
-        {
-            _funcs.SentNewspaperForRecords(num, place);
-            return Ok("Ok");
-        }
     }
 }

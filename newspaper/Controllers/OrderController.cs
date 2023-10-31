@@ -32,5 +32,11 @@ namespace newspaper.Controllers
             _funcs.FinishOrderAdWords(finishOrder.Customer, finishOrder.ListDates, finishOrder.ListOrderDetails);
             return Ok("finishOrder");
         }
+
+        [HttpPost("CalculationOfOrderPrice")]
+        public IActionResult CalculationOfOrderPrice([FromBody] List<OrderDetailDTO> listOrderDetails)
+        {
+            return Ok(_funcs.CalculationOfOrderPrice(listOrderDetails));
+        }
     }
 }

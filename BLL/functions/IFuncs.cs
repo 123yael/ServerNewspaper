@@ -44,6 +44,8 @@ namespace BLL.Functions
 
         public List<OrderDetailDTO> GetAllOrderDetails();
 
+        public decimal CalculationOfOrderPrice(List<OrderDetailDTO> listOrderDetails);
+
         #endregion
 
         #region Tabel
@@ -66,8 +68,6 @@ namespace BLL.Functions
         public NewspapersPublishedDTO Shabets(DateTime date);
 
         public void ClosingNewspaper(DateTime date, int countPages);
-
-        public void SentNewspaperForRecords(int num, string placeForNespaper);
 
         #endregion
 

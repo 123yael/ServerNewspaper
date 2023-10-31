@@ -43,5 +43,10 @@ namespace DAL.Actions.Classes
                 _dbNewspapers.SaveChanges();
             }
         }
+
+        public AdPlacement GetPlacementById(int id)
+        {
+            return _dbNewspapers.AdPlacements.FirstOrDefault(x => x.PlaceId == id)!;
+        }
     }
 }

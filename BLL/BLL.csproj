@@ -10,6 +10,7 @@
     <PackageReference Include="DocumentFormat.OpenXml" Version="2.20.0" />
     <PackageReference Include="GemBox.Document" Version="35.0.1363" />
     <PackageReference Include="Ghostscript.NET" Version="1.2.3.1" />
+    <PackageReference Include="MailKit" Version="4.2.0" />
     <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="7.0.12" />
     <PackageReference Include="PdfSharp" Version="1.50.5147" />
     <PackageReference Include="StackExchange.Redis" Version="2.6.122" />

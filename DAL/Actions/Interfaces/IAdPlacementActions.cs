@@ -16,5 +16,7 @@ namespace DAL.Actions.Interfaces
         public void UpdateAdPlacement(int id, AdPlacement adPlacement);
 
         public void DeleteAdPlacement(int id);
+
+        public AdPlacement GetPlacementById(int id);
     }
 }
