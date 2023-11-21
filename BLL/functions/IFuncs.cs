@@ -26,11 +26,13 @@ namespace BLL.Functions
 
         #region Customer
 
-        public CustomerDTO SignUp(CustomerDTO customer, bool isRegistered);
+        public string SignUp(CustomerDTO customer, bool isRegistered);
 
-        public CustomerDTO LogIn(string email, string pass);
+        public string LogIn(string email, string pass);
 
         public int GetIdByCustomer(CustomerDTO customer);
+
+        public bool IsAdmin(string token);
 
         #endregion
 
@@ -45,6 +47,8 @@ namespace BLL.Functions
         public List<OrderDetailDTO> GetAllOrderDetails();
 
         public decimal CalculationOfOrderPrice(List<OrderDetailDTO> listOrderDetails);
+
+        public decimal CalculationOfOrderWordsPrice(List<OrderDetailDTO> listOrderDetails);
 
         #endregion
 
@@ -79,9 +83,9 @@ namespace BLL.Functions
 
         #region FinishOrder
 
-        public void FinishOrder(CustomerDTO customer, List<string> listDates, List<OrderDetailDTO> listOrderDetails);
+        public void FinishOrder(string token, List<string> listDates, List<OrderDetailDTO> listOrderDetails);
 
-        public void FinishOrderAdWords(CustomerDTO customer, List<string> listDates, List<OrderDetailDTO> listOrderDetails);
+        public void FinishOrderAdWords(string token, List<string> listDates, List<OrderDetailDTO> listOrderDetails);
 
         #endregion
 

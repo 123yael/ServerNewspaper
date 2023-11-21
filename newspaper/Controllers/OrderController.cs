@@ -19,17 +19,17 @@ namespace newspaper.Controllers
 
         }
 
-        [HttpPost("FinishOrder")]
-        public IActionResult FinishOrder([FromBody] FinishOrderDTO finishOrder)
+        [HttpPost("FinishOrder/{token}")]
+        public IActionResult FinishOrder(string token, [FromBody] FinishOrderDTO finishOrder)
         {
-            _funcs.FinishOrder(finishOrder.Customer, finishOrder.ListDates, finishOrder.ListOrderDetails);
+            _funcs.FinishOrder(token, finishOrder.ListDates, finishOrder.ListOrderDetails);
             return Ok("finishOrder");
         }
 
-        [HttpPost("FinishOrderAdWords")]
-        public IActionResult FinishOrderAdWords([FromBody] FinishOrderDTO finishOrder)
+        [HttpPost("FinishOrderAdWords/{token}")]
+        public IActionResult FinishOrderAdWords(string token, [FromBody] FinishOrderDTO finishOrder)
         {
-            _funcs.FinishOrderAdWords(finishOrder.Customer, finishOrder.ListDates, finishOrder.ListOrderDetails);
+            _funcs.FinishOrderAdWords(token, finishOrder.ListDates, finishOrder.ListOrderDetails);
             return Ok("finishOrder");
         }
 
@@ -37,6 +37,12 @@ namespace newspaper.Controllers
         public IActionResult CalculationOfOrderPrice([FromBody] List<OrderDetailDTO> listOrderDetails)
         {
             return Ok(_funcs.CalculationOfOrderPrice(listOrderDetails));
+        }
+
+        [HttpPost("CalculationOfOrderWordsPrice")]
+        public IActionResult CalculationOfOrderWordsPrice([FromBody] List<OrderDetailDTO> listOrderDetails)
+        {
+            return Ok(_funcs.CalculationOfOrderWordsPrice(listOrderDetails));
         }
     }
 }

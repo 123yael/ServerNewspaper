@@ -1,8 +1,15 @@
 ﻿using BLL.Exceptions;
 using BLL.Functions;
+using BLL.Jwt;
+using DocumentFormat.OpenXml.Spreadsheet;
 using DTO.Repository;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace newspaper.Controllers
 {
@@ -17,19 +24,13 @@ namespace newspaper.Controllers
             this._funcs = funcs;
         }
 
-        [HttpPost("GetIdByCustomer")]
-        public IActionResult GetIdByCustomer([FromBody] CustomerDTO cust)
-        {
-            return Ok(_funcs.GetIdByCustomer(cust));
-        }
-
         [HttpGet("LogIn/{email}/{pass}")]
         public IActionResult LogIn(string email, string pass)
         {
             try
             {
-                CustomerDTO customerDTO = _funcs.LogIn(email, pass);
-                return Ok(customerDTO);
+                string token = _funcs.LogIn(email, pass);
+                return Ok(token);
             }
             catch (UserNotFoundException)
             {
@@ -46,8 +47,8 @@ namespace newspaper.Controllers
         {
             try
             {
-                CustomerDTO customerDTO = _funcs.SignUp(cust, isRegistered);
-                return Ok(customerDTO);
+                string token = _funcs.SignUp(cust, isRegistered);
+                return Ok(token);
             }
             catch (UserAlreadyExistsException)
             {
@@ -57,6 +58,14 @@ namespace newspaper.Controllers
             {
                 return StatusCode(500);
             }
+        }
+
+        [HttpGet("IsAdmin/{token}")]
+        public IActionResult IsAdmin(string token)
+        {
+
+            bool isAdmin = _funcs.IsAdmin(token);
+            return Ok(isAdmin);
         }
     }
 }

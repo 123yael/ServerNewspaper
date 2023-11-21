@@ -1,4 +1,5 @@
 using BLL.Functions;
+using BLL.Jwt;
 using BLL.Redis;
 using DAL.Actions.Classes;
 using DAL.Actions.Interfaces;
@@ -12,6 +13,7 @@ using System;
 var builder = WebApplication.CreateBuilder(args);
 
 IConfiguration _configuration = builder.Configuration;
+
 
 builder.Services.AddSingleton<IConnectionMultiplexer>(opt =>
     ConnectionMultiplexer.Connect(_configuration.GetConnectionString("RedisConnection")));
@@ -43,6 +45,7 @@ builder.Services.AddScoped<IOrderDetailActions, OrderDetailActions>();
 builder.Services.AddScoped<IWordAdSubCategoryActions, WordAdSubCategoryActions>();
 
 builder.Services.AddScoped<IFuncs, Funcs>();
+builder.Services.AddScoped<IJwtService, JwtService>();
 
 builder.Services.AddSignalR();
 builder.Services.AddSingleton<IDictionary<string, UserConnection>>(opts => new Dictionary<string, UserConnection>());

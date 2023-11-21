@@ -32,6 +32,7 @@ using System.IO;
 using MimeKit.Utils;
 using MimeKit;
 using System.Net.Mime;
+using BLL.Jwt;
 
 namespace BLL.Functions
 {
@@ -63,6 +64,7 @@ namespace BLL.Functions
         private readonly IOrderActions _order;
         private readonly INewspapersPublishedActions _newspapersPublished;
         private readonly ICacheRedis _cacheRedis;
+        private readonly IJwtService _jwtService;
 
 
 
@@ -75,7 +77,8 @@ namespace BLL.Functions
             IOrderActions order,
             INewspapersPublishedActions newspapersPublished,
             ICacheRedis cacheRedis,
-            IConfiguration config)
+            IConfiguration config,
+            IJwtService jwtService)
         {
             _adSize = adSize;
             _ordersDetailActions = ordersDetailActions;
@@ -87,6 +90,7 @@ namespace BLL.Functions
             _newspapersPublished = newspapersPublished;
             _cacheRedis = cacheRedis;
             _config = config;
+            _jwtService = jwtService;
         }
 
         #region WpAdSubCategory
@@ -146,7 +150,7 @@ namespace BLL.Functions
             return custToAdd.CustId;
         }
 
-        public CustomerDTO SignUp(CustomerDTO customer, bool isRegistered)
+        public string SignUp(CustomerDTO customer, bool isRegistered)
         {
             CustomerDTO custFind = GetAllCustomers().Where(x => x.CustEmail.Equals(customer.CustEmail)).FirstOrDefault()!;
             if (custFind != null)
@@ -159,7 +163,8 @@ namespace BLL.Functions
                 IsRegistered = isRegistered,
             });
             CustomerDTO newCust = _Mapper.Map<Customer, CustomerDTO>(custToAdd);
-            return newCust;
+            string token = _jwtService.CreateToken(newCust);
+            return token;
         }
 
         private List<CustomerDTO> GetAllCustomers()
@@ -169,14 +174,22 @@ namespace BLL.Functions
             return customersDTO;
         }
 
-        public CustomerDTO LogIn(string email, string pass)
+        public string LogIn(string email, string pass)
         {
             var cust = GetAllCustomers().FirstOrDefault(x => x.CustEmail.Equals(email) && x.CustPassword.Equals(pass));
             if (cust == null)
                 throw new UserNotFoundException();
-            return cust!;
+            string token = _jwtService.CreateToken(cust);
+            return token;
         }
 
+        public bool IsAdmin(string token)
+        {
+            string email = _jwtService.GetEmailFromToken(token);
+            string password = _jwtService.GetPasswordFromToken(token);
+            Console.WriteLine(_config["ManagerEmail"]);
+            return email.Equals(_config["ManagerEmail"]) && password.Equals(_config["ManagerPassword"]);
+        }
         #endregion
 
         #region NewspapersPublished
@@ -232,7 +245,13 @@ namespace BLL.Functions
 
         public decimal CalculationOfOrderPrice(List<OrderDetailDTO> listOrderDetails)
         {
-            decimal sum = listOrderDetails.Sum(x => GetPriceBySizeId(x.SizeId ?? 0) * (x.AdDuration ?? 0));
+            decimal sum = listOrderDetails.Sum(x => GetPriceBySizeId(x.SizeId ?? 0) * (decimal)x.AdDuration);
+            return sum;
+        }
+
+        public decimal CalculationOfOrderWordsPrice(List<OrderDetailDTO> listOrderDetails)
+        {
+            decimal sum = listOrderDetails.Sum(x => CountWords(x.AdContent) * (decimal)x.AdDuration);
             return sum;
         }
 
@@ -817,12 +836,12 @@ namespace BLL.Functions
 
         // פונקציה שמקבלת לקוח, מערך של פרטי הזמנות ומערך של תאריכים
         // הפונקציה מכניסה למסד הנתונים הזמנה וכל מה שהיא קיבלה
-        public void FinishOrder(CustomerDTO customer, List<string> listDates, List<OrderDetailDTO> listOrderDetails)
+        public void FinishOrder(string token, List<string> listDates, List<OrderDetailDTO> listOrderDetails)
         {
             List<OrderDetail> orderDetails = FromListOrderDetailDTOToListOrderDetail(listOrderDetails).ToList();
             Order newOrder = new Order()
             {
-                CustId = GetIdByCustomer(customer),
+                CustId = _jwtService.GetIdFromToken(token),
                 OrderDate = getDateNow(),
                 OrderFinalPrice = FinalPrice(orderDetails)
             };
@@ -844,12 +863,12 @@ namespace BLL.Functions
             return words.Length;
         }
 
-        public void FinishOrderAdWords(CustomerDTO customer, List<string> listDates, List<OrderDetailDTO> listOrderDetails)
+        public void FinishOrderAdWords(string token, List<string> listDates, List<OrderDetailDTO> listOrderDetails)
         {
             List<OrderDetail> orderDetails = FromListOrderDetailDTOToListOrderDetail(listOrderDetails).ToList();
             Order newOrder = new Order()
             {
-                CustId = GetIdByCustomer(customer),
+                CustId = _jwtService.GetIdFromToken(token),
                 OrderDate = getDateNow(),
                 OrderFinalPrice = CountWords(listOrderDetails[0].AdContent) * (decimal)listOrderDetails[0].AdDuration
             };
