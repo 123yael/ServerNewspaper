@@ -65,6 +65,8 @@ namespace BLL.Functions
         private readonly INewspapersPublishedActions _newspapersPublished;
         private readonly ICacheRedis _cacheRedis;
         private readonly IJwtService _jwtService;
+        private readonly IWebHostEnvironment _environment;
+
 
 
 
@@ -78,7 +80,8 @@ namespace BLL.Functions
             INewspapersPublishedActions newspapersPublished,
             ICacheRedis cacheRedis,
             IConfiguration config,
-            IJwtService jwtService)
+            IJwtService jwtService,
+            IWebHostEnvironment environment)
         {
             _adSize = adSize;
             _ordersDetailActions = ordersDetailActions;
@@ -91,6 +94,11 @@ namespace BLL.Functions
             _cacheRedis = cacheRedis;
             _config = config;
             _jwtService = jwtService;
+            _environment = environment;
+            pathWwwroot = environment.WebRootPath;
+            myPath = pathWwwroot + "\\TempWord";
+            GHOSTSCRIPT_DLL_PATH = "C:\\Program Files\\gs\\gs10.02.0\\bin\\gsdll64.dll";
+            upload = pathWwwroot + "\\Upload\\";
         }
 
         #region WpAdSubCategory
@@ -488,15 +496,22 @@ namespace BLL.Functions
             // רישום המודעות לעמוד האחורי, מודעה שאין לה מקום נכנסת למודעות שאין להן עדיפות
             placement(placeBackFileAds, backMat, anyFilesToInsertToBack, placeNormalFileAds, page, gfx, false);
 
+            if(!IsMatFull(backMat))
+            {
+                placeBackFileAds = placeNormalFileAds;
+                placeNormalFileAds = new List<OrderDetail>();
+                placement(placeBackFileAds, backMat, anyFilesToInsertToBack, placeNormalFileAds, page, gfx, false);
+            }
+
             placeCoverFileAds = SortBySizeDesc(placeCoverFileAds);
 
             // הכנסת המודעות לעמוד הקדמי אם אין להן מקום הם נכנסות לרשימת המודעות ללא עדיפות
-            placement(placeCoverFileAds, firstMat, anyFilesToInsertToBack, placeNormalFileAds, page, gfx, true);
+            placement(placeCoverFileAds, firstMat, new List<OrderDetail>(), placeNormalFileAds, page, gfx, true);
 
             placeNormalFileAds = SortBySizeDesc(placeNormalFileAds);
 
             // הכנסת המודעות ללא עדיפות לעמוד הקדמי כל מי שלא נכנסה נכנסת למערך של שאר המודעות
-            placement(placeNormalFileAds, firstMat, anyFilesToInsertToBack, anyFilesToInsert1, page, gfx, true);
+            placement(placeNormalFileAds, firstMat, new List<OrderDetail>(), anyFilesToInsert1, page, gfx, true);
 
             anyFilesToInsert1 = SortBySizeDesc(anyFilesToInsert1);
 
@@ -787,9 +802,9 @@ namespace BLL.Functions
 
         #region FinishOrder
 
-        private DateTime getDateNow()
+        private DateTime GetDateNow()
         {
-            DateTime date = new DateTime(2023, 8, 28);//DateTime.Now
+            DateTime date = new DateTime(2023, 11, 9);//DateTime.Now
             return date;
         }
         // פונקציה שמכניסה פרטי הזמנות למסד הנתונים ומחזירה רשימה של קודים של פרטי הזמנות
@@ -842,7 +857,7 @@ namespace BLL.Functions
             Order newOrder = new Order()
             {
                 CustId = _jwtService.GetIdFromToken(token),
-                OrderDate = getDateNow(),
+                OrderDate = GetDateNow(),
                 OrderFinalPrice = FinalPrice(orderDetails)
             };
             _order.AddNewOrder(newOrder);
@@ -869,7 +884,7 @@ namespace BLL.Functions
             Order newOrder = new Order()
             {
                 CustId = _jwtService.GetIdFromToken(token),
-                OrderDate = getDateNow(),
+                OrderDate = GetDateNow(),
                 OrderFinalPrice = CountWords(listOrderDetails[0].AdContent) * (decimal)listOrderDetails[0].AdDuration
             };
             _order.AddNewOrder(newOrder);
