@@ -41,10 +41,8 @@ namespace BLL.Functions
         static IMapper _Mapper;
         private IConfiguration _config;
 
-        private string pathWwwroot = "C:\\yael\\final_project\\newspaperProject\\server\\newspaper\\newspaper\\wwwroot";
-        private string myPath = "C:\\yael\\final_project\\newspaperProject\\server\\newspaper\\newspaper\\wwwroot\\TempWord";
+        private string pathWwwroot, myPath, upload;
         private string GHOSTSCRIPT_DLL_PATH = "C:\\Program Files\\gs\\gs10.02.0\\bin\\gsdll64.dll";
-        private string upload = "C:\\yael\\final_project\\newspaperProject\\server\\newspaper\\newspaper\\wwwroot\\Upload\\";
 
         static Funcs()
         {
@@ -66,8 +64,6 @@ namespace BLL.Functions
         private readonly ICacheRedis _cacheRedis;
         private readonly IJwtService _jwtService;
         private readonly IWebHostEnvironment _environment;
-
-
 
 
         public Funcs(IAdSizeActions adSize,
@@ -749,7 +745,7 @@ namespace BLL.Functions
             newspapersPublished.PublicationDate = date;
             newspapersPublished.CountPages = countPages;
             _newspapersPublished.AddNewNewspaperPublished(newspapersPublished);
-            SentNewspaperForRecords(newspapersPublished.NewspaperId, placeForNespaper, countPages);
+            SentNewspaperForRecords(newspapersPublished.NewspaperId, placeForNespaper);
         }
 
         #endregion
@@ -804,7 +800,7 @@ namespace BLL.Functions
 
         private DateTime GetDateNow()
         {
-            DateTime date = new DateTime(2023, 11, 9);//DateTime.Now
+            DateTime date = new DateTime(2023, 11, 16);//DateTime.Now
             return date;
         }
         // פונקציה שמכניסה פרטי הזמנות למסד הנתונים ומחזירה רשימה של קודים של פרטי הזמנות
@@ -1157,32 +1153,28 @@ namespace BLL.Functions
             }
         }
 
-        private void SentNewspaperForRecords(int num, string placeForNespaper, int numPages)
+        private void SentNewspaperForRecords(int num, string placeForNespaper)
         {
             var message = new MailMessage();
             message.From = new MailAddress("yads10000@gmail.com", "Yads");
             message.Subject = "Issue " + num;
 
-            List<LinkedResource> linkedResources = new List<LinkedResource>();
-            LinkedResource linkedResource;
-
             var html = "";
 
-            for (int i = 0; i < numPages; i++)
-            {
-                linkedResource = new LinkedResource(placeForNespaper + @$"\{i}.png");
-                linkedResource.ContentId = Guid.NewGuid().ToString();
-                html += $"<center><img width=\"600px\" src=\"cid:" + linkedResource.ContentId + "\"/></center>";
-                linkedResources.Add(linkedResource);
+            LinkedResource linkedResource = new LinkedResource(pathWwwroot + @$"\Newspapers\logo.png");
+            linkedResource.ContentId = Guid.NewGuid().ToString();
+            html += $"<center><img width=\"600px\" hight=\"218px\" src=\"cid:" + linkedResource.ContentId + "\"/></center>";
+            html += $"<center><h2>Attached to the message is this week's magazine, enjoy</h2></center>";
 
-            }
             AlternateView alternateView = AlternateView.CreateAlternateViewFromString(html, null, MediaTypeNames.Text.Html);
-            foreach (LinkedResource item in linkedResources)
-            {
-                alternateView.LinkedResources.Add(item);
-            }
+            alternateView.LinkedResources.Add(linkedResource);
 
             message.AlternateViews.Add(alternateView);
+
+            string filePath = placeForNespaper + @"\newspaper";
+            Attachment attachment = new Attachment(filePath, MediaTypeNames.Application.Pdf);
+            message.Attachments.Add(attachment);
+
 
             var list = _cacheRedis.GetAllItems();
             foreach (var item in list)
