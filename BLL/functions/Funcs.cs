@@ -800,7 +800,7 @@ namespace BLL.Functions
 
         private DateTime GetDateNow()
         {
-            DateTime date = new DateTime(2023, 11, 16);//DateTime.Now
+            DateTime date = new DateTime(2024, 2, 28);//DateTime.Now
             return date;
         }
         // פונקציה שמכניסה פרטי הזמנות למסד הנתונים ומחזירה רשימה של קודים של פרטי הזמנות
@@ -1161,7 +1161,7 @@ namespace BLL.Functions
 
             var html = "";
 
-            LinkedResource linkedResource = new LinkedResource(pathWwwroot + @$"\Newspapers\logo.png");
+            LinkedResource linkedResource = new LinkedResource(pathWwwroot + @$"\Newspapers\logo.jpg");
             linkedResource.ContentId = Guid.NewGuid().ToString();
             html += $"<center><img width=\"600px\" hight=\"218px\" src=\"cid:" + linkedResource.ContentId + "\"/></center>";
             html += $"<center><h2>Attached to the message is this week's magazine, enjoy</h2></center>";

@@ -7,6 +7,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="wwwroot\NewspapersImg\**" />
+    <Content Remove="wwwroot\NewspapersImg\**" />
+    <EmbeddedResource Remove="wwwroot\NewspapersImg\**" />
+    <None Remove="wwwroot\NewspapersImg\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="GroupDocs.Conversion" Version="23.5.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="7.0.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="7.0.0" />
@@ -19,7 +26,6 @@
 
   <ItemGroup>
     <Folder Include="wwwroot\TempWord\" />
-    <Folder Include="wwwroot\NewspapersImg\" />
     <Folder Include="wwwroot\TempWord\temp\" />
   </ItemGroup>
 

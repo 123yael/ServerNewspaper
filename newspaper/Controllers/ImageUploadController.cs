@@ -14,7 +14,6 @@ namespace files.Controllers
         }
 
 
-        // פונקציה להעלאת תמונה לשרת
         [HttpPost("uploadImage")]
         public IActionResult UploadImage(IFormFile image)
         {
