@@ -1,0 +1,34 @@
+# Ignore build output
+bin/
+obj/
+wwwroot/Upload/
+*.dll
+*.exe
+*.pdb
+
+# Ignore user-specific files
+*.user
+*.userprefs
+*.suo
+
+# Ignore packages folder
+packages/
+*.nupkg
+*.paket.*
+
+# Ignore Visual Studio files
+*.vs/
+*.vssscc
+*.vspscc
+*.sln.docstates
+
+# Ignore user secrets
+appsettings.Development.json
+appsettings.Production.json
+appsettings.Staging.json
+appsettings.json
+secrets.json
+
+# Ignore other sensitive files
+web.config
+*.pfx

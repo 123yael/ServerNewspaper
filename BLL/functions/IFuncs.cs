@@ -58,6 +58,10 @@ namespace BLL.Functions
 
         public Object GetAllDetailsWordsTableByDate(DateTime dateForPrint, int page, int itemsPerPage);
 
+        public Object GetAllOrderDetailsTableManager(int page, int itemsPerPage);
+
+        public Object GetAllOrderDetailsTableManagerWords(int page, int itemsPerPage);
+
         #endregion
 
         #region DatesForOrderDetail

@@ -226,6 +226,14 @@ namespace BLL.Functions
         {
             return orderDetails.OrderByDescending(x => x.Size?.SizeHeight)
                 .ThenByDescending(x => x.Size?.SizeWidth)
+                .ThenByDescending(x => GetDateNow().GetHashCode() - x.Order?.OrderDate.GetHashCode())
+                .ToList();
+        }
+
+        private List<OrderDetail> SortByDate(List<OrderDetail> orderDetails)
+        {
+            return orderDetails.OrderByDescending(x => x.Size?.SizeHeight)
+                .ThenByDescending(x => x.Size?.SizeWidth)
                 .ToList();
         }
 
@@ -293,6 +301,35 @@ namespace BLL.Functions
             return new { List = items, PaginationMetadata = paginationMetadata };
         }
 
+        public Object GetAllOrderDetailsTableManager(int page, int itemsPerPage)
+        {
+            List<DatesForOrderDetail> relevanteAds = _datesForOrderDetailActions.GetAllDatesForOrderDetails()
+                .Where(d => d.Details!.Order!.Cust.CustEmail == _config["ManagerEmail"])
+                .Where(d => d.Details!.AdContent == null).ToList();
+
+            List<OrderDetailsTable> orderDetailDTOs = _Mapper.Map<List<OrderDetailsTable>>(relevanteAds);
+
+            var paginationMetadata = new PaginationMetadata(orderDetailDTOs.Count(), page, itemsPerPage);
+
+            var items = orderDetailDTOs.Skip((page - 1) * itemsPerPage).Take(itemsPerPage);
+
+            return new { List = items, PaginationMetadata = paginationMetadata };
+        }
+
+        public Object GetAllOrderDetailsTableManagerWords(int page, int itemsPerPage)
+        {
+            List<DatesForOrderDetail> relevanteAds = _datesForOrderDetailActions.GetAllDatesForOrderDetails()
+                .Where(d => d.Details!.Order!.Cust.CustEmail == _config["ManagerEmail"])
+                .Where(d => d.Details!.AdContent != null).ToList();
+
+            List<OrderDetailsTable> orderDetailDTOs = _Mapper.Map<List<OrderDetailsTable>>(relevanteAds);
+
+            var paginationMetadata = new PaginationMetadata(orderDetailDTOs.Count(), page, itemsPerPage);
+
+            var items = orderDetailDTOs.Skip((page - 1) * itemsPerPage).Take(itemsPerPage);
+
+            return new { List = items, PaginationMetadata = paginationMetadata };
+        }
         #endregion
 
         #region DatesForOrderDetail
@@ -800,7 +837,7 @@ namespace BLL.Functions
 
         private DateTime GetDateNow()
         {
-            DateTime date = new DateTime(2024, 2, 28);//DateTime.Now
+            DateTime date = new DateTime(2024, 3, 21);//DateTime.Now
             return date;
         }
         // פונקציה שמכניסה פרטי הזמנות למסד הנתונים ומחזירה רשימה של קודים של פרטי הזמנות
@@ -1028,7 +1065,7 @@ namespace BLL.Functions
 
         private int WriteToWordAd(string tempFileFullName, string tempFileFullNamepdf, List<OrderDetail> allRelevantWordsAds)
         {
-            int countLetter = 100;
+            int countLetter = 90;
 
             List<WordAdSubCategoryDTO> categories = GetAllWordAdSubCategories();
 
@@ -1090,7 +1127,7 @@ namespace BLL.Functions
                             Justification justification = new Justification() { Val = JustificationValues.Both };
                             paragraphProperties.Append(justification);
 
-                            countLetter += detail.AdContent!.Trim().Length + 26;
+                            countLetter += detail.AdContent!.Trim().Length + 20;
                             Run run = new Run(new Text("• " + detail.AdContent.Trim()));
                             newParagraph.Append(paragraphProperties);
                             newParagraph.Append(run);

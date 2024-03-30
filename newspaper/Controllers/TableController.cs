@@ -29,14 +29,21 @@ namespace newspaper.Controllers
         [HttpGet("GetAllOrderDetailsTableByDate/{date}")]
         public async Task<IActionResult> GetAllOrderDetailsTableByDate([FromRoute] string date, [FromQuery] PaginationParams @params)
         {
+            if (date == "manager")
+            {
+                return Ok(_funcs.GetAllOrderDetailsTableManager(@params.Page, @params.ItemsPerPage));
+            }
             DateTime dateTime = ConvertDateFromStringToDateTime(date);
-            var res = _funcs.GetAllOrderDetailsTableByDate(dateTime, @params.Page, @params.ItemsPerPage);
-            return Ok(res);
+            return Ok(_funcs.GetAllOrderDetailsTableByDate(dateTime, @params.Page, @params.ItemsPerPage));
         }
 
         [HttpGet("GetAllDetailsWordsTableByDate/{date}")]
         public async Task<IActionResult> GetAllDetailsWordsTableByDate([FromRoute] string date, [FromQuery] PaginationParams @params)
         {
+            if (date == "manager")
+            {
+                return Ok(_funcs.GetAllOrderDetailsTableManagerWords(@params.Page, @params.ItemsPerPage));
+            }
             DateTime dateTime = ConvertDateFromStringToDateTime(date);
             return Ok(_funcs.GetAllDetailsWordsTableByDate(dateTime, @params.Page, @params.ItemsPerPage));
         }
