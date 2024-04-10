@@ -30,9 +30,16 @@ namespace newspaper.Controllers
         [HttpGet("Shabetz/{date}")]
         public IActionResult Shabetz(string date)
         {
-            DateTime dateTime = ConvertDateFromStringToDateTime(date);
-            NewspapersPublishedDTO newspapersPublishedDTO = _funcs.Shabets(dateTime);
-            return Ok(newspapersPublishedDTO);
+            try
+            {
+                DateTime dateTime = ConvertDateFromStringToDateTime(date);
+                NewspapersPublishedDTO newspapersPublishedDTO = _funcs.Shabets(dateTime);
+                return Ok(newspapersPublishedDTO);
+            }
+            catch (DateAlreadyExistsException)
+            {
+                return StatusCode(409);
+            }
         }
 
         [HttpGet("ClosingNewspaper/{date}/{countPages}")]

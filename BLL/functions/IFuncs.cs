@@ -39,6 +39,7 @@ namespace BLL.Functions
         #region NewspapersPublished
 
         public List<NewspapersPublishedDTO> GetAllNewspapersPublished();
+        public bool IsDateExists(DateTime date);
 
         #endregion
 

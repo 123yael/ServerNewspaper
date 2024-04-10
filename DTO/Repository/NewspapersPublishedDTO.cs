@@ -14,5 +14,7 @@ namespace DTO.Repository
 
         public int CountPages { get; set; }
 
+        public int MagazineNumber { get; set; }
+
     }
 }

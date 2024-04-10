@@ -10,4 +10,6 @@ public partial class NewspapersPublished
     public DateTime PublicationDate { get; set; }
 
     public int CountPages { get; set; }
+
+    public int? MagazineNumber { get; set; }
 }

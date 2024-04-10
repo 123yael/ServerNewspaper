@@ -40,6 +40,7 @@ namespace DAL.Actions.Classes
             {
                 NewspaperPublishedToEdit.PublicationDate = newspaperPublished.PublicationDate;
                 NewspaperPublishedToEdit.CountPages = newspaperPublished.CountPages;
+                NewspaperPublishedToEdit.MagazineNumber = newspaperPublished.MagazineNumber;
                 _dbNewspapers.SaveChanges();
             }
         }

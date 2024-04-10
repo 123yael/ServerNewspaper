@@ -205,6 +205,15 @@ namespace BLL.Functions
             return NewspapersPublishedDTO.OrderByDescending(x => x.NewspaperId).ToList();
         }
 
+        public bool IsDateExists(DateTime date)
+        {
+            var newspapersPublished = _newspapersPublished.GetAllNewspapersPublished()
+                .FirstOrDefault(x => x.PublicationDate == date);
+            if(newspapersPublished == null)
+                return false;
+            return true;
+        }
+
         #endregion
 
         #region OrderDetail
@@ -274,6 +283,7 @@ namespace BLL.Functions
         public Object GetAllOrderDetailsTableByDate(DateTime dateForPrint, int page, int itemsPerPage)
         {
             List<DatesForOrderDetail> relevanteAds = GetAllDatesForOrderDetailByDate(dateForPrint)
+                .Where(d => d.Details!.Order!.Cust.CustEmail != _config["ManagerEmail"])
                 .Where(d => d.Details!.AdContent == null).ToList();
             List<OrderDetailsTable> orderDetailDTOs = _Mapper.Map<List<OrderDetailsTable>>(relevanteAds);
             for (int i = 0; i < orderDetailDTOs.Count; i++)
@@ -289,6 +299,7 @@ namespace BLL.Functions
         public Object GetAllDetailsWordsTableByDate(DateTime dateForPrint, int page, int itemsPerPage)
         {
             List<DatesForOrderDetail> relevanteAds = GetAllDatesForOrderDetailByDate(dateForPrint)
+                .Where(d => d.Details!.Order!.Cust.CustEmail != _config["ManagerEmail"])
                 .Where(d => d.Details!.AdContent != null).ToList();
             List<DetailsWordsTable> orderDetailDTOs = _Mapper.Map<List<DetailsWordsTable>>(relevanteAds);
             for (int i = 0; i < orderDetailDTOs.Count; i++)
@@ -322,7 +333,7 @@ namespace BLL.Functions
                 .Where(d => d.Details!.Order!.Cust.CustEmail == _config["ManagerEmail"])
                 .Where(d => d.Details!.AdContent != null).ToList();
 
-            List<OrderDetailsTable> orderDetailDTOs = _Mapper.Map<List<OrderDetailsTable>>(relevanteAds);
+            List<DetailsWordsTable> orderDetailDTOs = _Mapper.Map<List<DetailsWordsTable>>(relevanteAds);
 
             var paginationMetadata = new PaginationMetadata(orderDetailDTOs.Count(), page, itemsPerPage);
 
@@ -688,6 +699,8 @@ namespace BLL.Functions
 
         public NewspapersPublishedDTO Shabets(DateTime datePublished)
         {
+            if (IsDateExists(datePublished))
+                throw new DateAlreadyExistsException("Date of newspaper already exists in the system!");
             List<OrderDetail> relevanteAds = GetAllReleventOrders(datePublished);
 
             List<OrderDetail> allRelevantFileAds = new List<OrderDetail>();
@@ -716,7 +729,7 @@ namespace BLL.Functions
                     placeNormalFileAds.Add(detail);
 
             List<NewspapersPublished> allNewpapers = _newspapersPublished.GetAllNewspapersPublished();
-            int newspaperId = allNewpapers.Count() > 0 ? allNewpapers.Max(x => x.NewspaperId) + 1 : 1;
+            int newspaperId = allNewpapers.Count() > 0 ? allNewpapers.Max(x => x.MagazineNumber  ?? x.NewspaperId) + 1 : 1;
 
             string regular = myPath + "\\regularTemplate" + ".pdf";
             string regularWord = myPath + "\\regularTemplate" + ".dotx";
@@ -781,8 +794,9 @@ namespace BLL.Functions
             NewspapersPublished newspapersPublished = new NewspapersPublished();
             newspapersPublished.PublicationDate = date;
             newspapersPublished.CountPages = countPages;
+            newspapersPublished.MagazineNumber = GetAllNewspapersPublished().Max(x => x.MagazineNumber) + 1;
             _newspapersPublished.AddNewNewspaperPublished(newspapersPublished);
-            SentNewspaperForRecords(newspapersPublished.NewspaperId, placeForNespaper);
+            SentNewspaperForRecords(newspapersPublished.MagazineNumber ?? newspapersPublished.NewspaperId, placeForNespaper);
         }
 
         #endregion
@@ -837,7 +851,7 @@ namespace BLL.Functions
 
         private DateTime GetDateNow()
         {
-            DateTime date = new DateTime(2024, 3, 21);//DateTime.Now
+            DateTime date = DateTime.Now;
             return date;
         }
         // פונקציה שמכניסה פרטי הזמנות למסד הנתונים ומחזירה רשימה של קודים של פרטי הזמנות
